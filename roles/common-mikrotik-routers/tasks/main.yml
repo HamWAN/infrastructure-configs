@@ -1,0 +1,31 @@
+---
+- name: Copy netadmin certificates to router
+  action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/files/key-dsa-{{ item }}.txt {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
+  with_items: "{{ net_admins }}"
+  tags: import
+
+- name: Create template for common changes
+  template: src=common.j2 dest=./roles/common-mikrotik-routers/generated-scripts/common.rsc backup=no
+  tags: generate
+
+- name: Copy common changes script to router
+  action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/generated-scripts/common.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
+  tags: import
+
+#- name: "import script on device"
+#  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes ansible_{{ template }}.rsc"
+#  tags: import
+#  register: import_result
+#
+#- name: "import script on device failed"
+#  action: fail msg="importing script ansible_{{ template }}.rsc on {{ inventory_hostname }} failed"
+#  tags: import
+#  when: "'failure:' in import_result.stdout"
+
+#- name: "remove script from device"
+#  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove ansible_{{ template }}.rsc"
+#  tags: cleanup
+
+- name: remove script from generated-scripts directory
+  action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
+  tags: cleanup

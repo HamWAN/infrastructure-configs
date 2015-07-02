@@ -1,0 +1,11 @@
+---
+# This playbook sets up all sectors as sectors.
+
+- hosts: mikrotik-sector-routers
+  gather_facts: no
+  connection: local
+
+  vars_prompt:
+    admin_password: "new admin password"
+  roles:
+    - common-mikrotik-routers

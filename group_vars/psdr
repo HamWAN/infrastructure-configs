@@ -1,0 +1,11 @@
+#psdr specific stuff
+---
+remote_logging_server: 44.24.255.4
+primary_ntp_server: 44.24.244.4
+secondary_ntp_server: 44.24.245.4
+snmp_community_addresses: 44.24.255.0/25
+dns_servers: 44.24.244.1,44.24.245.1
+net_admins: eo,NQ1E,nigel,osburn,tom
+net_domain: hamwan.net
+subnet_with_cidr: 44.24.240.0/20
+callsign: KI7WAN

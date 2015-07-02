@@ -1,0 +1,18 @@
+/user set admin password={{ admin_password }}
+{% for netadmin in net_admins %}
+/user remove [find name={{ netadmin }}]
+/user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
+/user ssh-keys import public-key-file=key-dsa-{{ netadmin }}.txt user={{ netadmin }}
+{% endfor %}
+/system logging action set 3 bsd-syslog=no name=remote remote={{ remote_logging_server }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
+/system logging add action=remote disabled=no prefix="" topics=!debug,!snmp
+/snmp set enabled=yes contact="#HamWAN on irc.freenode.org"
+/snmp community set name=hamwan addresses={{ snmp_community_addresses }} read-access=yes write-access=no numbers=0
+/ip dns set servers={{ primary_dns_server }},{{ secondary_dns_server }}
+/system ntp client set enabled=yes primary-ntp={{ primary_ntp_server }} secondary-ntp={{ secondary_ntp_server }}
+/ip firewall filter remove [find]
+/ip dhcp-server remove [find]
+/ip dhcp-server network remove [find]
+/ip dhcp-client remove [find]
+/ip address remove [find]
+/ip dns set allow-remote-requests=no
