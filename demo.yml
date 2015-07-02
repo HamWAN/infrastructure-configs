@@ -7,5 +7,9 @@
 
   vars_prompt:
     admin_password: "new admin password"
+    vrrp_password: "vrrp password"
+    ospf_password: "ospf password"
+
   roles:
     - common-mikrotik-routers
+    - mikrotik-sector-routers

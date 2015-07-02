@@ -1,0 +1,10 @@
+/ip firewall mangle remove [find]
+/interface wireless channels remove [find list=HamWAN]]
+{% for channel, frequency in channels.get(channel_width).iteritems() %}
+/interface wireless channels add band=5ghz-onlyn comment="Cell sites radiate this at {{ (channel -1) * 120 }} degrees" frequency={{ frequency }} list=HamWAN name=Sector{{ channel }}-{{ channel_width }}  width={{ channel_width }}
+{% endfor %}
+
+/system identity set name=sec{{ sector }}.{{ site }}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width=10mhz disabled=no frequency={{ channels.get(channel_width).get(sector) }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name=sec{{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
+/interface vrrp remove [find name=vrrp1]
+/interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
