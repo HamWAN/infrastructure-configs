@@ -5,8 +5,8 @@
 {% set vrrp1_ip = lookup('dig', 'vrrp1.' + site + '.' + net_domain + './A', wantlist=True)[0] %}
 {% set wlan1_ip_network = [wlan1_ip, '/28'] | join("") | ipaddr('network') %}
 {% set ether1_ip_network = [ether1_ip, '/28'] | join("") | ipaddr('network') %}
-{% set dhcp_pool_bottom_ip = "" %}
-{% set dhcp_pool_top_ip = "" %}
+{% set dhcp_pool_bottom_ip = [wlan1_ip_network, '/28'] | join("") | ipsubnet(32,2) | replace('/32', '', 1) %}
+{% set dhcp_pool_top_ip = [wlan1_ip_network, '/28'] | join("") | ipsubnet(32,-2) | replace('/32', '', 1) %}
 
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
