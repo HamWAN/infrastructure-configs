@@ -3,9 +3,8 @@
 {% set wlan1_ip = lookup('dig', 'wlan1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
 {% set ether1_ip = lookup('dig', 'ether1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp1.' + site + '.' + net_domain + './A', wantlist=True)[0] %}
-{% set dhcp_pool_range = list(IPNetwork(wlan1_ip + '/28'))[1] + "-" list(IPNetwork(wlan1_ip + '/28'))[-1] %}
-{% set wlan1_ip_network_with_cidr = IPNetwork(wlan1_ip + '/28') + '/28' %}
-{% set ether1_ip_network_with_cidr = IPNetwork(ether1_ip + '/28') + '/28' %}
+{% set wlan1_ip_network_with_cidr = wlan1_ip + '/28' | ipaddr('network') | ipaddr('0') %}
+{% set ether1_ip_network_with_cidr = ether1_ip + '/28' | ipaddr('network') | ipaddr('0') %}
 
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
@@ -19,7 +18,7 @@
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 
 /ip pool remove [find name=pool1]
-/ip pool add name=pool1 ranges={{ dhcp_pool_range }}
+/ip pool add name=pool1 ranges={{ wlan1_ip + '/28' | ipaddr('network') | ipaddr('1') }}-{{ wlan1_ip + '/28' | ipaddr('network') | ipaddr('-1') }}
 /ip dhcp-server remove [find name=dhcp1]
 /ip dhcp-server add address-pool=pool1 disabled=no interface=wlan1 lease-time=1h name=dhcp1
 /routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=as-type-1 router-id={{ ether1_ip }}
