@@ -1,3 +1,6 @@
+{% set site = ansible_ssh_host.split(".")[1] %}
+{% set sector = ansible_ssh_host.split(".")[0].replace("sec", "", 1) %}
+
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
 {% for channel, frequency in channels.get(channel_width).iteritems() %}

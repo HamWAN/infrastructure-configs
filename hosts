@@ -1,5 +1,5 @@
 [mikrotik-sector-routers]
-sec1_hil_memhamwan_net ansible_ssh_user=memhamwan ansible_ssh_host=sec1.hil.memhamwan.net ansible_ssh_port=22 sector=1 site=hil
+sec1_hil_memhamwan_net ansible_ssh_user=memhamwan ansible_ssh_host=sec1.hil.memhamwan.net ansible_ssh_port=22
 
 [memhamwan:children]
 mikrotik-sector-routers
