@@ -25,7 +25,7 @@
 /routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=as-type-1 router-id={{ ether1_ip }}
 /ip address add address={{ ether1_ip }}/28 interface=ether1
 /ip address add address={{ wlan1_ip }}/28 interface=wlan1
-/ip address add address={{ vrrp1_ip }}/28 interface=vrrp1
+/ip address add address={{ vrrp1_ip }} interface=vrrp1
 /ip dhcp-server network remove [find]
 /ip dhcp-server network add address={{ wlan1_ip_network_with_cidr }} dns-server={{ primary_dns_server }},{{ secondary_dns_server }} domain={{ net_domain }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ primary_ntp_server }},{{ secondary_ntp_server }}
 
