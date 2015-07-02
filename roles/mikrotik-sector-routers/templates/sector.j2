@@ -3,9 +3,9 @@
 {% set wlan1_ip = lookup('dig', 'wlan1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
 {% set ether1_ip = lookup('dig', 'ether1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp1.' + site + '.' + net_domain + './A', wantlist=True)[0] %}
-{% set dhcp_pool_range = "" %}
-{% set wlan1_ip_network_with_cidr = "" %}
-{% set ether1_ip_network_with_cidr = "" %}
+{% set dhcp_pool_range = list(IPNetwork(wlan1_ip + '/28'))[1] + "-" list(IPNetwork(wlan1_ip + '/28'))[-1] %}
+{% set wlan1_ip_network_with_cidr = IPNetwork(wlan1_ip + '/28') + '/28' %}
+{% set ether1_ip_network_with_cidr = IPNetwork(ether1_ip + '/28') + '/28' %}
 
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
