@@ -1,5 +1,11 @@
 {% set site = ansible_ssh_host.split(".")[1] %}
 {% set sector = ansible_ssh_host.split(".")[0].replace("sec", "", 1) %}
+{% set wlan1_ip = lookup('dig', 'wlan1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
+{% set ether1_ip = lookup('dig', 'ether1.' + ansible_ssh_host + './A', wantlist=True)[0] %}
+{% set vrrp1_ip = lookup('dig', 'vrrp1.' + site + '.' + net_domain + './A', wantlist=True)[0] %}
+{% set dhcp_pool_range = "" %}
+{% set wlan1_ip_network_with_cidr = "" %}
+{% set ether1_ip_network_with_cidr = "" %}
 
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
@@ -11,3 +17,28 @@
 /interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width=10mhz disabled=no frequency={{ channels.get(channel_width).get(sector) }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name=sec{{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
+
+/ip pool remove [find name=pool1]
+/ip pool add name=pool1 ranges={{ dhcp_pool_range }}
+/ip dhcp-server remove [find name=dhcp1]
+/ip dhcp-server add address-pool=pool1 disabled=no interface=wlan1 lease-time=1h name=dhcp1
+/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=as-type-1 router-id={{ ether1_ip }}
+/ip address add address={{ ether1_ip }}/28 interface=ether1
+/ip address add address={{ wlan1_ip }}/28 interface=wlan1
+/ip address add address={{ vrrp1_ip }}/28 interface=vrrp1
+/ip dhcp-server network remove [find]
+/ip dhcp-server network add address={{ wlan1_ip_network_with_cidr }} dns-server={{ primary_dns_server }},{{ secondary_dns_server }} domain={{ net_domain }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ primary_ntp_server }},{{ secondary_ntp_server }}
+
+/ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+/ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+
+/routing filter remove [find]
+/routing filter add action=accept chain=AMPR-default prefix=44.0.0.0/8 prefix-length=8-32
+/routing filter add action=accept chain=AMPR-default prefix=0.0.0.0/0
+/routing filter add action=reject chain=AMPR-default
+/routing filter add action=accept chain=AMPR prefix=44.0.0.0/8 prefix-length=8-32
+/routing filter add action=reject chain=AMPR
+/routing ospf interface remove [find]
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1 network-type=broadcast
+/routing ospf network remove [find]
+/routing ospf network add area=backbone network={{ ether1_ip_network_with_cidr }}
