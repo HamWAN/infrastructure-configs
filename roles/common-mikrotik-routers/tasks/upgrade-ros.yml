@@ -52,3 +52,10 @@
   tags: 
     - cleanup
     - upgrade-ros
+
+- name: remove script from generated-scripts directory
+  action: file path=./roles/common-mikrotik-routers/generated-scripts/upgrade.rsc state=absent
+  tags:
+    - cleanup
+    - upgrade-ros
+

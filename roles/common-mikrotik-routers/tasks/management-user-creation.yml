@@ -43,3 +43,9 @@
   tags: 
     - cleanup
     - management-user-creation
+
+- name: remove script from generated-scripts directory
+  action: file path=./roles/common-mikrotik-routers/generated-scripts/management-user-creation.rsc state=absent
+  tags: 
+    - cleanup
+    - management-user-creation

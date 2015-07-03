@@ -28,6 +28,6 @@
   action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove common.rsc"
   tags: cleanup
 
-#- name: remove script from generated-scripts directory
-#  action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
-#  tags: cleanup
+- name: remove script from generated-scripts directory
+  action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
+  tags: cleanup
