@@ -4,6 +4,8 @@
 - hosts: mikrotik-sector-routers
   gather_facts: no
   connection: local
+  vars:
+    ignore_ospf_and_ip_address: yes
 
   vars_prompt:
     admin_password: "new admin password"

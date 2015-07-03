@@ -12,20 +12,20 @@
   action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/generated-scripts/common.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
   tags: import
 
-#- name: "import script on device"
-#  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes ansible_{{ template }}.rsc"
-#  tags: import
-#  register: import_result
-#
-#- name: "import script on device failed"
-#  action: fail msg="importing script ansible_{{ template }}.rsc on {{ inventory_hostname }} failed"
-#  tags: import
-#  when: "'failure:' in import_result.stdout"
+- name: "import script on device"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes common.rsc"
+  tags: import
+  register: import_result
 
-#- name: "remove script from device"
-#  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove ansible_{{ template }}.rsc"
-#  tags: cleanup
+- name: "import script on device failed"
+  action: fail msg="importing script common.rsc on {{ inventory_hostname }} failed"
+  tags: import
+  when: "'failure:' in import_result.stdout"
 
-- name: remove script from generated-scripts directory
-  action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
+- name: "remove script from device"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove common.rsc"
   tags: cleanup
+
+#- name: remove script from generated-scripts directory
+#  action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
+#  tags: cleanup
