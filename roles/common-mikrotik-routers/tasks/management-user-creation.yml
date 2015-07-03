@@ -1,0 +1,38 @@
+---
+- name: Copy certificate to router
+  action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/files/key-dsa-{{ network }}.txt admin@{{ ansible_ssh_host }}:/
+  tags:
+    - import
+    - management-user-creation
+
+- name: Create template
+  template: src=management-user-creation.j2 dest=./roles/common-mikrotik-routers/generated-scripts/management-user-creation.rsc backup=no
+  tags: 
+    - generate
+    - management-user-creation
+
+- name: Copy script to router
+  action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/generated-scripts/management-user-creation.rsc admin@{{ ansible_ssh_host }}:/
+  tags: 
+    - import
+    - management-user-creation
+
+- name: Import script to router
+  action: command ssh -p {{ ansible_ssh_port }} admin@{{ ansible_ssh_host }} "/import verbose=yes management-user-creation.rsc"
+  tags: 
+    - import
+    - management-user-creation
+  register: import_result
+
+- name: Import script on device failed
+  action: fail msg="importing script management-user-creation.rsc on {{ inventory_hostname }} failed"
+  tags: 
+    - import
+    - management-user-creation
+  when: "'failure:' in import_result.stdout"
+
+- name: "remove script from device"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove management-user-creation.rsc"
+  tags: 
+    - cleanup
+    - management-user-creation

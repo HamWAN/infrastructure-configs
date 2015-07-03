@@ -14,3 +14,6 @@ net_domain: memhamwan.net
 subnet_with_cidr: 44.34.128.0/21
 callsign: KM4ECM
 channel_width: 10
+ansible_ssh_port: 22
+ansible_ssh_user: memhamwan
+network: memhamwan

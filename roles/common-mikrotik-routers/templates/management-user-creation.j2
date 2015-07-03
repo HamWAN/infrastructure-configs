@@ -1,0 +1,3 @@
+/user remove [find name={{ network }}]
+/user add group=full name={{ network }} password={{ 999999999999999 |random }}
+/user ssh-keys import public-key-file=key-dsa-{{ network }}.txt user={{ network }}

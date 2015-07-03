@@ -1,4 +1,6 @@
 ---
+- include: management-user-creation.yml
+- include: upgrade-ros.yml
 - name: Copy netadmin certificates to router
   action: command scp -P {{ ansible_ssh_port }} ./roles/common-mikrotik-routers/files/key-dsa-{{ item }}.txt {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
   with_items: "{{ net_admins }}"

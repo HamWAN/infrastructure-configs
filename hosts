@@ -1,5 +1,5 @@
 [mikrotik-sector-routers]
-sec1.hil.memhamwan.net ansible_ssh_user=memhamwan ansible_ssh_host=44.34.128.99 ansible_ssh_port=22
+sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
 
 [memhamwan:children]
 mikrotik-sector-routers

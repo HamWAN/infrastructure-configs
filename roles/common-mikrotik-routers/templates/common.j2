@@ -1,8 +1,10 @@
 /user set admin password={{ admin_password }}
 {% for netadmin in net_admins %}
+{% if netadmin != network %} 
 /user remove [find name={{ netadmin }}]
 /user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
 /user ssh-keys import public-key-file=key-dsa-{{ netadmin }}.txt user={{ netadmin }}
+{% endif %}
 {% endfor %}
 /system logging action set 3 bsd-syslog=no name=remote remote={{ remote_logging_server }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
 /system logging add action=remote disabled=no prefix="" topics=!debug,!snmp
