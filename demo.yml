@@ -1,7 +1,7 @@
 ---
 # This playbook sets up all sectors as sectors.
 
-- hosts: mikrotik-sector-routers
+- hosts: mikrotik-cell-core-routers
   gather_facts: no
   connection: local
   vars:
@@ -15,4 +15,4 @@
 
   roles:
     - common-mikrotik-routers
-    - mikrotik-sector-routers
+    - mikrotik-cell-core-routers
