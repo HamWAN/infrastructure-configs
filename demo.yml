@@ -8,6 +8,7 @@
     ignore_ospf_and_ip_address: yes
 
   vars_prompt:
+    ansible_ssh_password: "old (current) admin password"
     admin_password: "new admin password"
     vrrp_password: "vrrp password"
     ospf_password: "ospf password"

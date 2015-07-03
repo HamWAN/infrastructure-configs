@@ -1,5 +1,7 @@
 [mikrotik-sector-routers]
-sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
+sec1.sco.memhamwan.net ansible_ssh_host=44.34.128.34
+sec2.sco.memhamwan.net ansible_ssh_host=44.34.128.35
+sec3.sco.memhamwan.net ansible_ssh_host=44.34.128.36
 
 [memhamwan:children]
 mikrotik-sector-routers
