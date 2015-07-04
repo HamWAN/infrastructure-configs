@@ -1,6 +1,6 @@
 ---
 - name: Add server RSA key to known_hosts
-  action: command ssh-keyscan -H {{ ansible_ssh_host }} >> ~/.ssh/known_hosts
+  action: shell ssh-keyscan -t dsa -H {{ ansible_ssh_host }} >> ~/.ssh/known_hosts
   ignore_errors: yes
   tags:
     - import

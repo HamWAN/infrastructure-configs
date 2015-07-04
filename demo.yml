@@ -14,5 +14,4 @@
     ospf_password: "ospf password"
 
   roles:
-    - common-mikrotik-routers
     - mikrotik-cell-core-routers
