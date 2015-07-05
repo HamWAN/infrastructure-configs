@@ -34,7 +34,7 @@
 {% elif router_type == "921UAGS-5SHPacT" %}
 /interface wireless set [ find default-name=wlan1 ] channel-width=20/40/80mhz-Ceee rx-chains=0,1 tx-chains=0,1
 {% endif %}
-{% if wlan_ip == odd %}
+{% if wlan_ip.split(".")[-1] is odd %}
 /interface wireless set [ find default-name=wlan1 ] mode=bridge
 {% elif %}
 /interface wireless set [ find default-name=wlan1 ] mode=station
