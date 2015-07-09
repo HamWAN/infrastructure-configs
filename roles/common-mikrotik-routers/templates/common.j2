@@ -20,3 +20,5 @@
 /ip address remove [find]
 {% endif %}
 /ip dns set allow-remote-requests=no
+/tool romon set enabled=yes secrets={{ romon_secret }}
+/tool romon port add interface=all secrets={{ romon_secret }}

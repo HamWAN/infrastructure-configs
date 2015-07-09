@@ -12,6 +12,6 @@
     admin_password: "new admin password"
     vrrp_password: "vrrp password"
     ospf_password: "ospf password"
-
+    romon_secret: "romon secret"
   roles:
     - mikrotik-cell-core-routers
