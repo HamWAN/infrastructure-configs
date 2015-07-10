@@ -2,8 +2,8 @@
 {% set to_site = inventory_hostname.split(".")[0].replace("ptp", "", 1) %}
 {% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
-{% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + net_domain + './A', wantlist=True)[0] %}
-{% set wlan1_ip_network = lookup('dig', 'ptp' + site '.' + to_side + '.' + net_domain + './A', wantlist=True)[0] %}
+{% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set wlan1_ip_network = lookup('dig', 'ptp' + site '.' + to_side + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
 {% set ether1_ip_network = [ether1_ip, '/28'] | join("") | ipaddr('network') %}
 {% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
 

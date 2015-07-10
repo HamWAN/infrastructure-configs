@@ -9,5 +9,3 @@ r1.leb.memhamwan.net ansible_ssh_host=44.34.128.161
 mikrotik-sector-routers
 mikrotik-cell-core-routers
 
-[hamwan:children]
-memhamwan

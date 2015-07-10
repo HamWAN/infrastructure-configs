@@ -1,17 +1,17 @@
 /user set admin password={{ admin_password }}
-{% for netadmin in net_admins %}
+{% for netadmin in NETOPS_USERS %}
 {% if netadmin != network %} 
 /user remove [find name={{ netadmin }}]
 /user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
 /user ssh-keys import public-key-file=key-dsa-{{ netadmin }}.txt user={{ netadmin }}
 {% endif %}
 {% endfor %}
-/system logging action set 3 bsd-syslog=no name=remote remote={{ remote_logging_server }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
+/system logging action set 3 bsd-syslog=no name=remote remote={{ SERVER_REMOTE_LOGGING }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
 /system logging add action=remote disabled=no prefix="" topics=!debug,!snmp
 /snmp set enabled=yes contact="#HamWAN on irc.freenode.org"
-/snmp community set name=hamwan addresses={{ snmp_community_addresses }} read-access=yes write-access=no numbers=0
-/ip dns set servers={{ primary_dns_server }},{{ secondary_dns_server }}
-/system ntp client set enabled=yes primary-ntp={{ primary_ntp_server }} secondary-ntp={{ secondary_ntp_server }}
+/snmp community set name=hamwan addresses={{ SERVER_SNMP }} read-access=yes write-access=no numbers=0
+/ip dns set servers={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }}
+/system ntp client set enabled=yes primary-ntp={{ SERVER_NTP_PRIMARY }} secondary-ntp={{ SERVER_NTP_SECONDARY }}
 /ip firewall filter remove [find]
 /ip dhcp-server remove [find]
 /ip dhcp-server network remove [find]
@@ -20,5 +20,3 @@
 /ip address remove [find]
 {% endif %}
 /ip dns set allow-remote-requests=no
-/tool romon set enabled=yes secrets={{ romon_secret }}
-/tool romon port add interface=all secrets={{ romon_secret }}

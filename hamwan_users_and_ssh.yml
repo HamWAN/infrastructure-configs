@@ -1,0 +1,7 @@
+---
+- hosts: linux
+  tasks:
+  - include: roles/common-linux/tasks/add_hamwan_users_groups.yml
+  - include: roles/common-linux/tasks/restrict_ssh.yml
+  handlers:
+  - include: roles/common-linux/handlers/restart_ssh.yml

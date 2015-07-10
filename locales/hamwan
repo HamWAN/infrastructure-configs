@@ -1,5 +1,5 @@
 ---
-channels:
+HAMWAN_SECTOR_CHANNELS:
   5:
     1: 5920
     2: 5905
