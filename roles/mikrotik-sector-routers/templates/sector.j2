@@ -18,7 +18,7 @@
 /interface wireless set [ find default-name=wlan1 ] rx-chains=0,1 tx-chains=0,1
 {% endif %}
 /system identity set name=sec{{ sector }}.{{ site }}
-/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width=10mhz disabled=no frequency={{ HAMWAN_SECTOR_CHANNELS.get(SECTOR_CHANNEL_WIDTH).get(sector | int) }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name=sec{{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ SECTOR_CHANNEL_WIDTH }}mhz disabled=no frequency={{ HAMWAN_SECTOR_CHANNELS.get(SECTOR_CHANNEL_WIDTH).get(sector | int) }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name=sec{{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 {% if ignore_ospf_and_ip_address == false %}
