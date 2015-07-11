@@ -1,0 +1,7 @@
+---
+- hosts: mikrotik_clients
+  gather_facts: no
+  connection: paramiko
+  vars:
+  tasks:
+  - raw: /system resource print

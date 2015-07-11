@@ -1,5 +1,9 @@
 [seattle:children]
 linux
+mikrotik_clients
 
 [linux]
 44.24.255.6
+
+[mikrotik_clients]
+10.1.10.45
