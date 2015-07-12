@@ -8,7 +8,7 @@ LOCALE_SUBNET: 44.34.128.0/21
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"
 
-KEYS_URL: ""
+KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/master/"
 
 NETOPS_USERS:
   - ns4b
