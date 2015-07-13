@@ -1,9 +1,19 @@
 ---
 # Tell the mikrotik router to download software updates and reboot.
+- name: Get current ROS version
+  local_action: uri url=http://download2.mikrotik.com/routeros/LATEST.6 return_content=yes
+  register: latest_routeros_version
 
-- name: Upgrade routeros
-  raw: "/system package update upgrade"
+- debug: msg="Latest ROS version is {{ latest_routeros_version.content }}"
+
+- name: Download latest routeros
+  raw: "/tool fetch url=http://download2.mikrotik.com/routeros/{{ latest_routeros_version.content | trim }}/routeros-mipsbe-{{ latest_routeros_version.content | trim }}.npk"
   tags: 
+    - upgrade-ros
+
+- name: Restarting router
+  raw: "/system reboot"
+  tags:
     - upgrade-ros
 
 #- name: Check Upgrade status
@@ -14,16 +24,8 @@
 #
 #- debug: msg="{{ ros-upgrade-status }}"
 
-- pause: seconds=30
-  tags:
-    - upgrade-ros
-
 - name: Wait for server to restart
-  local_action:
-    module: wait_for
-      host={{ inventory_hostname }}
-      delay=1
-      timeout=300
+  local_action: wait_for host={{ inventory_hostname }} port=22 delay=30
   tags:
     - upgrade-ros
  

@@ -21,7 +21,7 @@
     - import
 
 - name: Create template for common changes
-  template: src=common.j2 dest=roles/common-mikrotik-routers/generated-scripts/common.rsc backup=no
+  local_action: template src=common.j2 dest=roles/common-mikrotik-routers/generated-scripts/common.rsc backup=no
   tags:
     - generate
     - common
