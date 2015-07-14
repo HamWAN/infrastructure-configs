@@ -4,9 +4,5 @@
   connection: paramiko
   vars:
     ignore_ospf_and_ip_address: yes
-  vars_prompt:
-    vrrp_password: "vrrp password"
-    ospf_password: "ospf password"
-    romon_secret: "romon secret"
   roles:
-    - mikrotik-cell-core-routers
+    - common-mikrotik-routers

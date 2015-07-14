@@ -26,14 +26,25 @@
     - generate
     - common
 
-- name: "run commands on device"
-  raw: >
-       "{{ item }}"
-  with_lines: cat ../generated-scripts/common.rsc
+- name: Copy common changes script to router
+  local_action: command scp -P {{ ansible_ssh_port }} roles/common-mikrotik-routers/generated-scripts/common.rsc {{ inventory_hostname }}:/
+  tags:
+    - import
+    - common
+
+- name: "import script on device"
+  raw: "/import verbose=yes common.rsc"
   tags: 
     - import
     - common
   register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script common.rsc on {{ inventory_hostname }} failed"
+  tags: 
+    - import
+    - common
+  when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
   raw: "/file remove common.rsc"
