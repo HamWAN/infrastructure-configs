@@ -3,7 +3,7 @@
   gather_facts: no
   connection: paramiko
   vars:
-    ignore_ospf_and_ip_address: yes
+    ignore_ospf_and_ip_address: no
   roles:
     - mikrotik-cell-core-routers
   vars_prompt:

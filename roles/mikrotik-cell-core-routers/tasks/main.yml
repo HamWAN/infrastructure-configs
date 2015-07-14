@@ -1,4 +1,7 @@
 ---
+- set_fact:
+    ether1_ip:  "{{ lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] }}"
+
 - name: Create template for common changes
   local_action: template src=cell-core-router.j2 dest=./roles/mikrotik-cell-core-routers/generated-scripts/cell-core-router.rsc backup=no
   tags: 

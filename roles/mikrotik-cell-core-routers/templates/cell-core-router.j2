@@ -1,7 +1,6 @@
 {% set site = inventory_hostname.split(".")[1] %}
 {% set router = inventory_hostname.split(".")[0].replace("r", "", 1) %}
 {% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
-{% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
 {% set ether1_ip_network = [ether1_ip, '/28'] | join("") | ipaddr('network') %}
 {% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
@@ -14,13 +13,6 @@
 /interface ethernet set [ find default-name=ether3 ] master-port=ether1
 /interface ethernet set [ find default-name=ether4 ] master-port=ether1
 /interface ethernet set [ find default-name=ether5 ] master-port=ether1
-{% if ignore_ospf_and_ip_address == false %}
-/interface bridge remove [find]
-/interface bridge add auto-mac=yes mtu=1500 name=bridge-local
-/interface bridge port remove [find]
-/interface bridge port add bridge=bridge-local interface=ether6-master-local
-/interface bridge port add bridge=bridge-local interface=ether1-gateway
-{% endif %}
 /ip firewall filter remove [find action!=fasttrack-connection !dynamic ]
 /ip firewall filter add chain=forward action=fasttrack-connection connection-state=established,related
 {% endif %}
@@ -28,10 +20,10 @@
 /ip firewall mangle remove [find action !dynamic]
 
 /system identity set name=r{{ router }}.{{ site }}
+{% if ignore_ospf_and_ip_address == false %}
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
-{% if ignore_ospf_and_ip_address == false %}
-/ip address add address={{ ether1_ip }}/28 interface=ether1
+/ip address add address={{ ether1_ip }}/28 interface=bridge-local
 /ip address add address={{ vrrp1_ip }} interface=vrrp1
 {% endif %}
 
