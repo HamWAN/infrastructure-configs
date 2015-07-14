@@ -1,0 +1,31 @@
+---
+# memhamwan specific stuff
+
+LOCALE_DOMAIN: memhamwan.net
+LOCALE_CALLSIGN: KM4ECM
+LOCALE_SUBNET: 44.34.128.0/21
+
+SUDOERS_FILE: "hamwan"
+SUDOERS_GROUP: "hamwan"
+
+KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/master/"
+
+NETOPS_USERS:
+  - ns4b
+  - ryan_turner
+  - memhamwan
+
+LIMITED_USERS:
+  - monitoring
+
+SERVER_REMOTE_LOGGING: 44.34.128.21
+SERVER_NTP_PRIMARY: 44.34.132.3
+SERVER_NTP_SECONDARY: 44.34.133.3
+SERVER_SNMP: 44.34.128.0/21
+SERVER_DNS_PRIMARY: 44.34.132.1
+SERVER_DNS_SECONDARY: 44.34.133.1
+
+SECTOR_CHANNEL_WIDTH: 10
+
+ansible_ssh_port: 22
+network: memhamwan
