@@ -21,11 +21,11 @@
 /interface bridge port add bridge=bridge-local interface=ether6-master-local
 /interface bridge port add bridge=bridge-local interface=ether1-gateway
 {% endif %}
-/ip firewall filter remove [find]
+/ip firewall filter remove [find action!=fasttrack-connection !dynamic ]
 /ip firewall filter add chain=forward action=fasttrack-connection connection-state=established,related
 {% endif %}
 
-/ip firewall mangle remove [find]
+/ip firewall mangle remove [find action !dynamic]
 
 /system identity set name=r{{ router }}.{{ site }}
 /interface vrrp remove [find name=vrrp1]
