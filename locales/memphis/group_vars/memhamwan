@@ -28,5 +28,4 @@ SERVER_DNS_SECONDARY: 44.34.133.1
 SECTOR_CHANNEL_WIDTH: 10
 
 ansible_ssh_port: 22
-ansible_ssh_user: memhamwan
 network: memhamwan
