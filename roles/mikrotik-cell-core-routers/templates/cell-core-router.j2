@@ -23,7 +23,7 @@
 {% if ignore_ospf_and_ip_address == false %}
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
-/ip address add address={{ ether1_ip }}/28 interface=bridge-local
+/ip address add address={{ ether1_ip }}/28 interface=ether1
 /ip address add address={{ vrrp1_ip }} interface=vrrp1
 {% endif %}
 
