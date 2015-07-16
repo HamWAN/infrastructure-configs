@@ -14,6 +14,7 @@
 /ip dhcp-server remove [find]
 /ip dhcp-server network remove [find]
 /ip dhcp-client remove [find]
+/ip service disable [find name=ftp]
 {% if ignore_ospf_and_ip_address == false %}
 /ip address remove [find]
 {% endif %}
