@@ -6,13 +6,13 @@
     - sector
 
 - name: Copy common changes script to router
-  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-sector-routers/generated-scripts/sector.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
+  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-sector-routers/generated-scripts/sector.rsc {{ ansible_ssh_host }}:/
   tags: 
     - import
     - sector
 
 - name: "import script on device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
   tags: 
     - import
     - sector
@@ -26,7 +26,7 @@
   when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove sector.rsc"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/file remove sector.rsc"
   tags: 
     - cleanup
     - sector

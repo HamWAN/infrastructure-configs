@@ -6,13 +6,13 @@
     - ptp
 
 - name: Copy common changes script to router
-  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-ptp-routers/generated-scripts/ptp.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
+  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-ptp-routers/generated-scripts/ptp.rsc {{ ansible_ssh_host }}:/
   tags: 
     - import
     - ptp
 
 - name: "import script on device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes ptp.rsc"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/import verbose=yes ptp.rsc"
   tags: 
     - import
     - ptp
@@ -26,7 +26,7 @@
   when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove ptp.rsc"
+  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/file remove ptp.rsc"
   tags: 
     - cleanup
     - ptp
