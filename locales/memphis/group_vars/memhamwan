@@ -13,10 +13,9 @@ KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/ma
 NETOPS_USERS:
   - ns4b
   - ryan_turner
-  - memhamwan
 
 LIMITED_USERS:
-  #- monitoring
+  - memhamwan
 
 SERVER_REMOTE_LOGGING: 44.34.128.171
 SERVER_NTP_PRIMARY: 44.34.132.3
@@ -24,6 +23,7 @@ SERVER_NTP_SECONDARY: 44.34.133.3
 SERVER_SNMP: 44.34.128.0/21
 SERVER_DNS_PRIMARY: 44.34.132.1
 SERVER_DNS_SECONDARY: 44.34.133.1
+SERVER_SMTP: smtp-relay.gmail.com
 
 SECTOR_CHANNEL_WIDTH: 10
 
