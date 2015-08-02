@@ -1,0 +1,12 @@
+---
+- name: Restart sshd
+  action: service name=ssh state=restarted
+
+- name: Restart ntpd
+  action: service name=ntp state=restarted
+
+- name: Restart postfix
+  action: service name=postfix state=restarted
+
+- name: Reload postfix aliases
+  action: command /usr/bin/newaliases

@@ -1,0 +1,14 @@
+---
+- hosts: linux_fresh
+  vars:
+  tasks:
+    - include: ../roles/common-linux/tasks/ensure_python.yml
+    - include: ../roles/common-linux/tasks/apt_update_upgrade.yml
+    - include: ../roles/common-linux/tasks/add_users_groups.yml
+    - include: ../roles/common-linux/tasks/restrict_ssh.yml
+    - include: ../roles/common-linux/tasks/restrict_firewall.yml
+    - include: ../roles/common-linux/tasks/install_ntp.yml
+    - include: ../roles/common-linux/tasks/install_postfix.yml
+    - include: ../roles/common-linux/tasks/setup_dns.yml
+  handlers:
+  - include: ../roles/common-linux/handlers/handlers.yml

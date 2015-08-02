@@ -1,0 +1,5 @@
+---
+# Ensure python is installed so the rest of ansible's commands can run
+
+- name: Ensure python is installed
+  raw: apt-get install python -y

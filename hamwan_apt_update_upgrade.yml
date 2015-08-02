@@ -1,5 +1,0 @@
----
-- hosts: linux
-  vars:
-  tasks:
-    - include: roles/common-linux/tasks/apt_update_upgrade.yml

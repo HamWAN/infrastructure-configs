@@ -1,0 +1,19 @@
+---
+# Install and configure NTP
+
+- name: Ensure ntp is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - ntp
+  tags: ntp
+
+- name: Generate ntp.conf template
+  template:
+    backup=no
+    dest=/etc/ntp.conf
+    src=ntp.conf.j2
+    force=yes
+  notify: Restart ntpd
