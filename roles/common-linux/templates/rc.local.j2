@@ -18,4 +18,7 @@ ip6tables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 ip6tables -A INPUT -p tcp --dport 22 -j ACCEPT
 ip6tables -P INPUT DROP
 
+#-----ROLE RULES START-----
+#-----ROLE RULES END-----
+
 exit 0
