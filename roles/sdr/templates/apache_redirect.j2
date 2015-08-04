@@ -1,0 +1,5 @@
+<VirtualHost *:80>
+ServerName {{ inventory_hostname }}
+Redirect 301 / http://{{ inventory_hostname }}:8100/None/
+</VirtualHost>
+
