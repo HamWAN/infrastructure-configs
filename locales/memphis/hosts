@@ -6,9 +6,12 @@
 #r1.hil.memhamwan.net #ansible_ssh_host=44.34.128.161
 
 [linux_fresh]
-sdr.leb.memhamwan.net
+
+[sdr]
+test.leb.memhamwan.net
 
 [memhamwan:children]
 mikrotik-sector-routers
 mikrotik-cell-core-routers
 linux_fresh
+sdr

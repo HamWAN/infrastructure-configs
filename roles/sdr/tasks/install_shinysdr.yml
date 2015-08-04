@@ -1,0 +1,83 @@
+- name: Add gqrx ppa
+  apt_repository: repo='ppa:gqrx/releases' state=present
+
+- name: Install prerequesites
+  apt: pkg={{item}} state=installed
+  with_items:
+    - python2.7-dev 
+    - gnuradio 
+    - gr-osmosdr 
+    - rtl-sdr 
+    - gr-air-modes 
+    - multimon 
+    - build-essential 
+    - python-twisted 
+    - python-txws 
+    - git
+
+- name: Install optional prereqs
+  apt: pkg={{item}} state=installed
+  with_items:
+    - apache2
+  tags: redirect
+
+- name: Install shinysdr redirect
+  template: src=apache_redirect.j2 dest=/etc/apache2/sites-enabled/000-default.conf mode=0777 owner=root group=root
+  tags: redirect
+
+- name: Install optional prereqs
+  apt: pkg={{item}} state=installed
+  with_items:
+    - cmake
+    - libboost-all-dev
+    - libcppunit-dev
+    - liblog4cpp5-dev
+    - swig
+    - pkg-config
+    - gnuradio-dev
+    - doxygen
+    - libsndfile1-dev
+  tags: gr-dsd
+
+# build gr-dsd
+
+- name: Clone gr-dsd
+  git: repo=https://github.com/argilo/gr-dsd.git
+       dest=/tmp/gr-dsd/
+       accept_hostkey=yes
+       force=yes
+  tags: gr-dsd
+
+- name: Build gr-dsd
+  command: "{{ item }} chdir=/tmp/gr-dsd/"
+  with_items:
+    - "cmake ."
+    - make
+    - "make install"
+    - ldconfig
+  tags: gr-dsd
+
+# build shinysdr
+
+- name: Clone shinysdr
+  git: repo=https://github.com/kpreid/shinysdr.git 
+       dest=/usr/local/src/shinysdr/
+       accept_hostkey=yes
+       force=yes
+
+- name: Build shinysdr
+  command: "{{ item }} chdir=/usr/local/src/shinysdr/"
+  with_items:
+    - sh fetch-js-deps.sh
+
+- name: Change owner of shinysdr
+  file: path=/usr/local/src/shinysdr/ owner=root group=root mode=0755 recurse=yes
+
+- name: Install shinysdr config
+  template: src=shinysdr.j2 dest=/usr/local/src/shinysdr/config mode=0755 owner=root group=root
+
+- name: Install shinysdr restart script
+  template: src=shinysdr-restart.j2 dest=/usr/local/src/shinysdr/shinysdr-restart.sh mode=0755 owner=root group=root
+
+- name: Add cron job to start
+  cron: name="Restart shinysdr every 5 mins" minute="*/5" job="/usr/local/src/shinysdr/shinysdr-restart.sh"

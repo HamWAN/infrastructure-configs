@@ -25,6 +25,8 @@ SERVER_DNS_PRIMARY: 44.34.132.1
 SERVER_DNS_SECONDARY: 44.34.133.1
 SERVER_SMTP: smtp-relay.gmail.com
 
+NETOPS_EMAIL: netops@memhamwan.net
+
 SECTOR_CHANNEL_WIDTH: 10
 
 ansible_ssh_port: 22
