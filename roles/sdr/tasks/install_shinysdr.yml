@@ -23,6 +23,7 @@
 
 - name: Install shinysdr redirect
   template: src=apache_redirect.j2 dest=/etc/apache2/sites-enabled/000-default.conf mode=0777 owner=root group=root
+  notify: Restart apache2
   tags: redirect
 
 - name: Install optional prereqs
@@ -81,3 +82,37 @@
 
 - name: Add cron job to start
   cron: name="Restart shinysdr every 5 mins" minute="*/5" job="/usr/local/src/shinysdr/shinysdr-restart.sh"
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+ 
+- name: Add apache iptable rule
+  lineinfile: 
+    dest=/etc/rc.local 
+    line="iptables -A INPUT -p tcp --dport http -j ACCEPT"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"         
+  when: iptablesrules.stdout.find("http") == -1
+  tags: redirect
+
+- name: Add apache iptable rule
+  lineinfile: 
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 8100 -j ACCEPT"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("8100") == -1
+
+- name: Add apache iptable rule
+  lineinfile: 
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 8101 -j ACCEPT"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("8101") == -1
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
+
