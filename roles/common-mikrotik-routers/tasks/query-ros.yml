@@ -4,11 +4,11 @@
   tags: 
     - research
   register: routerboard_details
-- debug: msg="{{ routerboard_details.stdout }}"
+- debug: msg=routerboard_details.stdout
 
 - name: query device for health and version
   raw: "/system resource print"
   tags:
     - research
   register: routeros_details
-- debug: msg="{{ routeros_details.stdout }}"
+- debug: msg=routeros_details.stdout

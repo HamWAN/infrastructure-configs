@@ -21,13 +21,13 @@
     - import
 
 - name: Create template for common changes
-  local_action: template src=common.j2 dest=roles/common-mikrotik-routers/generated-scripts/common.rsc backup=no
+  local_action: template src=common.j2 dest=/tmp/common.rsc backup=no
   tags:
     - generate
     - common
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }} roles/common-mikrotik-routers/generated-scripts/common.rsc {{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port }} /tmp/common.rsc {{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags:
     - import
     - common
@@ -53,7 +53,7 @@
     - common
 
 - name: remove script from generated-scripts directory
-  local_action: file path=./roles/common-mikrotik-routers/generated-scripts/common.rsc state=absent
+  local_action: file path=/tmp/common.rsc state=absent
   tags: 
     - cleanup
     - common

@@ -4,13 +4,16 @@
 #sec3.sco.memhamwan.net ansible_ssh_host=44.34.128.36
 [mikrotik-cell-core-routers]
 #r1.hil.memhamwan.net #ansible_ssh_host=44.34.128.161
+[mikrotik-ptp-routers]
+ptpmil.hil.memhamwan.net ansible_ssh_host=44.34.128.106
 
 [linux_fresh]
 
 [sdr]
-test.leb.memhamwan.net
+#test.leb.memhamwan.net
 
 [memhamwan:children]
+mikrotik-ptp-routers
 mikrotik-sector-routers
 mikrotik-cell-core-routers
 linux_fresh

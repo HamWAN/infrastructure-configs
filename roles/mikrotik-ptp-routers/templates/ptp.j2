@@ -1,20 +1,18 @@
 {% set site = inventory_hostname.split(".")[1] %}
 {% set to_site = inventory_hostname.split(".")[0].replace("ptp", "", 1) %}
 {% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
+{% set wlan1_ip_int = wlan1_ip | ipaddr | int %}
 {% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
-{% set wlan1_ip_network = lookup('dig', 'ptp' + site '.' + to_side + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set wlan1_ip_network = lookup('dig', 'ptp' + site + '.' + to_site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
 {% set ether1_ip_network = [ether1_ip, '/28'] | join("") | ipaddr('network') %}
 {% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
-
-// this is an ODD numbered IP pair
 
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 
 {% if ignore_ospf_and_ip_address == false %}
 /ip address add address={{ vrrp1_ip }} interface=vrrp1
-/ip address add address={{ ether1_ip }}/28 interface=ether1-local network={{ ether1_ip_network }}
 /ip address add address={{wlan1_ip}}/32 interface=bridge1 network={{ wlan1_ip_network }}
 /routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-bgp=as-type-1 redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 router-id={{ wlan1_ip }}
 /routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1-local network-type=broadcast
@@ -24,19 +22,21 @@
 {% endif %}
 
 /system identity set name=ptp{{ to_site }}.{{ site }}
-
+/interface bridge remove [find name=bridge1]
 /interface bridge add mtu=1500 name=bridge1
-/interface bridge port add bridge=bridge1 interface=wlan2
+/interface bridge port remove [find]
+/interface bridge port add bridge=bridge1 interface=wlan1
+/interface wireless security-profiles remove [find name=hamwan]
 /interface wireless security-profiles add authentication-types=wpa-psk,wpa2-psk eap-methods="" management-protection=allowed mode=dynamic-keys name=hamwan supplicant-identity="" wpa-pre-shared-key={{ wpa_psk }} wpa2-pre-shared-key={{ wpa_psk }}
-/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" disabled=no frequency={{ frequency }} frequency-mode=superchannel l2mtu=1600 name=wlan2 security-profile=hamwan ssid=HamWAN wireless-protocol=nv2
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" disabled=no frequency={{ frequency }} frequency-mode=superchannel l2mtu=1600 name=wlan1 security-profile=hamwan ssid=HamWAN wireless-protocol=nv2 scan-list={{ frequency }}
 {% if router_type == "911G-5HPnD" %}
 /interface wireless set [ find default-name=wlan1 ] channel-width=20/40mhz-Ce rx-chains=0,1 tx-chains=0,1
 {% elif router_type == "921UAGS-5SHPacT" %}
 /interface wireless set [ find default-name=wlan1 ] channel-width=20/40/80mhz-Ceee rx-chains=0,1 tx-chains=0,1
 {% endif %}
-{% if wlan_ip.split(".")[-1] is odd %}
+{% if wlan1_ip_int is odd %}
 /interface wireless set [ find default-name=wlan1 ] mode=bridge
-{% elif %}
+{% else %}
 /interface wireless set [ find default-name=wlan1 ] mode=station
 {% endif %}
 /ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378

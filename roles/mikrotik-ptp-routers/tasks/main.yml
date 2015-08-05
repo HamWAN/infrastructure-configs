@@ -1,38 +1,38 @@
 ---
 - name: Create template for common changes
-  template: src=ptp.j2 dest=./roles/mikrotik-ptp-routers/generated-scripts/ptp.rsc backup=no
+  local_action: template src=ptp.j2 dest=/tmp/ptp.rsc backup=no
   tags: 
     - generate
     - ptp
 
 - name: Copy common changes script to router
-  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-ptp-routers/generated-scripts/ptp.rsc {{ ansible_ssh_host }}:/
+  local_action: command scp -P {{ ansible_ssh_port }} /tmp/ptp.rsc {{ ansible_ssh_host }}:/
   tags: 
     - import
     - ptp
 
 - name: "import script on device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/import verbose=yes ptp.rsc"
-  tags: 
+  raw: "/import verbose=yes ptp.rsc"
+  tags:
     - import
-    - ptp
+    - ptp 
   register: import_result
 
 - name: "import script on device failed"
   action: fail msg="importing script ptp.rsc on {{ inventory_hostname }} failed"
-  tags: 
+  tags:
     - import
     - ptp
   when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/file remove ptp.rsc"
-  tags: 
+  raw: "/file remove ptp.rsc"
+  tags:
     - cleanup
     - ptp
 
 - name: remove script from generated-scripts directory
-  action: file path=./roles/mikrotik-sector-routers/generated-scripts/ptp.rsc state=absent
-  tags: 
+  local_action: file path=/tmp/ptp.rsc state=absent
+  tags:
     - cleanup
     - ptp
