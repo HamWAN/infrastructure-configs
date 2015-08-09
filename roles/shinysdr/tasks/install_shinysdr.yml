@@ -73,11 +73,14 @@
        force=yes
   tags: multimon-ng
 
-- name: Build multimon-ng
-  command: "{{ item }} chdir=.tmp/multimon-ng/"
+- name: Create build directory for multimon-ng
+  command: "{{ item }} chdir=/tmp/multimon-ng/"
   with_items:
     - mkdir build
-    - cd build
+
+- name: Build multimon-ng
+  command: "{{ item }} chdir=/tmp/multimon-ng/build/"
+  with_items:
     - qmake ../multimon-ng.pro
     - make
     - sudo make install
