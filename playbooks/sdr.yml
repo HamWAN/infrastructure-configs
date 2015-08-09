@@ -1,7 +1,0 @@
-- hosts: sdr
-  vars:
-  tasks:
-  - include: ../roles/sdr/tasks/install_shinysdr.yml
-
-  handlers:
-  - include: ../roles/sdr/handlers/handlers.yml

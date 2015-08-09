@@ -10,7 +10,7 @@
 [linux_fresh]
 #sdr.hil.memhamwan.net
 
-[sdr]
+[shinysdr]
 #ns1.leb.memhamwan.net
 sdr.hil.memhamwan.net
 
@@ -19,4 +19,4 @@ mikrotik-ptp-routers
 mikrotik-sector-routers
 mikrotik-cell-core-routers
 linux_fresh
-sdr
+shinysdr

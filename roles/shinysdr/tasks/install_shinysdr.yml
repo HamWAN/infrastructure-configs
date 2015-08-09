@@ -40,6 +40,12 @@
     - libsndfile1-dev
   tags: gr-dsd
 
+- name: Install optional prereqs
+  apt: pkg={{item}} state=installed
+  with_items:
+    - libpulse-dev
+  tags: multimon-ng
+
 # build gr-dsd
 
 - name: Clone gr-dsd
@@ -57,6 +63,25 @@
     - "make install"
     - ldconfig
   tags: gr-dsd
+
+# build multimon-ng
+
+- name: Clone multimon-ng
+  git: repo=https://github.com/EliasOenal/multimon-ng.git
+       dest=/tmp/multimon-ng/
+       accept_hostkey=yes
+       force=yes
+  tags: multimon-ng
+
+- name: Build multimon-ng
+  command: "{{ item }} chdir=.tmp/multimon-ng/"
+  with_items:
+    - mkdir build
+    - cd build
+    - qmake ../multimon-ng.pro
+    - make
+    - sudo make install
+  tags: multimon-ng
 
 # build shinysdr
 
