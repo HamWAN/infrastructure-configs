@@ -71,6 +71,10 @@
   with_items:
     - sh fetch-js-deps.sh
 
+# ShinySDR references the jasmine repo @ fd914337925a1e2729e2583a1023b2293d54ca55 which contains a recursive link. This is a workaround.
+- name: Fix issue with infinite link
+  file: path=/usr/local/src/shinysdr/shinysdr/deps/jasmine/pages state=absent
+
 - name: Change owner of shinysdr
   file: path=/usr/local/src/shinysdr/ owner=root group=root mode=0755 recurse=yes
 
