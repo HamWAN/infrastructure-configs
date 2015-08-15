@@ -1,0 +1,8 @@
+---
+- hosts: quagga
+  vars:
+  tasks:
+    - include: ../roles/quagga-anycast/tasks/setup.yml
+  vars_prompt:
+    host_cidr: "CIDR (numbers only)"
+    ospf_password: "OSPF Password"

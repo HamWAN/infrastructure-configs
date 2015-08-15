@@ -9,10 +9,14 @@
 
 [linux_fresh]
 #sdr.hil.memhamwan.net
+#ns1.hil.memhamwan.net
 
 [shinysdr]
 #ns1.leb.memhamwan.net
-sdr.hil.memhamwan.net
+#sdr.hil.memhamwan.net
+
+[quagga]
+ns1.hil.memhamwan.net
 
 [memhamwan:children]
 mikrotik-ptp-routers
@@ -20,3 +24,4 @@ mikrotik-sector-routers
 mikrotik-cell-core-routers
 linux_fresh
 shinysdr
+quagga
