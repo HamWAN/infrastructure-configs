@@ -1,0 +1,68 @@
+- name: Install unbound
+  apt: pkg={{item}} state=installed
+  with_items:
+    - unbound
+- name: Stop unbound
+  command: "service unbound stop"
+
+- name: Disable unbound in rc.d since we'll manage it starting/stopping via the anycast network interface instead
+  command: "update-rc.d unbound disable"
+
+- name: Configure unbound
+  template: src=unbound.j2 dest=/etc/unbound/unbound.conf mode=0644 owner=root group=root
+
+- name: Add the anycast network interfaces
+  blockinfile:
+    dest: /etc/network/interfaces
+    block: |
+      auto any-dns-rr
+      iface any-dns-rr inet manual
+        pre-up ip tuntap add dev any-dns-rr mode tap
+        post-up ip a add {{ SERVER_DNS_PRIMARY }}/32 dev any-dns-rr
+        post-up ip a add {{ SERVER_DNS_SECONDARY }}/32 dev any-dns-rr
+        post-up ip l set dev any-dns-rr up
+        post-up service unbound start
+        post-down service unbound stop
+        post-down ip tuntap del dev any-dns-rr mode tap
+
+
+- name: Add the IPv6 anycast network interfaces
+  when: ipv6_support
+  blockinfile:
+    dest: /etc/network/interfaces
+    block: |
+      auto lo
+      iface lo inet loopback
+        post-up ip -6 a add {{ recursive_dns_v6_ip_1 }}/128 dev lo
+        post-up ip -6 a add {{ recursive_dns_v6_ip_2 }}/128 dev lo
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+
+- name: Add UDP dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p udp --dport 53 -j ACCEPT \#udp-rdns"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("udp-rdns") == -1
+
+- name: Add tcp dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 53 -j ACCEPT \#tcp-rdns"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("tcp-rdns") == -1
+
+- name: Bring the interfaces up (which starts Unbound)
+  command: "{{ item }}"
+  with_items:
+    - ifup lo
+    - ifup any-dns-rr
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
+

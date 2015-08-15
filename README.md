@@ -10,7 +10,8 @@ This repository hosts a group of ansible playbooks to deploy and manage HamWAN i
 ## Usage
 ```bash
 pip install dnspython
-apt-get install python-netaddr
+apt-get install python-netaddr ansible
+ansible-galaxy install yaegashi.blockinfile
 ```
 To use the playbooks, clone this repository. The example here is as if you're configuring a new cell site. This assumes you already have the host entries added to your DNS, but that the routers are running locally as freshly-reset routers with IPs on your lan (AKA you need to give them statics that are accessible for this stuff to work, or instead use this to update existing hosts). Take a look at "demo.yml", specifically the "ignore_ospf_and_ip_address" part; you'll want this set to false if you're configuring new radios, but set to true if you're trying to reconfigure radios that are already deployed. Then, edit the "hosts" inventory file to contain the hostnames of the routers which you want to be configured (make sure to update the groups to be relevant as well!). Finally run the playbook like this:
 ```bash
