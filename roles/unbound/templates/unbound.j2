@@ -1,3 +1,4 @@
+include: "/etc/unbound/unbound.conf.d/*.conf"
 {% set host_ip = lookup('dig', inventory_hostname, wantlist=True)[0] %}
     interface: {{ SERVER_DNS_PRIMARY }}
     interface: {{ SERVER_DNS_SECONDARY }}
@@ -10,3 +11,11 @@
     access-control: {{ LOCALE_SUBNET }} allow
     outgoing-interface: {{ host_ip }}
     rrset-roundrobin: yes
+server:
+        extended-statistics: yes
+        statistics-cumulative: no
+        statistics-interval: 0
+        pidfile: "/var/lib/unbound/unbound.pid"
+remote-control:
+        control-enable: yes
+

@@ -1,0 +1,92 @@
+- name: Install powerdns
+  apt: pkg={{item}} state=installed
+  with_items:
+    - postgresql
+    - postgresql-contrib
+    - postgresql-client
+    - pdns-server
+    - pdns-backend-pgsql
+    - python-psycopg2
+    - libpq-dev
+
+- name: Add the anycast network interfaces
+  blockinfile:
+    dest: /etc/network/interfaces
+    block: |
+      auto any-adns
+      iface any-adns inet manual
+        pre-up ip tuntap add dev any-adns mode tap
+        pre-up ip l set dev any-adns mtu 1418
+        post-up ip a add {{ AUTHORITATIVE_DNS_PRIMARY }}/32 dev any-adns
+        post-up ip a add {{ AUTHORITATIVE_DNS_SECONDARY }}/32 dev any-adns
+        post-up ip l set dev any-adns up
+        post-up service pdns restart
+        post-down ip tuntap del dev any-adns mode tap
+
+# Add steps to setup pg_hba, pdns.loca.gpsql, and insert the pdns db
+- name: Allow md5 connection to postgres from loca
+  lineinfile:
+    dest=/etc/postgresql/9.3/main/pg_hba.conf
+    line="local   all             all                                     md5"
+
+- name: Setup postgres to allow our local connection
+  lineinfile:
+    dest=/etc/powerdns/pdns.d/pdns.local.gpgsql.conf
+    line="local-address={{ AUTHORITATIVE_DNS_PRIMARY }},{{ AUTHORITATIVE_DNS_SECONDARY }}"
+    state="present"
+
+- name: Add our new password for pdns to use
+  lineinfile:
+    dest=/etc/powerdns/pdns.d/pdns.local.gpgsql.conf
+    line="gpgsql-password={{ pdns_psql_pw }}"
+    regexp="gpgsql-password="
+    state="present"
+
+- name: Create user
+  sudo_user: postgres
+  postgresql_user: name=pdns password="{{ pdns_psql_pw }}"
+
+- name: Create db
+  sudo_user: postgres
+  postgresql_db: name=pdns
+
+- name: Transfer our schema
+  sudo_user: postgres
+  template: src=powerdns-schema.j2 dest=/tmp/powerdns-schema.sql
+
+- name: Execute our schema
+  sudo_user: postgres
+  action: command psql -d pdns -f /tmp/powerdns-schema.sql
+  notify: restart postgresql
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+
+- name: Add UDP dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 53 -j ACCEPT \#tcp-pdns"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("tcp-pdns") == -1
+
+- name: Add tcp dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p udp --dport 53 -j ACCEPT \#udp-pdns"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("udp-pdns") == -1
+
+- name: Start postgresql
+  service: name=pdns state=restarted
+
+- name: Bring the interface up (which starts pdns)
+  command: "{{ item }}"
+  with_items:
+    - ifup any-adns
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
