@@ -4,6 +4,7 @@
 LOCALE_DOMAIN: memhamwan.net
 LOCALE_CALLSIGN: KM4ECM
 LOCALE_SUBNET: 44.34.128.0/21
+LOCALE: "Memphis Metro"
 
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"

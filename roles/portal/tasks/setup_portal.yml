@@ -1,0 +1,161 @@
+- name: Install powerdns
+  apt: pkg={{item}} state=installed
+  with_items:
+    - nginx 
+    - python-pip 
+    - python-virtualenv 
+    - python-dev 
+    - git-core 
+    - libpq-dev 
+    - postgresql 
+    - postfix
+
+- name: Install uwsgi
+  apt: name=uwsgi state=present
+
+- name: Create user for portal
+  user: name=portal state=present
+
+- name: Get portal user's UID
+  command: /usr/bin/id -u portal
+  register: portal_uid
+  always_run: yes
+
+- name: Get portal user's GID
+  command: /usr/bin/id -g portal
+  register: portal_gid
+  always_run: yes
+
+- name: Create webroot
+  file: path=/var/www state=directory
+
+- name: Clone portal source
+  git: repo=https://github.com/HamWAN/hamwan-portal.git dest=/var/www/hamwan-portal force=yes
+
+- name: Clone django-ssl-client-auth
+  git: repo=https://github.com/HamWAN/django-ssl-client-auth.git dest=/var/www/django-ssl-client-auth force=yes
+
+- name: Create symlink
+  file: src=/var/www/django-ssl-client-auth/django_ssl_auth dest=/var/www/hamwan-portal/django_ssl_auth state=link
+
+- name: Install django
+  pip: name=django version=1.6.6 virtualenv=/var/www/hamwan-portal/env
+
+- name: Install more stuff using pip
+  pip: name={{ item }} virtualenv=/var/www/hamwan-portal/env
+  with_items:
+  - south
+  - psycopg2
+  - django-debug-toolbar
+  - ipaddr
+  - pyasn1
+
+- name: Set owner to portal for all of that stuff
+  file: recurse=yes owner=portal path=/var/www group=portal
+
+- name: Create user
+  sudo_user: postgres
+  postgresql_user: name=portal password="{{ portal_psql_pw }}"
+
+- name: Create db
+  sudo_user: postgres
+  postgresql_db: name=portal
+
+- name: Transfer our schema
+  sudo_user: postgres
+  template: src=portal-schema.j2 dest=/tmp/portal-schema.sql
+
+- name: Execute our schema
+  sudo_user: postgres
+  action: command psql -d portal -f /tmp/portal-schema.sql
+  notify: restart postgresql
+
+- name: Transfer our config
+  sudo_user: postgres
+  template: src=portal-settings.j2 dest=/var/www/hamwan-portal/hamwanadmin/settings.py owner=portal group=portal
+  sudo_user: portal
+
+- name: DB sync
+  django_manage: >
+    command=syncdb
+    virtualenv=/var/www/hamwan-portal/env
+    app_path=/var/www/hamwan-portal
+
+- name: migrate
+  django_manage: >
+    command=migrate
+    virtualenv=/var/www/hamwan-portal/env
+    app_path=/var/www/hamwan-portal
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+
+- name: Create SSL dir for nginx
+  file: path=/etc/nginx/ssl  state=directory
+
+- name: create self-signed SSL cert
+  command: openssl req -new -nodes -x509 -subj "/C=US/ST=/L={{ LOCALE }}/O=HamWAN/CN=${ansible_fqdn}" -days 3650 -keyout /etc/nginx/ssl/hamwanadmin.key -out /etc/nginx/ssl/hamwanadmin.crt -extensions v3_ca creates=/etc/nginx/ssl/hamwanadmin.crt
+
+- name: Set hash bucket size for nginx
+  lineinfile:
+    dest=/etc/nginx/nginx.conf
+    line="server_names_hash_bucket_size 64;"
+    regexp="server_names_hash_bucket_size"
+    state="present"
+
+- name: Create symlink
+  file: src=/var/www/hamwan-portal/deploy/uwsgi.conf dest=/etc/init/uwsgi.conf state=link
+
+- name: Create uwsgi log directory
+  file: path=/var/log/uwsgi/portal.log state=touch owner=portal group=portal
+  notify: restart uwsgi
+
+- name: Set the uwsgi user id
+  lineinfile:
+    dest=/var/www/hamwan-portal/deploy/uwsgi.ini
+    line="uid = {{ portal_uid.stdout }}"
+    regexp="uid"
+    state="present"
+
+- name: Set the uwsgi group id
+  lineinfile:
+    dest=/var/www/hamwan-portal/deploy/uwsgi.ini
+    line="gid = {{ portal_gid.stdout }}"
+    regexp="gid"
+    state="present"
+
+- name: Disable the default site
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify:
+
+- name: Create symlink
+  file: src=/var/www/hamwan-portal/deploy/portal_nginx.conf dest=/etc/nginx/sites-enabled/portal.conf state=link
+
+- name: Make portal default site
+  lineinfile:
+    dest=/etc/nginx/sites-enabled/portal.conf
+    line="listen 80 default_server;"
+    regexp="listen      80;"
+    state="present"
+  notify: restart nginx
+
+- name: Add UDP dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 80 -j ACCEPT \#portal-80"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("portal-80") == -1
+
+- name: Add tcp dns iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 443 -j ACCEPT \#portal-443"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("portal-443") == -1
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
