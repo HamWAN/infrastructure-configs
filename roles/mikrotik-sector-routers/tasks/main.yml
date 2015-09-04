@@ -1,18 +1,18 @@
 ---
 - name: Create template for common changes
-  template: src=sector.j2 dest=./roles/mikrotik-sector-routers/generated-scripts/sector.rsc backup=no
+  local_action: template src=sector.j2 dest=/tmp/sector.rsc backup=no
   tags: 
     - generate
     - sector
 
 - name: Copy common changes script to router
-  action: command scp -P {{ ansible_ssh_port }} ./roles/mikrotik-sector-routers/generated-scripts/sector.rsc {{ ansible_ssh_host }}:/
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/sector.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags: 
     - import
     - sector
 
 - name: "import script on device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
   tags: 
     - import
     - sector
@@ -26,13 +26,13 @@
   when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
-  action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_host }} "/file remove sector.rsc"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove sector.rsc"
   tags: 
     - cleanup
     - sector
 
 - name: remove script from generated-scripts directory
-  action: file path=./roles/mikrotik-sector-routers/generated-scripts/sector.rsc state=absent
+  local_action: file path=/tmp/sector.rsc state=absent
   tags: 
     - cleanup
     - sector

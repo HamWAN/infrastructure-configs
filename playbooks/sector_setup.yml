@@ -1,0 +1,16 @@
+---
+- hosts: mikrotik-sector-routers
+  gather_facts: False
+  connection: paramiko
+  tasks:
+    - include: ../roles/common-mikrotik-routers/tasks/main.yml
+    - include: ../roles/mikrotik-sector-routers/tasks/main.yml
+  vars:
+    ignore_ospf_and_ip_address: yes
+  vars_prompt:
+    vrrp_password: "VRRP Password"
+    ospf_password: "OSPF Password"
+    romon_secret: "Romon Secret"
+    wpa_psk: "WPA PSK"
+    frequency: "Frequency"
+    channel_width: "Channel width"

@@ -1,5 +1,5 @@
 {% set site = inventory_hostname.split(".")[1] %}
-{% set sector = inventory_hostname.split(".")[0].replace("sec", "", 1) %}
+{% set sector = inventory_hostname.split(".")[0] %}
 {% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
@@ -11,14 +11,11 @@
 
 /ip firewall mangle remove [find]
 /interface wireless channels remove [find list=HamWAN]]
-{% for channel, frequency in HAMWAN_SECTOR_CHANNELS.get(SECTOR_CHANNEL_WIDTH).iteritems() %}
-/interface wireless channels add band=5ghz-onlyn comment="Cell sites radiate this at {{ (channel -1) * 120 }} degrees" frequency={{ frequency }} list=HamWAN name=Sector{{ channel }}-{{ SECTOR_CHANNEL_WIDTH }}  width={{ channel_width }}
-{% endfor %}
 {% if router_type == "912UAG-5HPnD" %}
 /interface wireless set [ find default-name=wlan1 ] rx-chains=0,1 tx-chains=0,1
 {% endif %}
-/system identity set name=sec{{ sector }}.{{ site }}
-/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ SECTOR_CHANNEL_WIDTH }}mhz disabled=no frequency={{ HAMWAN_SECTOR_CHANNELS.get(SECTOR_CHANNEL_WIDTH).get(sector | int) }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name=sec{{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
+/system identity set name={{ sector }}.{{ site }}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ channel_width }}mhz disabled=no frequency={{ frequency }} frequency-mode=superchannel l2mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name={{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2 scan-list={{ frequency }}
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 {% if ignore_ospf_and_ip_address == false %}
@@ -31,7 +28,7 @@
 /ip dhcp-server remove [find name=dhcp1]
 /ip dhcp-server add address-pool=pool1 disabled=no interface=wlan1 lease-time=1h name=dhcp1
 /ip dhcp-server network remove [find]
-/ip dhcp-server network add address={{ wlan1_ip_network }}/28 dns-server={{ primary_dns_server }},{{ secondary_dns_server }} domain={{ LOCALE_DOMAIN }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ primary_ntp_server }},{{ secondary_ntp_server }}
+/ip dhcp-server network add address={{ wlan1_ip_network }}/28 dns-server={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }} domain={{ LOCALE_DOMAIN }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ SERVER_NTP_PRIMARY }},{{ SERVER_NTP_SECONDARY }}
 
 /ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
 /ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
