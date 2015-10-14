@@ -6,7 +6,7 @@
     - ptp
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }} /tmp/ptp.rsc {{ ansible_ssh_host }}:/
+  local_action: command scp -P {{ ansible_ssh_port }} /tmp/ptp.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
   tags: 
     - import
     - ptp

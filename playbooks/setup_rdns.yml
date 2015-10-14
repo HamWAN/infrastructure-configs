@@ -1,0 +1,19 @@
+---
+- hosts: quagga
+  vars:
+  roles:
+    - yaegashi.blockinfile
+  tasks:
+#    - include: ../roles/quagga-anycast/tasks/setup.yml
+#    - include: ../roles/unbound/tasks/setup.yml
+#    - include: ../roles/portal/tasks/setup_pdns.yml
+    - include: ../roles/portal/tasks/setup_portal.yml
+  vars_prompt:
+    host_cidr: "CIDR (numbers only)"
+    ospf_password: "OSPF Password"
+    pdns_psql_pw: "PDNS's Progres user Password"
+    portal_psql_pw: "Portal's postgres user password"
+    portal_admin_name: "Portal admin user's name"
+    portal_admin_email: "Portal admin user's email"
+  handlers:
+  - include: ../roles/portal/handlers/handlers.yml

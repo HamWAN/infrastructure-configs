@@ -1,39 +1,44 @@
 {% set site = inventory_hostname.split(".")[1] %}
 {% set to_site = inventory_hostname.split(".")[0].replace("ptp", "", 1) %}
 {% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
-{% set wlan1_ip_int = wlan1_ip | ipaddr | int %}
+{% set wlan1_ip_int = wlan1_ip.split('.')[-1] | int %}
 {% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
 {% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
-{% set wlan1_ip_network = lookup('dig', 'ptp' + site + '.' + to_site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set wlan1_ip_network = lookup('dig', 'wlan1.ptp' + site + '.' + to_site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
 {% set ether1_ip_network = [ether1_ip, '/28'] | join("") | ipaddr('network') %}
 {% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
 
+/ip address remove [find interface=vrrp1]
 /interface vrrp remove [find name=vrrp1]
 /interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 
-{% if ignore_ospf_and_ip_address == false %}
-/ip address add address={{ vrrp1_ip }} interface=vrrp1
-/ip address add address={{wlan1_ip}}/32 interface=bridge1 network={{ wlan1_ip_network }}
-/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-bgp=as-type-1 redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 router-id={{ wlan1_ip }}
-/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1-local network-type=broadcast
-/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=bridge1 network-type=point-to-point
-/routing ospf network add area=backbone network={{ ether1_ip_network }}/28
-/routing ospf network add area=backbone network={{ wlan1_ip_network }}/32
-{% endif %}
-
 /system identity set name=ptp{{ to_site }}.{{ site }}
+/ip address remove [find interface=bridge1]
+
 /interface bridge remove [find name=bridge1]
 /interface bridge add mtu=1500 name=bridge1
 /interface bridge port remove [find]
 /interface bridge port add bridge=bridge1 interface=wlan1
+
+/ip address add address={{ vrrp1_ip }} interface=vrrp1
+/ip address add address={{wlan1_ip}}/32 interface=bridge1 network={{ wlan1_ip_network }}
+/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-bgp=as-type-1 redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 router-id={{ wlan1_ip }}
+/routing ospf interface remove [find]
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1 network-type=broadcast
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=bridge1 network-type=point-to-point
+/routing ospf network remove [find]
+/routing ospf network add area=backbone network={{ ether1_ip_network }}/28
+/routing ospf network add area=backbone network={{ wlan1_ip_network }}/32
+
 /interface wireless security-profiles remove [find name=hamwan]
 /interface wireless security-profiles add authentication-types=wpa-psk,wpa2-psk eap-methods="" management-protection=allowed mode=dynamic-keys name=hamwan supplicant-identity="" wpa-pre-shared-key={{ wpa_psk }} wpa2-pre-shared-key={{ wpa_psk }}
 /interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" disabled=no frequency={{ frequency }} frequency-mode=superchannel l2mtu=1600 name=wlan1 security-profile=hamwan ssid=HamWAN wireless-protocol=nv2 scan-list={{ frequency }}
 {% if router_type == "911G-5HPnD" %}
-/interface wireless set [ find default-name=wlan1 ] channel-width=20/40mhz-Ce rx-chains=0,1 tx-chains=0,1
+/interface wireless set [ find default-name=wlan1 ] channel-width=20mhz rx-chains=0,1 tx-chains=0,1
 {% elif router_type == "921UAGS-5SHPacT" %}
-/interface wireless set [ find default-name=wlan1 ] channel-width=20/40/80mhz-Ceee rx-chains=0,1 tx-chains=0,1
+/interface wireless set [ find default-name=wlan1 ] channel-width=20mhz rx-chains=0,1 tx-chains=0,1
 {% endif %}
+:put "{{ wlan1_ip_int }}"
 {% if wlan1_ip_int is odd %}
 /interface wireless set [ find default-name=wlan1 ] mode=bridge
 {% else %}

@@ -27,7 +27,7 @@
     - common
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }} /tmp/common.rsc {{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/common.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags:
     - import
     - common

@@ -2,19 +2,32 @@
 #sec1.sco.memhamwan.net ansible_ssh_host=44.34.128.34
 #sec2.sco.memhamwan.net ansible_ssh_host=44.34.128.35
 #sec3.sco.memhamwan.net ansible_ssh_host=44.34.128.36
+omn1.leb.memhamwan.net ansible_ssh_host=44.34.128.183
+
 [mikrotik-cell-core-routers]
 #r1.hil.memhamwan.net #ansible_ssh_host=44.34.128.161
+
 [mikrotik-ptp-routers]
-ptpmil.hil.memhamwan.net ansible_ssh_host=44.34.128.106
+#ptpmil.hil.memhamwan.net ansible_ssh_host=44.34.128.106
+#ptpleb.mil.memhamwan.net ansible_ssh_host=10.0.7.206
+#ptphil.mil.memhamwan.net ansible_ssh_host=10.0.7.207
 
 [linux_fresh]
+#sdr.hil.memhamwan.net
+#ns1.hil.memhamwan.net
+#stream.leb.memhamwan.net
 
-[sdr]
-#test.leb.memhamwan.net
+[shinysdr]
+#ns1.leb.memhamwan.net
+#sdr.hil.memhamwan.net
+
+[quagga]
+#ns1.hil.memhamwan.net
 
 [memhamwan:children]
 mikrotik-ptp-routers
 mikrotik-sector-routers
 mikrotik-cell-core-routers
 linux_fresh
-sdr
+shinysdr
+quagga

@@ -4,6 +4,7 @@
 LOCALE_DOMAIN: memhamwan.net
 LOCALE_CALLSIGN: KM4ECM
 LOCALE_SUBNET: 44.34.128.0/21
+LOCALE: "Memphis Metro"
 
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"
@@ -31,3 +32,8 @@ SECTOR_CHANNEL_WIDTH: 10
 
 ansible_ssh_port: 22
 network: memhamwan
+anycast_ipv4_host_and_cidr: 44.34.132.0/21
+ipv6_support: false
+
+AUTHORITATIVE_DNS_PRIMARY: 44.34.132.2
+AUTHORITATIVE_DNS_SECONDARY: 44.34.133.2
