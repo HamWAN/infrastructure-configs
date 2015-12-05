@@ -16,6 +16,7 @@ omn1.leb.memhamwan.net ansible_ssh_host=44.34.128.183
 #sdr.hil.memhamwan.net
 #ns1.hil.memhamwan.net
 #stream.leb.memhamwan.net
+monitor.leb.memhamwan.net
 
 [shinysdr]
 #ns1.leb.memhamwan.net

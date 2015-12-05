@@ -1,0 +1,36 @@
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+- name: Add prometheus-console iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 9090 -j ACCEPT"
+    insertbefore="iptables -P INPUT DROP"
+    state="present"
+  when: iptablesrules.stdout.find("9090") == -1
+- name: Add prometheus-dash iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 3000 -j ACCEPT"
+    insertbefore="iptables -P INPUT DROP"
+    state="present"
+  when: iptablesrules.stdout.find("3000") == -1
+- name: Add alertmanager iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 9093 -j ACCEPT"
+    insertbefore="iptables -P INPUT DROP"
+    state="present"
+  when: iptablesrules.stdout.find("9093") == -1
+- name: Add nodeexporter iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 9100 -j ACCEPT"
+    insertbefore="iptables -P INPUT DROP"
+    state="present"
+  when: iptablesrules.stdout.find("9100") == -1
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
+

@@ -1,0 +1,9 @@
+---
+- hosts: linux_fresh
+  vars: 
+    prometheus_components: ["node_exporter", "prometheus", "alertmanager"]
+#  roles:
+#   - williamyeh.prometheus
+  sudo: yes
+  tasks:
+  - include: ../roles/prometheus/tasks/setup_firewall_for_prom.yml
