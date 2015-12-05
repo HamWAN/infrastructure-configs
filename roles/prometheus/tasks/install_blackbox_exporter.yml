@@ -1,0 +1,36 @@
+- name: clone the repo
+  git: repo=https://github.com/prometheus/blackbox_exporter.git
+       dest=/opt/prometheus/blackbox_exporter
+       force=yes
+
+- name: build
+  command: make
+  args:
+    chdir: /opt/prometheus/blackbox_exporter
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+
+- name: Add prometheus-console iptable rule
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 9115 -j ACCEPT"
+    insertbefore="iptables -P INPUT DROP"
+    state="present"
+  when: iptablesrules.stdout.find("9115") == -1
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
+
+- name: Generate init.d script
+  template:
+    backup=no
+    dest=/etc/init.d/blackbox_exporter
+    src=blackbox_exporter.j2
+    force=yes
+  notify: Restart blackbox_exporter
+
+- name: Setup blackbox_exporter to start on boot
+  command: update-rc.d blackbox_exporter defaults
