@@ -21,6 +21,9 @@ ansible-playbook -i locales/memphis/hosts playbooks/hamwan_site_config.yml
 ```
 Be sure to take a look at the tags!!
 
+### SSH to servers
+Since we use cert auth everywhere, you'll need to have SSH'd to that remote server at least once and have your cert installed locally for connecting to that server. Also, if your local use is different than your remote user, be sure to add -u remote_user to your ansible-playbook command!
+
 ## Use to configure a new appliance
 * First, make sure you have the router on your LAN and with an IP and gateway (can it ping google.com?)
 * Second, on the local machine running ansible, add an /etc/hosts entry for your router's hostname to point to the lan IP.
