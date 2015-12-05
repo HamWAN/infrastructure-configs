@@ -9,7 +9,9 @@ This repository hosts a group of ansible playbooks to deploy and manage HamWAN i
 
 ## Usage
 ```bash
-apt-get install python-pip python-netaddr ansible git -y
+apt-add-repository ppa:ansible/ansible
+apt-get update
+apt-get install python-pip python-netaddr ansible git software-properties-common -y
 pip install dnspython
 ansible-galaxy install yaegashi.blockinfile
 ansible-galaxy install williamyeh.prometheus
