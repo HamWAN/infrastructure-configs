@@ -1,13 +1,13 @@
 ---
 - hosts: linux_fresh
-#  vars: 
-#    prometheus_components: ["node_exporter", "prometheus", "alertmanager"]
-#  roles:
-#   - williamyeh.prometheus
+  vars: 
+    prometheus_components: ["node_exporter", "prometheus", "alertmanager"]
+  roles:
+   - williamyeh.prometheus
   sudo: yes
   tasks:
-#   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
+   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
    - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
-#   - include: ../roles/prometheus/tasks/setup_firewall_for_prom.yml
+   - include: ../roles/prometheus/tasks/setup_firewall_for_prom.yml
   handlers:
    - include: ../roles/prometheus/handlers/handlers.yml

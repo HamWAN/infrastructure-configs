@@ -7,7 +7,7 @@
 - debug: msg="Latest ROS version is {{ latest_routeros_version.content }}"
 
 - name: Download latest routeros
-  raw: "/tool fetch url=http://download2.mikrotik.com/routeros/{{ latest_routeros_version.content | trim }}/routeros-mipsbe-{{ latest_routeros_version.content | trim }}.npk"
+  raw: "/tool fetch url=http://download2.mikrotik.com/routeros/{{ latest_routeros_version.content.split(' ')[0] | trim }}/routeros-mipsbe-{{ latest_routeros_version.content.split(' ')[0] | trim }}.npk"
   tags: 
     - upgrade-ros
 
