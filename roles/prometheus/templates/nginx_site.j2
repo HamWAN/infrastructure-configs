@@ -1,0 +1,16 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+        location / {
+            proxy_pass  http://localhost:9090/;
+            proxy_set_header    X-Host       $host;
+        }
+        location /alert/ {
+            proxy_pass http://localhost:9093/;
+            proxy_set_header    X-Host       $host;
+        }
+        location /dash {
+            return 302 http://monitor.leb.memhamwan.net:3000/;
+        }
+}
