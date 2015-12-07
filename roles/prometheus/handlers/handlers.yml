@@ -3,3 +3,5 @@
   action: service name=blackbox_exporter state=restarted
 - name: Restart snmp_exporter
   action: service name=snmp_exporter state=restarted
+- name: Restart promdash
+  action: service name=promdash state=restarted

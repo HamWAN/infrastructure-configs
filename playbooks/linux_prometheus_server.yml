@@ -2,12 +2,15 @@
 - hosts: linux_fresh
   vars: 
     prometheus_components: ["node_exporter", "prometheus", "alertmanager"]
+    prometheus_alertmanager_url: "http://localhost:9093/"
+    prometheus_alertmanager_conf: ../roles/prometheus/templates/alertmanager.conf.j2
   roles:
-   - williamyeh.prometheus
+#   - williamyeh.prometheus
   sudo: yes
   tasks:
-   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
-   - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
-   - include: ../roles/prometheus/tasks/setup_firewall_for_prom.yml
+#   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
+#   - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
+#   - include: ../roles/prometheus/tasks/setup_firewall_for_prom.yml
+   - include: ../roles/prometheus/tasks/install_promdash.yml
   handlers:
    - include: ../roles/prometheus/handlers/handlers.yml
