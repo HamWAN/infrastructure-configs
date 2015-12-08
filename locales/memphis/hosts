@@ -25,6 +25,17 @@ ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
 #sdr.hil.memhamwan.net
 #ns1.hil.memhamwan.net
 #stream.leb.memhamwan.net
+#monitor.leb.memhamwan.net
+#allstar.leb.memhamwan.net
+#chat.leb.memhamwan.net
+#conf.leb.memhamwan.net
+#ns1.leb.memhamwan.net
+#stream.leb.memhamwan.net
+#voip.leb.memhamwan.net
+#www.leb.memhamwan.net
+#ntp.leb.memhamwan.net
+
+[prometheus-server]
 monitor.leb.memhamwan.net
 
 [shinysdr]

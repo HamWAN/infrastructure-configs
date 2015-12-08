@@ -1,0 +1,19 @@
+- name: Add the apt_repository
+  apt_repository:
+    repo='deb https://packagecloud.io/grafana/stable/debian/ wheezy main'
+    state=present
+
+- name: Add the key for the new repository
+  apt_key:
+    url=https://packagecloud.io/gpg.key
+    state=present
+
+- name: Install grafana
+  apt:
+    update_cache=yes
+    name=grafana
+    state=present
+  notify: Restart grafana
+
+- name: Register grafana to run on boot
+  command: update-rc.d grafana-server defaults 95 10

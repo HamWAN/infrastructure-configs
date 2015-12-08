@@ -7,3 +7,7 @@
   action: service name=promdash state=restarted
 - name: Restart nginx
   action: service name=nginx state=restarted
+- name: Restart node_exporter
+  action: service name=node_exporter state=restarted
+- name: Restart grafana
+  action: service name=grafana state=restarted

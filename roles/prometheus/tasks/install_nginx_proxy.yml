@@ -11,6 +11,12 @@
     path=/etc/nginx/sites-enabled/default
     state=absent
 
+- name: Copy a beginner htpasswd file (hamwan:hamwan)
+  template:
+    dest=/etc/nginx/.htpasswd
+    src=htpasswd
+    force=no
+
 - name: Generate site file
   template:
     backup=no
