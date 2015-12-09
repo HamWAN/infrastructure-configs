@@ -1,0 +1,112 @@
+global:
+  scrape_interval:     1m   # How frequently to scrape targets by default.
+  scrape_timeout:      10s  # How long until a scrape request times out.
+  evaluation_interval: 1m   # How frequently to evaluate rules by default.
+
+  # The labels to add to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'master'
+rule_files:
+  - '/etc/prometheus/rules/*'
+
+
+
+
+
+# A list of scrape configurations.
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    scrape_timeout: 10s
+    target_groups:
+      - targets: ['localhost:9090']
+
+  - job_name: "node"
+    file_sd_configs:
+      - names:
+        - '/etc/prometheus/tgroups/node.json'
+
+  - job_name: 'blackbox-https'
+    file_sd_configs:
+      - names:
+        - '/etc/prometheus/tgroups/blackbox-https.json'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)
+        target_label: __param_target
+        replacement: https://${1}
+      - source_labels: [__param_target]
+        regex: (.*)
+        target_label: instance
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: 127.0.0.1:9115  # Blackbox exporter.
+
+
+  - job_name: 'blackbox-http'
+    file_sd_configs:
+      - names:
+        - '/etc/prometheus/tgroups/blackbox-http.json'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)
+        target_label: __param_target
+        replacement: http://${1}
+      - source_labels: [__param_target]
+        regex: (.*)
+        target_label: instance
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: 127.0.0.1:9115  # Blackbox exporter.
+
+  - job_name: 'blackbox-asterisk-admin'
+    file_sd_configs:
+      - names:
+        - '/etc/prometheus/tgroups/blackbox-tcp.json'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]  # Look for a HTTP 200 response.
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)
+        target_label: __param_target
+        replacement: ${1}
+      - source_labels: [__param_target]
+        regex: (.*)
+        target_label: instance
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: 127.0.0.1:9115  # Blackbox exporter.
+
+  - job_name: 'snmp'
+    file_sd_configs:
+      - names:
+        - '/etc/prometheus/tgroups/snmp.json'
+    scrape_timeout: 20s
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)(:80)$
+        target_label: __param_address
+        replacement: ${1}
+      - source_labels: [__param_address]
+        regex: (.*)
+        target_label: instance
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: 127.0.0.1:9116  # SNMP exporter.
+
