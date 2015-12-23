@@ -22,6 +22,9 @@ To use the playbooks, clone this repository. The example here is as if you're co
 ```bash
 ansible-playbook -i locales/memphis/hosts playbooks/hamwan_site_config.yml
 ```
+```
+ansible-playbook -i locales/memphis/hosts playbooks/linux_setup.yml -u your_remote_user -k -K -s
+```
 Be sure to take a look at the tags!!
 
 ### SSH to servers
