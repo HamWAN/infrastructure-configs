@@ -1,0 +1,7 @@
+---
+- hosts: ubnt-nvr-server
+  tasks:
+   - include: ../roles/ubnt-nvr/tasks/install_nvr.yml
+#  handlers:
+#   - include: ../roles/prometheus/handlers/handlers.yml
+  sudo: yes

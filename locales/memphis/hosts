@@ -34,6 +34,10 @@ ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
 #voip.leb.memhamwan.net
 #www.leb.memhamwan.net
 #ntp.leb.memhamwan.net
+nvr.leb.memhamwan.net
+
+[ubnt-nvr-server]
+nvr.leb.memhamwan.net
 
 [prometheus-server]
 monitor.leb.memhamwan.net
