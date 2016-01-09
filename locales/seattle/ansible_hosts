@@ -4,11 +4,11 @@ mikrotik_clients
 linux_fresh
 
 [linux]
-44.24.255.6
+mail.hamwan.net			ansible_ssh_host=44.24.241.199 ansible_ssh_port=22
+k7nvh-voip01.k7nvh.hamwan.net	ansible_ssh_host=44.24.255.50
+seattle-voip01.hamwan.net	ansible_ssh_host=44.24.241.102
 
 [mikrotik_clients]
 10.1.10.45
 
 [linux_fresh]
-k7nvh-voip01.k7nvh.hamwan.net	ansible_ssh_host=44.24.255.50
-seattle-voip01.hamwan.net	ansible_ssh_host=44.24.241.102
