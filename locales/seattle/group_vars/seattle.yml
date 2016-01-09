@@ -1,6 +1,7 @@
 ---
 # Vars specific to HamWAN Seattle
 
+LOCALE_NAME: "HamWAN Puget Sound"
 LOCALE_DOMAIN: hamwan.net
 LOCALE_CALLSIGN: K7WAN
 LOCALE_SUBNET: 44.24.240.0/20
@@ -30,4 +31,5 @@ SERVER_SMTP: mail.hamwan.net
 
 NETOPS_EMAIL: netops@hamwan.org
 
+SNMP_COMMUNITY: hamwan
 SECTOR_CHANNEL_WIDTH: 10
