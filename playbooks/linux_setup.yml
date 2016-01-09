@@ -4,6 +4,7 @@
   tasks:
     - include: ../roles/common-linux/tasks/ensure_python.yml
     - inlucde: ../roles/common-linux/tasks/ensure_aptitude.yml
+    - include: ../roles/common-linux/tasks/setup_sysctl.yml
     - include: ../roles/common-linux/tasks/setup_dns.yml
     - include: ../roles/common-linux/tasks/apt_update_upgrade.yml
     - include: ../roles/common-linux/tasks/add_users_groups.yml
