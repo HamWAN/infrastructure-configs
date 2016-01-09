@@ -46,12 +46,6 @@
     - common
   when: "'failure:' in import_result.stdout"
 
-- name: "remove script from device"
-  raw: "/file remove common.rsc"
-  tags: 
-    - cleanup
-    - common
-
 - name: remove script from generated-scripts directory
   local_action: file path=/tmp/common.rsc state=absent
   tags: 

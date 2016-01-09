@@ -32,17 +32,21 @@
 
 /interface wireless security-profiles remove [find name=hamwan]
 /interface wireless security-profiles add authentication-types=wpa-psk,wpa2-psk eap-methods="" management-protection=allowed mode=dynamic-keys name=hamwan supplicant-identity="" wpa-pre-shared-key={{ wpa_psk }} wpa2-pre-shared-key={{ wpa_psk }}
-/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" disabled=no frequency={{ frequency }} frequency-mode=superchannel l2mtu=1600 name=wlan1 security-profile=hamwan ssid=HamWAN wireless-protocol=nv2 scan-list={{ frequency }}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" channel-width=20mhz disabled=no frequency-mode=regulatory-domain mtu=1600 name=wlan1 security-profile=hamwan ssid=HamWAN dfs-mode=radar-detect wireless-protocol=nv2 scan-list=default
 {% if router_type == "911G-5HPnD" %}
 /interface wireless set [ find default-name=wlan1 ] channel-width=20mhz rx-chains=0,1 tx-chains=0,1
 {% elif router_type == "921UAGS-5SHPacT" %}
-/interface wireless set [ find default-name=wlan1 ] channel-width=20mhz rx-chains=0,1 tx-chains=0,1
+/interface wireless set [ find default-name=wlan1 ] antenna-gain=30 band=5ghz-a/n/ac channel-width=20/40/80mhz-Ceee rx-chains=0,1 tx-chains=0,1
+{% elif router_type == "G-5HPacD" %}
+/interface wireless set [ find default-name=wlan1 ] antenna-gain=16 band=5ghz-a/n/ac channel-width=20/40/80mhz-Ceee rx-chains=0,1 tx-chains=0,1
 {% endif %}
 :put "{{ wlan1_ip_int }}"
 {% if wlan1_ip_int is odd %}
 /interface wireless set [ find default-name=wlan1 ] mode=bridge
+/interface wireless set [ find default-name=wlan1 ] ssid=HamWAN-{{ site }}-{{ to_site }}
 {% else %}
 /interface wireless set [ find default-name=wlan1 ] mode=station
+/interface wireless set [ find default-name=wlan1 ]  ssid=HamWAN-{{ to_site }}-{{ site }}
 {% endif %}
 /ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
 /ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378

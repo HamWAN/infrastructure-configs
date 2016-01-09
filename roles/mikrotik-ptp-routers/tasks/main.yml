@@ -1,4 +1,18 @@
 ---
+- name: query device for hardware
+  raw: "/system routerboard print"
+  tags:
+    - research
+  register: routerboard_details
+- debug: msg=routerboard_details.stdout
+
+- name: query device for health and version
+  raw: "/system resource print"
+  tags:
+    - research
+  register: routeros_details
+- debug: msg=routeros_details.stdout
+
 - name: Create template for common changes
   local_action: template src=ptp.j2 dest=/tmp/ptp.rsc backup=no
   tags: 
@@ -6,7 +20,7 @@
     - ptp
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }} /tmp/ptp.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host }}:/
+  local_action: command scp -P {{ ansible_ssh_port }} /tmp/ptp.rsc {{ scp_user }}@{{ ansible_ssh_host }}:/
   tags: 
     - import
     - ptp

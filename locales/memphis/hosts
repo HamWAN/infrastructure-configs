@@ -15,7 +15,10 @@ r1.azo.memhamwan.net ansible_ssh_host=10.0.7.181 frequency=5860
 #r1.sco.memhamwan.net ansible_ssh_host=44.34.128.33
 
 [mikrotik_fresh] #for this group, scp_user should be whatever default you have
-ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155 scp_user=ryan_turner default_user=ryan_turner ansible_ssh_user=ryan_turner
+#ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
+#ptpazo.leb.memhamwan.net ansible_ssh_host=10.0.7.151
+#ptpmno.leb.memhamwan.net ansible_ssh_host=10.0.7.150
+ptpmno.hil.memhamwan.net ansible_ssh_host=10.0.7.149
 
 [mikrotik-ptp-routers]
 #ptphil.leb.memhamwan.net ansible_ssh_host=44.34.128.182
@@ -24,7 +27,10 @@ ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155 scp_user=ryan_turner defaul
 #ptpleb.ret.memhamwan.net ansible_ssh_host=44.34.128.22
 #ptpleb.sco.memhamwan.net ansible_ssh_host=44.34.128.37
 #ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
-ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
+#ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
+#ptpazo.leb.memhamwan.net ansible_ssh_host=10.0.7.151
+#ptpmno.leb.memhamwan.net ansible_ssh_host=10.0.7.150
+ptpmno.hil.memhamwan.net ansible_ssh_host=10.0.7.149
 
 [linux_fresh]
 #sdr.hil.memhamwan.net
