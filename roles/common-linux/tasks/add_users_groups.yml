@@ -24,7 +24,7 @@
   user:
     name={{ item }}
     shell=/bin/bash
-    groups=hamwan
+    groups={{ SUDOERS_GROUP }}
     state=present
   with_items: NETOPS_USERS
 
