@@ -3,6 +3,8 @@
 /user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
 /user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
 {% endfor %}
+/user remove [find name=hamwan]
+/user add group=full name=hamwan password={{ router_user_text_password }}
 /user remove [find name=admin]
 /system logging action set 3 bsd-syslog=no name=remote remote={{ SERVER_REMOTE_LOGGING }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
 /system logging add action=remote disabled=no prefix="" topics=!debug,!snmp
@@ -10,10 +12,10 @@
 /snmp community set name=hamwan addresses={{ SERVER_SNMP }} read-access=yes write-access=no numbers=0
 /ip dns set servers={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }}
 /system ntp client set enabled=yes primary-ntp={{ SERVER_NTP_PRIMARY }} secondary-ntp={{ SERVER_NTP_SECONDARY }}
-/ip firewall filter remove [find]
+/ip firewall remove [find]
 /ip dhcp-server remove [find]
 /ip dhcp-server network remove [find]
 /ip service disable [find name=ftp]
 /ip dns set allow-remote-requests=no
-/interface bridge remove [find]
-/interface bridge port remove [find]
+;/interface bridge remove [find]
+;/interface bridge port remove [find]

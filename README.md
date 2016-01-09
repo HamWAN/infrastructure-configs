@@ -20,12 +20,12 @@ git clone https://github.com/HamWAN/infrastructure-configs
 ```
 To use the playbooks, clone this repository. The example here is as if you're configuring a new cell site. This assumes you already have the host entries added to your DNS, but that the routers are running locally as freshly-reset routers with IPs on your lan (AKA you need to give them statics that are accessible for this stuff to work, or instead use this to update existing hosts). Take a look at "demo.yml", specifically the "ignore_ospf_and_ip_address" part; you'll want this set to false if you're configuring new radios, but set to true if you're trying to reconfigure radios that are already deployed. Then, edit the "hosts" inventory file to contain the hostnames of the routers which you want to be configured (make sure to update the groups to be relevant as well!). Finally run the playbook like this:
 ```bash
-ansible-playbook -i locales/memphis/hosts playbooks/hamwan_site_config.yml
+ansible-playbook -i locales/memphis/hosts playbooks/mikrotik_fresh.yml --vault-password-file ~/.vault_pass.txt
 ```
 ```
 ansible-playbook -i locales/memphis/hosts playbooks/linux_setup.yml -u your_remote_user -k -K -s
 ```
-Be sure to take a look at the tags!!
+~/.vault_pass.txt should contain the vault password for your locale's secret values.
 
 ### SSH to servers
 Since we use cert auth everywhere, you'll need to have SSH'd to that remote server at least once and have your cert installed locally for connecting to that server. Also, if your local use is different than your remote user, be sure to add -u remote_user to your ansible-playbook command!

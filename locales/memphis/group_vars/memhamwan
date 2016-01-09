@@ -37,3 +37,9 @@ ipv6_support: false
 
 AUTHORITATIVE_DNS_PRIMARY: 44.34.132.2
 AUTHORITATIVE_DNS_SECONDARY: 44.34.133.2
+
+vrrp_password: "{{ vault_vrrp_password }}"
+ospf_password: "{{ vault_ospf_password }}"
+romon_secret: "{{ vault_romon_secret }}"
+wpa_psk: "{{ vault_p2p_wpa_psk }}"
+router_user_text_password: "{{ vault_router_user_text_password }}"

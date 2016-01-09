@@ -6,13 +6,13 @@
     - sector
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/sector.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/sector.rsc {{ scp_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags: 
     - import
     - sector
 
 - name: "import script on device"
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ scp_user }}@{{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
   tags: 
     - import
     - sector
@@ -26,7 +26,7 @@
   when: "'failure:' in import_result.stdout"
 
 - name: "remove script from device"
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }} "/file remove sector.rsc"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ scp_user }}@{{ ansible_ssh_host }} "/file remove sector.rsc"
   tags: 
     - cleanup
     - sector

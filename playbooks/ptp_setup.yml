@@ -7,10 +7,3 @@
     - include: ../roles/mikrotik-ptp-routers/tasks/main.yml
   vars:
     ignore_ospf_and_ip_address: yes
-  vars_prompt:
-    vrrp_password: "VRRP Password"
-    ospf_password: "OSPF Password"
-    romon_secret: "Romon Secret"
-    wpa_psk: "WPA PSK"
-    frequency: "Frequency"
-

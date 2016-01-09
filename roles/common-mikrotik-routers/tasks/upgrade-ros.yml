@@ -16,16 +16,8 @@
   tags:
     - upgrade-ros
 
-#- name: Check Upgrade status
-#  raw: "/system package update print"
-#  tags:
-#    - upgrade-ros
-#  register: ros-upgrade-status
-#
-#- debug: msg="{{ ros-upgrade-status }}"
-
 - name: Wait for server to restart
-  local_action: wait_for host={{ inventory_hostname }} port=22 delay=30
+  local_action: wait_for host={{ ansible_ssh_host |default(inventory_hostname) }} port=22 delay=30
   tags:
     - upgrade-ros
  

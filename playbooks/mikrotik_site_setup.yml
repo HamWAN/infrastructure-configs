@@ -6,4 +6,6 @@
     - include: ../roles/common-mikrotik-routers/tasks/main.yml
     - include: ../roles/mikrotik-sector-routers/tasks/main.yml
   vars:
-    ignore_ospf: no
+    ignore_ospf_and_ip_address: yes
+  vars_files:
+    group_vars/
