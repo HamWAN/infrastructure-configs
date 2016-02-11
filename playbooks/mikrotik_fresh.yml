@@ -1,5 +1,5 @@
 ---
-- hosts: mikrotik_fresh
+- hosts: mikrotik
   gather_facts: False
   connection: paramiko
   tasks:

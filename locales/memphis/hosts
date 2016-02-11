@@ -6,19 +6,17 @@
 #sec1.hil.memhamwan.net ansible_ssh_host=44.34.128.99
 #sec2.hil.memhamwan.net ansible_ssh_host=44.34.128.100
 #sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
-#omn2.azo.memhamwan.net ansible_ssh_host=10.0.7.
-r1.azo.memhamwan.net ansible_ssh_host=10.0.7.181 frequency=5860
+#r1.azo.memhamwan.net ansible_ssh_host=10.0.7.181 frequency=5860
+sec1.mno.memhamwan.net ansible_ssh_host=10.0.7.117 frequency=5920 ether_netmask=/27
+sec2.mno.memhamwan.net ansible_ssh_host=10.0.7.116 frequency=5900 ether_netmask=/27
+sec3.mno.memhamwan.net ansible_ssh_host=10.0.7.115 frequency=5880 ether_netmask=/27
 
 [mikrotik-cell-core-routers]
 #r1.hil.memhamwan.net ansible_ssh_host=44.34.128.101
 #r1.leb.memhamwan.net ansible_ssh_host=44.34.128.161
 #r1.sco.memhamwan.net ansible_ssh_host=44.34.128.33
-
-[mikrotik_fresh] #for this group, scp_user should be whatever default you have
-#ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
-#ptpazo.leb.memhamwan.net ansible_ssh_host=10.0.7.151
-#ptpmno.leb.memhamwan.net ansible_ssh_host=10.0.7.150
-ptpmno.hil.memhamwan.net ansible_ssh_host=10.0.7.149
+#r2.leb.memhamwan.net ansible_ssh_host=44.34.128.185
+#r1.mno.memhamwan.net ansible_ssh_host=10.0.7.123 ether_netmask=/27
 
 [mikrotik-ptp-routers]
 #ptphil.leb.memhamwan.net ansible_ssh_host=44.34.128.182
@@ -28,24 +26,13 @@ ptpmno.hil.memhamwan.net ansible_ssh_host=10.0.7.149
 #ptpleb.sco.memhamwan.net ansible_ssh_host=44.34.128.37
 #ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
 #ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
-#ptpazo.leb.memhamwan.net ansible_ssh_host=10.0.7.151
+#ptpazo.leb.memhamwan.net ansible_ssh_host=44.34.128.184
 #ptpmno.leb.memhamwan.net ansible_ssh_host=10.0.7.150
-ptpmno.hil.memhamwan.net ansible_ssh_host=10.0.7.149
+#ptpmno.hil.memhamwan.net ansible_ssh_host=44.34.128.110
+#ptphil.mno.memhamwan.net ansible_ssh_host=10.0.7.114 ether_netmask=/27
+#ptpleb.mno.memhamwan.net ansible_ssh_host=10.0.7.119 ether_netmask=/27
 
 [linux_fresh]
-#sdr.hil.memhamwan.net
-#ns1.hil.memhamwan.net
-#stream.leb.memhamwan.net
-#monitor.leb.memhamwan.net
-#allstar.leb.memhamwan.net
-#chat.leb.memhamwan.net
-#conf.leb.memhamwan.net
-#ns1.leb.memhamwan.net
-#stream.leb.memhamwan.net
-#voip.leb.memhamwan.net
-#www.leb.memhamwan.net
-#ntp.leb.memhamwan.net
-nvr.leb.memhamwan.net
 
 [ubnt-nvr-server]
 nvr.leb.memhamwan.net
@@ -59,6 +46,11 @@ monitor.leb.memhamwan.net
 
 [quagga]
 #ns1.hil.memhamwan.net
+
+[mikrotik:children]
+mikrotik-sector-routers
+mikrotik-cell-core-routers
+mikrotik-ptp-routers
 
 [memhamwan:children]
 mikrotik-ptp-routers

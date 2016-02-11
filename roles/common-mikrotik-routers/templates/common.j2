@@ -6,8 +6,10 @@
 /user remove [find name=hamwan]
 /user add group=full name=hamwan password={{ router_user_text_password }}
 /user remove [find name=admin]
-/system logging action set 3 bsd-syslog=no name=remote remote={{ SERVER_REMOTE_LOGGING }} remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
-/system logging add action=remote disabled=no prefix="" topics=!debug,!snmp
+/system logging remove [find default=no]
+/system logging action remove [find default=no]
+/system logging action add bsd-syslog=yes name=centrallogging remote=44.34.128.171 target=remote syslog-facility=syslog
+/system logging add action=centrallogging topics=error,warning,critical
 /snmp set enabled=yes contact="#HamWAN on irc.freenode.org"
 /snmp community set name=hamwan addresses={{ SERVER_SNMP }} read-access=yes write-access=no numbers=0
 /ip dns set servers={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }}
@@ -19,5 +21,4 @@
 /ip dhcp-server network remove [find]
 /ip service disable [find name=ftp]
 /ip dns set allow-remote-requests=no
-;/interface bridge remove [find]
-;/interface bridge port remove [find]
+/tool romon set enabled=yes secrets={{ romon_secret }}

@@ -3,13 +3,13 @@
     ether1_ip:  "{{ lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] }}"
 
 - name: Create template for common changes
-  local_action: template src=cell-core-router.j2 dest=./roles/mikrotik-cell-core-routers/generated-scripts/cell-core-router.rsc backup=no
+  local_action: template src=cell-core-router.j2 dest=/tmp/cell-core-router.rsc backup=no
   tags: 
     - generate
     - cell-core-router
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port|default('22') }} ./roles/mikrotik-cell-core-routers/generated-scripts/cell-core-router.rsc {{ ansible_ssh_host|default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port|default('22') }} /tmp/cell-core-router.rsc {{ scp_user }}@{{ ansible_ssh_host|default(inventory_hostname) }}:/
   tags: 
     - import
     - cell-core-router
@@ -35,7 +35,7 @@
     - cleanup
 
 - name: remove script from generated-scripts directory
-  local_action: file path=./roles/mikrotik-sector-routers/generated-scripts/cell-core-rotuer.rsc state=absent
+  local_action: file path=/tmp/cell-core-rotuer.rsc state=absent
   tags: 
     - cleanup
     - cell-core-router

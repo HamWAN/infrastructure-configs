@@ -9,11 +9,11 @@
    - williamyeh.prometheus
   sudo: yes
   tasks:
-   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
-   - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
+#   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
+#   - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
 #   - include: ../roles/prometheus/tasks/install_promdash.yml # you probably dont want this -- use grafana instead!!
-   - include: ../roles/prometheus/tasks/install_nginx_proxy.yml
+#   - include: ../roles/prometheus/tasks/install_nginx_proxy.yml
    - include: ../roles/prometheus/tasks/install_node_exporter.yml
-   - include: ../roles/prometheus/tasks/install_grafana.yml
+#   - include: ../roles/prometheus/tasks/install_grafana.yml
   handlers:
    - include: ../roles/prometheus/handlers/handlers.yml

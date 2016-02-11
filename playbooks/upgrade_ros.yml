@@ -1,5 +1,5 @@
 ---
-- hosts: mikrotik-sector-routers:mikrotik-cell-core-routers:mikrotik-ptp-routers
+- hosts: mikrotik
   gather_facts: False
   connection: paramiko
   serial: 1
