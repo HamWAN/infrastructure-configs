@@ -7,9 +7,9 @@
 #sec2.hil.memhamwan.net ansible_ssh_host=44.34.128.100
 #sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
 #r1.azo.memhamwan.net ansible_ssh_host=10.0.7.181 frequency=5860
-sec1.mno.memhamwan.net ansible_ssh_host=10.0.7.117 frequency=5920 ether_netmask=/27
-sec2.mno.memhamwan.net ansible_ssh_host=10.0.7.116 frequency=5900 ether_netmask=/27
-sec3.mno.memhamwan.net ansible_ssh_host=10.0.7.115 frequency=5880 ether_netmask=/27
+#sec1.mno.memhamwan.net ansible_ssh_host=10.0.7.117 frequency=5920 ether_netmask=/27
+#sec2.mno.memhamwan.net ansible_ssh_host=10.0.7.116 frequency=5900 ether_netmask=/27
+#sec3.mno.memhamwan.net ansible_ssh_host=10.0.7.115 frequency=5880 ether_netmask=/27
 
 [mikrotik-cell-core-routers]
 #r1.hil.memhamwan.net ansible_ssh_host=44.34.128.101
@@ -17,6 +17,8 @@ sec3.mno.memhamwan.net ansible_ssh_host=10.0.7.115 frequency=5880 ether_netmask=
 #r1.sco.memhamwan.net ansible_ssh_host=44.34.128.33
 #r2.leb.memhamwan.net ansible_ssh_host=44.34.128.185
 #r1.mno.memhamwan.net ansible_ssh_host=10.0.7.123 ether_netmask=/27
+#ap1.mno.memhamwan.net ansible_ssh_host=10.0.7.113 ether_netmask=/27
+r2.mno.memhamwan.net ansible_ssh_host=10.0.7.112 ether_netmask=/27
 
 [mikrotik-ptp-routers]
 #ptphil.leb.memhamwan.net ansible_ssh_host=44.34.128.182

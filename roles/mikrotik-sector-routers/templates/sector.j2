@@ -31,10 +31,11 @@
 /ip dhcp-server network remove [find]
 /ip dhcp-server network add address={{ wlan1_ip_network }}/28 dns-server={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }} domain={{ LOCALE_DOMAIN }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ SERVER_NTP_PRIMARY }},{{ SERVER_NTP_SECONDARY }}
 
-/ip fireawll mange remove [find action=change-mss]
+/ip firewall mange remove [find action=change-mss]
 /ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
 /ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
-
+/interface bridge remove [find]
+/interface bridge port remove [find]
 /routing filter remove [find]
 /routing filter add action=accept chain=AMPR-default prefix=44.0.0.0/8 prefix-length=8-32
 /routing filter add action=accept chain=AMPR-default prefix=0.0.0.0/0
