@@ -26,6 +26,14 @@ ansible-playbook -i locales/memphis/hosts playbooks/linux_setup.yml -u your_remo
 ```
 ~/.vault_pass.txt should contain the vault password for your locale's secret values.
 
+Here's an example of configuring a new cell site:
+Get each piece of equipment connected to your lan. Add it to your DNS and add the appropriate entries to your locale's hosts file. Then, execute the following, making the appropriate substitutions for your username:
+```base
+ansible-playbook -i locales/memphis/hosts playbooks/mikrotik_fresh.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "default_user=admin scp_user=ryan_turner" -u admin
+ansible-playbook -i locales/memphis/hosts playbooks/mikrotik_site_setup.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "scp_user=ryan_turner" -u ryan_turner
+```
+The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
+
 ### SSH to servers
 Since we use cert auth everywhere, you'll need to have SSH'd to that remote server at least once and have your cert installed locally for connecting to that server. Also, if your local use is different than your remote user, be sure to add -u remote_user to your ansible-playbook command!
 
