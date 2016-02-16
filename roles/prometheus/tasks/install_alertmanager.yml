@@ -1,14 +1,13 @@
-
-- name: Install grafana
+- name: Install alertmanager
   docker:
-    name: grafana
-    image: grafana/grafana
+    name: alertmanager
+    image: prom/alertmanager:dev
     state: reloaded
     pull: always
     ports:
-    - "3000:3000"
+    - "9093:9093"
     volumes:
-    - /srv/grafana:/var/lib/grafana
+    - /srv/alertmanager:/etc/alertmanager
 
 - name: Get iptables rules
   command: /bin/cat /etc/rc.local
@@ -18,7 +17,7 @@
 - name: Add grafana iptable rule
   lineinfile:
     dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 3000 -j ACCEPT"
+    line="iptables -A INPUT -p tcp --dport 9093 -j ACCEPT"
     insertbefore="iptables -P INPUT DROP"
     state="present"
-  when: iptablesrules.stdout.find("3000") == -1  
+  when: iptablesrules.stdout.find("9093") == -1  

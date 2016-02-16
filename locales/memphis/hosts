@@ -35,12 +35,13 @@ r2.mno.memhamwan.net ansible_ssh_host=10.0.7.112 ether_netmask=/27
 #ptpleb.mno.memhamwan.net ansible_ssh_host=10.0.7.119 ether_netmask=/27
 
 [linux_fresh]
+eth0.monitor.leb.memhamwan.net
 
 [ubnt-nvr-server]
 nvr.leb.memhamwan.net
 
 [prometheus-server]
-monitor.leb.memhamwan.net
+eth0.monitor.leb.memhamwan.net
 
 [shinysdr]
 #ns1.leb.memhamwan.net
