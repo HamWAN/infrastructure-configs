@@ -1,17 +1,8 @@
-- name: clone the repo
-  git: repo=https://github.com/prometheus/snmp_exporter.git
-       dest=/opt/prometheus/snmp_exporter
-       force=yes
+- name: install prereqs
+  apt: name=python-netsnmp state=present
 
-- name: remove previous if exists
-  pip: 
-    name=snmp_exporter
-    state=absent
-
-- name: build
-  command: python setup.py install
-  args:
-    chdir: /opt/prometheus/snmp_exporter
+- name: install snmp_exporter
+  pip: name=snmp_exporter
 
 - name: Get iptables rules
   command: /bin/cat /etc/rc.local
@@ -32,25 +23,6 @@
 - name: Generate snmp_exporter config
   template:
     backup=no
-    dest=/etc/prometheus/snmp_exporter.yml
+    dest=/srv/mikrotik_snmp_exporter.yml
     src=snmp_exporter_mikrotik.j2
     force=yes
-
-- name: Generate default script
-  template:
-    backup=no
-    dest=/etc/default/snmp_exporter
-    src=generic_default.j2
-    mode="u=rw,g=r,o=r"
-    
-- name: Generate init.d script
-  template:
-    backup=no
-    dest=/etc/init.d/snmp_exporter
-    src=snmp_exporter_initscript.j2
-    force=yes
-    mode="u=rwx,g=rx,o=rw"
-  notify: Restart snmp_exporter 
-
-- name: Setup blackbox_exporter to start on boot
-  command: update-rc.d blackbox_exporter defaults

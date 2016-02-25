@@ -1,31 +1,33 @@
-- name: Install apt-transport-https
-  apt: name=apt-transport-https state=present
-
-- name: Install ca-certificates
-  apt: name=ca-certificates state=present
-
-- name: install docker apt key
-#  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=36A1D7869245C8950F966E92D8576A8BA88D21E9
-  command: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-
-- name: add repo
-  apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
-
-- name: Install docker
-  apt: name=docker-engine state=present update_cache=yes
-
-- name: Install pip
-  apt: name=python-pip state=present
-
-- name: Install docker-py
-  pip: name=docker-py version=1.2.3
-
+#- name: Install apt-transport-https
+#  apt: name=apt-transport-https state=present
+#
+#- name: Install ca-certificates
+#  apt: name=ca-certificates state=present
+#
+#- name: install docker apt key
+##  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=36A1D7869245C8950F966E92D8576A8BA88D21E9
+#  command: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+#
+#- name: add repo
+#  apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+#
+#- name: Install docker
+#  apt: name=docker-engine state=present update_cache=yes
+#
+#- name: Install pip
+#  apt: name=python-pip state=present
+#
+#- name: Install docker-py
+#  pip: name=docker-py version=1.2.3
+#
 - name: Generate default script
   template:
     backup=no
-    dest=/etc/prometheus/prometheus.yml
+    dest=/srv/prometheus/prometheus.yml
     src=prometheus.yml.j2
     mode="u=rw,g=r,o=r"
+- name:
+  file: path=/srv/prometheus/tgroups/ state=directory
 
 - name: Install prometheus
   docker:
@@ -33,20 +35,21 @@
     image: prom/prometheus
     state: reloaded
     pull: always
+    command: -alertmanager.url=http://{{ inventory_hostname }}:9093 -config.file=/etc/prometheus/prometheus.yml
     ports:
     - "9090:9090"
     volumes:
-    - /srv/prometheus:/etc/prometheus/prometheus
+    - /srv/prometheus:/etc/prometheus/
 
 - name: Get iptables rules
   command: /bin/cat /etc/rc.local
   register: iptablesrules
   always_run: yes
 
-- name: Add prometheus-console iptable rule
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 9090 -j ACCEPT"
-    insertbefore="iptables -P INPUT DROP"
-    state="present"
-  when: iptablesrules.stdout.find("9090") == -1  
+#- name: Add prometheus-console iptable rule
+#  lineinfile:
+#    dest=/etc/rc.local
+#    line="iptables -A INPUT -p tcp --dport 9090 -j ACCEPT"
+#    insertbefore="iptables -P INPUT DROP"
+#    state="present"
+#  when: iptablesrules.stdout.find("9090") == -1  

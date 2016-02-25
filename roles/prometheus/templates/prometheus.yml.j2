@@ -46,7 +46,7 @@ scrape_configs:
       - source_labels: []
         regex: .*
         target_label: __address__
-        replacement: 127.0.0.1:9115  # Blackbox exporter.
+        replacement: {{ inventory_hostname }}:9115  # Blackbox exporter.
 
 
   - job_name: 'blackbox-http'
@@ -68,28 +68,7 @@ scrape_configs:
       - source_labels: []
         regex: .*
         target_label: __address__
-        replacement: 127.0.0.1:9115  # Blackbox exporter.
-
-  - job_name: 'blackbox-asterisk-admin'
-    file_sd_configs:
-      - names:
-        - '/etc/prometheus/tgroups/blackbox-tcp.json'
-    metrics_path: /probe
-    params:
-      module: [tcp_connect]  # Look for a HTTP 200 response.
-    relabel_configs:
-      - source_labels: [__address__]
-        regex: (.*)
-        target_label: __param_target
-        replacement: ${1}
-      - source_labels: [__param_target]
-        regex: (.*)
-        target_label: instance
-        replacement: ${1}
-      - source_labels: []
-        regex: .*
-        target_label: __address__
-        replacement: 127.0.0.1:9115  # Blackbox exporter.
+        replacement: {{ inventory_hostname }}:9115  # Blackbox exporter.
 
   - job_name: 'snmp'
     file_sd_configs:
@@ -108,5 +87,5 @@ scrape_configs:
       - source_labels: []
         regex: .*
         target_label: __address__
-        replacement: 127.0.0.1:9116  # SNMP exporter.
+        replacement: {{ inventory_hostname }}:9116  # SNMP exporter.
 
