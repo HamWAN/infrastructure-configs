@@ -1,38 +1,38 @@
 [mikrotik-sector-routers]
 #sec1.sco.memhamwan.net ansible_ssh_host=44.34.128.34
 #sec2.sco.memhamwan.net ansible_ssh_host=44.34.128.35
-#sec3.sco.memhamwan.net ansible_ssh_host=44.34.128.36
-#omn1.leb.memhamwan.net ansible_ssh_host=44.34.128.183
-#sec1.hil.memhamwan.net ansible_ssh_host=44.34.128.99
-#sec2.hil.memhamwan.net ansible_ssh_host=44.34.128.100
-#sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
-#r1.azo.memhamwan.net ansible_ssh_host=10.0.7.181 frequency=5860
-#sec1.mno.memhamwan.net ansible_ssh_host=10.0.7.117 frequency=5920 ether_netmask=/27
-#sec2.mno.memhamwan.net ansible_ssh_host=10.0.7.116 frequency=5900 ether_netmask=/27
-#sec3.mno.memhamwan.net ansible_ssh_host=10.0.7.115 frequency=5880 ether_netmask=/27
+sec3.sco.memhamwan.net ansible_ssh_host=44.34.128.36
+omn1.leb.memhamwan.net ansible_ssh_host=44.34.128.183
+sec1.hil.memhamwan.net ansible_ssh_host=44.34.128.99
+sec2.hil.memhamwan.net ansible_ssh_host=44.34.128.100
+sec3.hil.memhamwan.net ansible_ssh_host=44.34.128.101
+r1.azo.memhamwan.net ansible_ssh_host=44.34.129.66 frequency=5860
+sec1.mno.memhamwan.net ansible_ssh_host=44.34.129.40 frequency=5920 ether_netmask=/27
+sec2.mno.memhamwan.net ansible_ssh_host=44.34.129.41 frequency=5900 ether_netmask=/27
+sec3.mno.memhamwan.net ansible_ssh_host=44.34.129.42 frequency=5880 ether_netmask=/27
 
 [mikrotik-cell-core-routers]
-#r1.hil.memhamwan.net ansible_ssh_host=44.34.128.101
-#r1.leb.memhamwan.net ansible_ssh_host=44.34.128.161
-#r1.sco.memhamwan.net ansible_ssh_host=44.34.128.33
-#r2.leb.memhamwan.net ansible_ssh_host=44.34.128.185
-#r1.mno.memhamwan.net ansible_ssh_host=10.0.7.123 ether_netmask=/27
+r1.hil.memhamwan.net ansible_ssh_host=44.34.128.101
+r1.leb.memhamwan.net ansible_ssh_host=44.34.128.161
+r1.sco.memhamwan.net ansible_ssh_host=44.34.128.33
+r2.leb.memhamwan.net ansible_ssh_host=44.34.128.185
+r1.mno.memhamwan.net ansible_ssh_host=44.34.129.34 ether_netmask=/27
 #ap1.mno.memhamwan.net ansible_ssh_host=10.0.7.113 ether_netmask=/27
-r2.mno.memhamwan.net ansible_ssh_host=10.0.7.112 ether_netmask=/27
+r2.mno.memhamwan.net ansible_ssh_host=44.34.129.35 ether_netmask=/27
 
 [mikrotik-ptp-routers]
-#ptphil.leb.memhamwan.net ansible_ssh_host=44.34.128.182
-#ptpret.leb.memhamwan.net ansible_ssh_host=44.34.128.162
-#ptpsco.leb.memhamwan.net ansible_ssh_host=44.34.128.163
-#ptpleb.ret.memhamwan.net ansible_ssh_host=44.34.128.22
-#ptpleb.sco.memhamwan.net ansible_ssh_host=44.34.128.37
-#ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
+ptphil.leb.memhamwan.net ansible_ssh_host=44.34.128.182
+ptpret.leb.memhamwan.net ansible_ssh_host=44.34.128.162
+ptpsco.leb.memhamwan.net ansible_ssh_host=44.34.128.163
+ptpleb.ret.memhamwan.net ansible_ssh_host=44.34.128.22
+ptpleb.sco.memhamwan.net ansible_ssh_host=44.34.128.37
+ptpleb.hil.memhamwan.net ansible_ssh_host=44.34.128.97
 #ptpleb.azo.memhamwan.net ansible_ssh_host=10.0.7.155
-#ptpazo.leb.memhamwan.net ansible_ssh_host=44.34.128.184
-#ptpmno.leb.memhamwan.net ansible_ssh_host=10.0.7.150
-#ptpmno.hil.memhamwan.net ansible_ssh_host=44.34.128.110
-#ptphil.mno.memhamwan.net ansible_ssh_host=10.0.7.114 ether_netmask=/27
-#ptpleb.mno.memhamwan.net ansible_ssh_host=10.0.7.119 ether_netmask=/27
+ptpazo.leb.memhamwan.net ansible_ssh_host=44.34.128.184
+#ptpmno.leb.memhamwan.net ansible_ssh_host=
+ptpmno.hil.memhamwan.net ansible_ssh_host=44.34.128.110
+ptphil.mno.memhamwan.net ansible_ssh_host=44.34.129.38 ether_netmask=/27
+ptpleb.mno.memhamwan.net ansible_ssh_host=44.34.129.39 ether_netmask=/27
 
 [linux_fresh]
 eth0.monitor.leb.memhamwan.net

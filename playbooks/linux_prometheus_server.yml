@@ -9,10 +9,11 @@
 #   - williamyeh.prometheus
   sudo: yes
   tasks:
-#   - include: ../roles/prometheus/tasks/install_prometheus.yml
-#   - include: ../roles/prometheus/tasks/install_grafana.yml
-#   - include: ../roles/prometheus/tasks/install_alertmanager.yml
-#   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
+   - include: ../roles/prometheus/tasks/install_docker.yml
+   - include: ../roles/prometheus/tasks/install_prometheus.yml
+   - include: ../roles/prometheus/tasks/install_grafana.yml
+   - include: ../roles/prometheus/tasks/install_alertmanager.yml
+   - include: ../roles/prometheus/tasks/install_blackbox_exporter.yml
    - include: ../roles/prometheus/tasks/install_snmp_exporter.yml
-#  handlers:
-#   - include: ../roles/prometheus/handlers/handlers.yml
+  handlers:
+   - include: ../roles/prometheus/handlers/handlers.yml

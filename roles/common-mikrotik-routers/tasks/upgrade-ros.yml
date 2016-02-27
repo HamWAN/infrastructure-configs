@@ -11,6 +11,11 @@
   tags: 
     - upgrade-ros
 
+#- name: Upgrade
+#  raw: "/system package update install"
+#  tags:
+#    - upgrade-ros
+
 - name: Restarting router
   raw: "/system reboot"
   tags:
