@@ -1,7 +1,4 @@
 ---
 - hosts: linux_fresh
-  vars:
-    prometheus_components: ["node_exporter"]
   roles:
-   - williamyeh.prometheus
    - common-linux
