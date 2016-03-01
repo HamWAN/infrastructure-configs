@@ -39,4 +39,10 @@
   authorized_key:
     user={{ item }}
     key={{ KEYS_URL }}{{ item }}.key
-  with_items: NETOPS_USERS + LIMITED_USERS
+  with_items: NETOPS_USERS
+
+- name: Ensure user keys are installed
+  authorized_key:
+    user={{ item }}
+    key={{ KEYS_URL }}{{ item }}.key
+  with_items: LIMITED_USERS
