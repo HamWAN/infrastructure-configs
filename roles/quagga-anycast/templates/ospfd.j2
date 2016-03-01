@@ -12,6 +12,6 @@ interface eth0
 router ospf
  ospf router-id {{ host_ip }}
  redistribute connected
- network {{ host_ip_network }}/{{ host_cidr }} area 0.0.0.0
- network {{ anycast_ipv4_host_and_cidr}} area 0.0.0.0
+ network {{ host_ip_network }}{{ ether_netmask }} area 0.0.0.0
+ network {{ anycast_ipv4_host_and_cidr }} area 0.0.0.0
  area 0 authentication message-digest

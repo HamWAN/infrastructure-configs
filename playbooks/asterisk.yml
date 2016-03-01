@@ -1,0 +1,9 @@
+---
+- hosts: asterisk
+  vars:
+  roles:
+    - yaegashi.blockinfile
+  tasks:
+    - include: ../roles/quagga-anycast/tasks/setup.yml
+  handlers:
+  - include: ../roles/portal/handlers/handlers.yml
