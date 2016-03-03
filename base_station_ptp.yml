@@ -1,0 +1,7 @@
+---
+- hosts: mikrotik-ptp-routers
+  gather_facts: False
+  connection: paramiko
+  serial: 1
+  roles:
+    - mikrotik-ptp-routers

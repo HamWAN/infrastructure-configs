@@ -1,0 +1,46 @@
+---
+# Tell the mikrotik router to download software updates and reboot.
+- name: Get current ROS version
+  local_action: uri url=http://download2.mikrotik.com/routeros/LATEST.6 return_content=yes
+  register: latest_routeros_version
+
+- debug: msg="Latest ROS version is {{ latest_routeros_version.content }}"
+
+- name: Create template for common changes
+  local_action: template src=update.j2 dest=/tmp/update.rsc backup=no
+  tags:
+    - generate
+    - upgrade-ros
+
+- name: Copy common changes script to router
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/update.rsc {{ scp_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  tags:
+    - import
+    - upgrade-ros
+
+- name: "import script on device"
+  raw: "/import verbose=yes update.rsc"
+  tags:
+    - import
+    - upgrade-ros
+  register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script update.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - import
+    - upgrade-ros
+  when: "'failure:' in import_result.stdout"
+
+- name: remove script from generated-scripts directory
+  local_action: file path=/tmp/update.rsc state=absent
+  tags:
+    - cleanup
+    - upgrade-ros
+
+- name: Wait for server to restart
+  local_action: wait_for host={{ ansible_ssh_host |default(inventory_hostname) }} port=22 delay=60
+  tags:
+    - upgrade-ros
+- name: pause 15 seconds for things to settle down
+  local_action: pause seconds=15

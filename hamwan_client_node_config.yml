@@ -1,8 +1,0 @@
----
-- hosts: mikrotik_clients
-  gather_facts: no
-  connection: paramiko
-  vars:
-    ignore_ospf_and_ip_address: yes
-  roles:
-    - common-mikrotik-routers

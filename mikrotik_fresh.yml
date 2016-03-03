@@ -1,8 +1,0 @@
----
-- hosts: mikrotik
-  gather_facts: False
-  connection: paramiko
-  tasks:
-    - include: ../roles/common-mikrotik-routers/tasks/main.yml
-  vars:
-    ignore_ip_address: yes

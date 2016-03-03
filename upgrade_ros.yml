@@ -1,7 +1,0 @@
----
-- hosts: mikrotik
-  gather_facts: False
-  connection: paramiko
-  serial: 1
-  tasks:
-    - include: ../roles/common-mikrotik-routers/tasks/upgrade-ros.yml

@@ -1,9 +1,0 @@
----
-- hosts: mikrotik-ptp-routers
-  gather_facts: False
-  connection: paramiko
-  serial: 1
-  tasks:
-    - include: ../roles/common-mikrotik-routers/tasks/query-ros.yml
-    - include: ../roles/mikrotik-ptp-routers/tasks/main.yml
-  vars:

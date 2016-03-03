@@ -1,0 +1,6 @@
+---
+- hosts: base-station
+  gather_facts: False
+  serial: 1
+  roles:
+    - routeros

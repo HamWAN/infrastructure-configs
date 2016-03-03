@@ -1,4 +1,0 @@
----
- - include: sector_setup.yml
- - include: ptp_setup.yml
- - include: mikrotik-cell-core-routers.yml
