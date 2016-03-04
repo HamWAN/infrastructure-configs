@@ -115,6 +115,9 @@
 - name: Link the certs
   file: src=/etc/letsencrypt/live/portal.{{ LOCALE_DOMAIN }}/privkey.pem dest=/etc/nginx/ssl/privkey.pem state=link
 
+- name: Add cron entries
+  cron: name="Renew cert each month" special_time=monthly job="service nginx stop && /srv/letsencrypt/letsencrypt-auto --config /srv/letsencrypt/config.ini certonly && service nginx start"
+
 - name: Start service nginx
   service: name=nginx state=started
 
