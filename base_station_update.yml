@@ -1,6 +1,7 @@
 ---
 - hosts: base-station
   gather_facts: False
+  connection: paramiko
   serial: 1
   roles:
     - routeros

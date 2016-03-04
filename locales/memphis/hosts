@@ -1,7 +1,7 @@
 [sco-base-station-ptmps]
-sec1.sco.memhamwan.net
-sec2.sco.memhamwan.net
-sec3.sco.memhamwan.net
+#sec1.sco.memhamwan.net
+#sec2.sco.memhamwan.net
+#sec3.sco.memhamwan.net
 
 [sco-base-station-ptps]
 ptpleb.sco.memhamwan.net
@@ -15,9 +15,9 @@ sco-base-station-ptps
 sco-base-station-ptmps
 
 [hil-base-station-ptmps]
-sec1.hil.memhamwan.net
-sec2.hil.memhamwan.net
-sec3.hil.memhamwan.net
+#sec1.hil.memhamwan.net
+#sec2.hil.memhamwan.net
+#sec3.hil.memhamwan.net
 
 [hil-base-station-ptps]
 ptpleb.hil.memhamwan.net
@@ -32,9 +32,9 @@ hil-base-station-ptps
 hil-base-station-ptmps
 
 [mno-base-station-ptmps]
-sec1.mno.memhamwan.net
-sec2.mno.memhamwan.net
-sec3.mno.memhamwan.net
+#sec1.mno.memhamwan.net
+#sec2.mno.memhamwan.net
+#sec3.mno.memhamwan.net
 
 [mno-base-station-ptps]
 ptpleb.mno.memhamwan.net
