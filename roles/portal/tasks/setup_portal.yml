@@ -1,13 +1,13 @@
 - name: Install powerdns
   apt: pkg={{item}} state=installed
   with_items:
-    - nginx 
-    - python-pip 
-    - python-virtualenv 
-    - python-dev 
-    - git-core 
-    - libpq-dev 
-    - postgresql 
+    - nginx
+    - python-pip
+    - python-virtualenv
+    - python-dev
+    - git-core
+    - libpq-dev
+    - postgresql
     - postfix
 
 - name: Install uwsgi
@@ -95,8 +95,28 @@
 - name: Create SSL dir for nginx
   file: path=/etc/nginx/ssl  state=directory
 
-- name: create self-signed SSL cert
-  command: openssl req -new -nodes -x509 -subj "/C=US/ST=/L={{ LOCALE }}/O=HamWAN/CN=${ansible_fqdn}" -days 3650 -keyout /etc/nginx/ssl/hamwanadmin.key -out /etc/nginx/ssl/hamwanadmin.crt -extensions v3_ca creates=/etc/nginx/ssl/hamwanadmin.crt
+- name: checkout letsencrypt
+  git:
+    repo=https://github.com/letsencrypt/letsencrypt
+    dest=/srv/letsencrypt
+
+- name: Add letsencrypt template
+  template: src=letsencrypt.j2 dest=/srv/letsencrypt/config.ini
+
+- name: Stop service nginx
+  service: name=nginx state=stopped
+
+- name: Run letsencrypt
+  action: /srv/letsencrypt/letsencrypt-auto --config config.ini certonly
+
+- name: Link the certs
+  file: src=/etc/letsencrypt/live/portal.{{ LOCALE_DOMAIN }}/cert.pem dest=/etc/nginx/ssl/cert.pem state=link
+
+- name: Link the certs
+  file: src=/etc/letsencrypt/live/portal.{{ LOCALE_DOMAIN }}/privkey.pem dest=/etc/nginx/ssl/privkey.pem state=link
+
+- name: Start service nginx
+  service: name=nginx state=started
 
 - name: Set hash bucket size for nginx
   lineinfile:
