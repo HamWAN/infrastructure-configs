@@ -110,6 +110,9 @@ nvr.leb.memhamwan.net
 [prometheus-server]
 eth0.monitor.leb.memhamwan.net
 
+[linux_fresh]
+nas1.leb.memhamwan.net ansible_ssh_host=10.0.7.106
+
 [shinysdr]
 #sdr.hil.memhamwan.net
 
@@ -120,6 +123,7 @@ eth0.monitor.leb.memhamwan.net
 base-station
 shinysdr
 quagga
+linux_fresh
 
 [vault:children]
 memhamwan
