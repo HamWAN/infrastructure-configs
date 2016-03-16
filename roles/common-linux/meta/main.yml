@@ -1,3 +1,2 @@
 ---
-dependencies:
-  - { role: williamyeh.prometheus, prometheus_components: ["node_exporter"] }
+  
