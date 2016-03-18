@@ -1,4 +1,4 @@
-domains = {{ inventory_hostname }}
+domains = {{ inventory_hostname }}{% if letsencrypt_extra_domains is defined %}, {{ letsencrypt_extra_domains }}{% endif %}
 text = True
 authenticator = standalone
 email = {{ NETOPS_EMAIL }}

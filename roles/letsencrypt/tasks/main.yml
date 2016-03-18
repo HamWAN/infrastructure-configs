@@ -1,0 +1,37 @@
+- name: Install prerequesites
+  apt: pkg={{item}} state=installed
+  with_items:
+    - git
+
+- name: Clone letsencrypt
+  git: repo=https://github.com/letsencrypt/letsencrypt
+       dest=/opt/letsencrypt/
+       accept_hostkey=yes
+       force=yes
+
+- name: Ensures /etc/letsencrypt/ dir exists
+  file: path=/etc/letsencrypt/ state=directory
+
+- name: Install letsencrypt
+  shell: "sudo /opt/letsencrypt/letsencrypt-auto"
+
+- name: Generate letsencrypt config
+  template:
+    backup=no
+    dest=/etc/letsencrypt/cli.conf
+    src=cli.ini.j2
+    force=yes
+
+- name: Allow HTTPS traffic
+  lineinfile:
+    dest=/etc/rc.local
+    state=present
+    insertbefore="#-----ROLE RULES END-----"
+    line="iptables -A INPUT -p tcp --dport 443 -j ACCEPT"
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local
+
+- name: Install and run letsencrypt
+  shell: "sudo /opt/letsencrypt/letsencrypt-auto certonly --config cli.ini"
+  ignore_errors: True

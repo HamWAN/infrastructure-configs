@@ -1,5 +1,0 @@
- - name: Install letsencrypt
-   command:
-// ./letsencrypt-auto certonly --config cli.ini
-// ln -s /etc/letsencrypt/live/monitor.memhamwan.net/privkey.pem /etc/nginx/
-// ln -s /etc/letsencrypt/live/monitor.memhamwan.net/cert.pem /etc/nginx/
