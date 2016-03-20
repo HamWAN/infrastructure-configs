@@ -14,6 +14,7 @@ KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/ma
 NETOPS_USERS:
   - ns4b
   - ryan_turner
+  - haksaw
 
 LIMITED_USERS:
   - memhamwan
@@ -27,7 +28,7 @@ SERVER_DNS_SECONDARY: 44.34.133.1
 SERVER_SMTP: smtp-relay.gmail.com
 SNMP_COMMUNITY: hamwan
 
-NETOPS_EMAIL: netops@memhamwan.net
+NETOPS_EMAIL: netops@memhamwan.org
 
 SECTOR_CHANNEL_WIDTH: 10
 
