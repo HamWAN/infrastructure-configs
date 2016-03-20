@@ -114,7 +114,7 @@ eth0.monitor.leb.memhamwan.net
 #nas1.leb.memhamwan.net ansible_ssh_host=10.0.7.106
 
 [jira]
-jira.leb.memhamwan.net letsencrypt_extra_domains=jira.memhamwan.net
+jira.leb.memhamwan.net letsencrypt_domains=jira.memhamwan.net
 
 [shinysdr]
 #sdr.hil.memhamwan.net

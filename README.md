@@ -22,7 +22,8 @@ To use the playbooks, clone this repository. The example here is as if you're co
 ```bash
 ansible-playbook -i locales/memphis/hosts mikrotik_fresh.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "default_user=admin scp_user=ryan_turner" -u admin
 ansible-playbook -i locales/memphis/hosts base_station_update.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "scp_user=ryan_turner" -u ryan_turner
-ansible-playbook -i locales/memphis/hosts linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts jira.yml -u ryan_turner -s --vault-password-file ~/.vault_pass.txt -vvvv
 ```
 ~/.vault_pass.txt should contain the vault password for your locale's secret values.
 

@@ -12,13 +12,10 @@
 - name: Ensures /etc/letsencrypt/ dir exists
   file: path=/etc/letsencrypt/ state=directory
 
-- name: Install letsencrypt
-  shell: "sudo /opt/letsencrypt/letsencrypt-auto"
-
 - name: Generate letsencrypt config
   template:
     backup=no
-    dest=/etc/letsencrypt/cli.conf
+    dest=/etc/letsencrypt/cli.ini
     src=cli.ini.j2
     force=yes
 
@@ -33,5 +30,7 @@
   command: /etc/rc.local
 
 - name: Install and run letsencrypt
-  shell: "sudo /opt/letsencrypt/letsencrypt-auto certonly --config cli.ini"
-  ignore_errors: True
+  shell: /opt/letsencrypt/letsencrypt-auto certonly --config /etc/letsencrypt/cli.ini
+
+- name:
+  shell: cat /etc/letsencrypt/live/jira.memhamwan.net/cert.pem /etc/letsencrypt/live/jira.memhamwan.net/privkey.pem > /etc/letsencrypt/live/jira.memhamwan.net/cert+privkey.pem
