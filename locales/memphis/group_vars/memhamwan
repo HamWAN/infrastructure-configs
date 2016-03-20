@@ -9,7 +9,7 @@ LOCALE: "Memphis Metro"
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"
 
-KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/master/"
+KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/client/"
 
 NETOPS_USERS:
   - ns4b

@@ -1,0 +1,54 @@
+---
+# Set up users, groups, and sudo permissions for standard HamWAN linux servers
+
+- name: Ensure sudo is installed
+  sudo: yes
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - sudo
+  tags: sudo
+
+- name: Ensure sudoers is configured for HamWAN admin group
+  sudo: yes
+  lineinfile: dest=/etc/sudoers.d/{{ SUDOERS_FILE }} owner=root group=root mode=0440
+              line="%{{ SUDOERS_GROUP }} ALL=(ALL) NOPASSWD:ALL"
+              state=present
+              create=yes
+              validate='visudo -cf %s'
+
+- name: Ensure HamWAN admin group exists
+  group: name={{ SUDOERS_GROUP }} state=present
+
+- name: Ensure HamWAN NetOps users exist
+  user:
+    name={{ item }}
+    shell=/bin/bash
+    groups={{ SUDOERS_GROUP }}
+    state=present
+  sudo: yes
+  with_items: NETOPS_USERS
+
+- name: Ensure HamWAN Limited users exist
+  user:
+    name={{ item }}
+    shell=/bin/bash
+    state=present
+  sudo: yes
+  with_items: LIMITED_USERS
+
+- name: Ensure user keys are installed
+  authorized_key:
+    user={{ item }}
+    key={{ KEYS_URL }}{{ item }}.key
+  sudo: yes
+  with_items: NETOPS_USERS
+
+- name: Ensure user keys are installed
+  authorized_key:
+    user={{ item }}
+    key={{ KEYS_URL }}{{ item }}.key
+  sudo: yes
+  with_items: LIMITED_USERS

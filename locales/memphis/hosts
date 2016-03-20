@@ -1,7 +1,7 @@
 [sco-base-station-ptmps]
-#sec1.sco.memhamwan.net
-#sec2.sco.memhamwan.net
-#sec3.sco.memhamwan.net
+sec1.sco.memhamwan.net
+sec2.sco.memhamwan.net
+sec3.sco.memhamwan.net
 
 [sco-base-station-ptps]
 ptpleb.sco.memhamwan.net
@@ -15,9 +15,9 @@ sco-base-station-ptps
 sco-base-station-ptmps
 
 [hil-base-station-ptmps]
-#sec1.hil.memhamwan.net
-#sec2.hil.memhamwan.net
-#sec3.hil.memhamwan.net
+sec1.hil.memhamwan.net
+sec2.hil.memhamwan.net
+sec3.hil.memhamwan.net
 
 [hil-base-station-ptps]
 ptpleb.hil.memhamwan.net
@@ -32,9 +32,9 @@ hil-base-station-ptps
 hil-base-station-ptmps
 
 [mno-base-station-ptmps]
-#sec1.mno.memhamwan.net
-#sec2.mno.memhamwan.net
-#sec3.mno.memhamwan.net
+sec1.mno.memhamwan.net
+sec2.mno.memhamwan.net
+sec3.mno.memhamwan.net
 
 [mno-base-station-ptps]
 ptpleb.mno.memhamwan.net
@@ -48,12 +48,11 @@ mno-base-station-ptps
 mno-base-station-ptmps
 
 [leb-base-station-ptmps]
-r2.leb.memhamwan.net
+#r2.leb.memhamwan.net
 
 [leb-base-station-ptps]
 ptphil.leb.memhamwan.net
 ptpsco.leb.memhamwan.net
-ptpret.leb.memhamwan.net
 ptpmno.leb.memhamwan.net
 
 [leb-base-station-core-routers]
@@ -83,21 +82,21 @@ sco-base-station-ptmps
 hil-base-station-ptmps
 mno-base-station-ptmps
 leb-base-station-ptmps
-azo-base-station-ptmps
+#azo-base-station-ptmps
 
 [base-station-ptps:children]
 sco-base-station-ptps
 hil-base-station-ptps
 mno-base-station-ptps
 leb-base-station-ptps
-azo-base-station-ptps
+#azo-base-station-ptps
 
 [base-station-core-routers:children]
 sco-base-station-core-routers
 hil-base-station-core-routers
 mno-base-station-core-routers
 leb-base-station-core-routers
-azo-base-station-core-routers
+#azo-base-station-core-routers
 
 [base-station:children]
 base-station-ptmps
@@ -120,7 +119,19 @@ jira.leb.memhamwan.net letsencrypt_domains=jira.memhamwan.net
 #sdr.hil.memhamwan.net
 
 [quagga]
-#ns1.hil.memhamwan.net
+ns1.leb.memhamwan.net
+
+[general-linux]
+dmr.leb.memhamwan.net
+www.leb.memhamwan.net
+
+[linux:children]
+jira
+ubnt-nvr-server
+shinysdr
+quagga
+prometheus-server
+general-linux
 
 [memhamwan:children]
 base-station
@@ -128,6 +139,7 @@ shinysdr
 quagga
 linux_fresh
 jira
+linux
 
 [vault:children]
 memhamwan

@@ -1,0 +1,4 @@
+---
+# default values
+ether_netmask: /28
+default_user: admin
