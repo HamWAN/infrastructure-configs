@@ -1,10 +1,20 @@
 - name: Add gqrx ppa
-  apt_repository: repo='ppa:gqrx/releases' state=present
+  apt_repository: repo={{item}} state=present
+  with_items:
+    - 'ppa:bladerf/bladerf'
+    - 'ppa:ettusresearch/uhd'
+    - 'ppa:myriadrf/drivers'
+    - 'ppa:myriadrf/gnuradio'
+    - 'ppa:gqrx/gqrx-sdr'
+
+- name: Update and upgrade
+  apt: upgrade=dist update_cache=yes
 
 - name: Install prerequesites
   apt: pkg={{item}} state=installed
   with_items:
     - python2.7-dev 
+    - python-pip
     - gnuradio 
     - gr-osmosdr 
     - rtl-sdr 
@@ -25,6 +35,9 @@
   template: src=apache_redirect.j2 dest=/etc/apache2/sites-enabled/000-default.conf mode=0777 owner=root group=root
   notify: Restart apache2
   tags: redirect
+
+- name: Install prerequesites
+  pip: name=ephem
 
 - name: Install optional prereqs
   apt: pkg={{item}} state=installed
@@ -74,9 +87,7 @@
   tags: multimon-ng
 
 - name: Create build directory for multimon-ng
-  command: "{{ item }} chdir=/tmp/multimon-ng/"
-  with_items:
-    - mkdir build
+  file: path=/tmp/multimon-ng/build state=directory
 
 - name: Build multimon-ng
   command: "{{ item }} chdir=/tmp/multimon-ng/build/"
@@ -107,10 +118,10 @@
   file: path=/usr/local/src/shinysdr/ owner=root group=root mode=0755 recurse=yes
 
 - name: Install shinysdr config
-  template: src=shinysdr.j2 dest=/usr/local/src/shinysdr/config mode=0755 owner=root group=root
+  template: src=roles/shinysdr/templates/shinysdr.j2 dest=/usr/local/src/shinysdr/config mode=0755 owner=root group=root
 
 - name: Install shinysdr restart script
-  template: src=shinysdr-restart.j2 dest=/usr/local/src/shinysdr/shinysdr-restart.sh mode=0755 owner=root group=root
+  template: src=roles/shinysdr/templates/shinysdr-restart.j2 dest=/usr/local/src/shinysdr/shinysdr-restart.sh mode=0755 owner=root group=root
 
 - name: Add cron job to start
   cron: name="Restart shinysdr every 5 mins" minute="*/5" job="/usr/local/src/shinysdr/shinysdr-restart.sh"
