@@ -1,5 +1,9 @@
 ---
 # Tell the mikrotik router to download software updates and reboot.
+
+- name: Configure temp DNS servers before upgrade
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/ip dns set servers=8.8.8.8,8.8.4.4"
+  
 - name: Get current ROS version
   local_action: uri url=http://download2.mikrotik.com/routeros/LATEST.6 return_content=yes
   register: latest_routeros_version
@@ -13,7 +17,7 @@
     - upgrade-ros
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/update.rsc {{ scp_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/update.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags:
     - import
     - upgrade-ros

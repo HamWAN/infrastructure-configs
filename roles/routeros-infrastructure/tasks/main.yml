@@ -1,22 +1,17 @@
 ---
 - include: query-ros.yml
 
-- name: Configure temp DNS servers before upgrade
-  raw: /ip dns set servers=8.8.8.8,8.8.4.4
-
-- include: upgrade-ros.yml
-
 - name: Copy netadmin certificates to router
-  raw: "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
   with_items: NETOPS_USERS
   tags:
     - common
     - import
 
 - name: Copy limted user certificates to router
-  raw: "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
   with_items: LIMITED_USERS
-  tags: 
+  tags:
     - common
     - import
 
@@ -27,27 +22,27 @@
     - common
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/common.rsc {{ default_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/common.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
   tags:
     - import
     - common
 
 - name: "import script on device"
-  raw: "/import verbose=yes common.rsc"
-  tags: 
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/import verbose=yes common.rsc"
+  tags:
     - import
     - common
   register: import_result
 
 - name: "import script on device failed"
   action: fail msg="importing script common.rsc on {{ inventory_hostname }} failed"
-  tags: 
+  tags:
     - import
     - common
   when: "'failure:' in import_result.stdout"
 
 - name: remove script from generated-scripts directory
   local_action: file path=/tmp/common.rsc state=absent
-  tags: 
+  tags:
     - cleanup
     - common

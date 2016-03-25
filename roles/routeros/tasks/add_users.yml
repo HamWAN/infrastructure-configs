@@ -1,15 +1,13 @@
 ---
-- include: query-ros.yml
-
 - name: Copy netadmin certificates to router
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ inventory_hostname }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
   with_items: NETOPS_USERS
   tags:
     - common
     - import
 
 - name: Copy limted user certificates to router
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ inventory_hostname }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/tool fetch url=\"{{ KEYS_URL }}{{ item }}.key\""
   with_items: LIMITED_USERS
   tags:
     - common
@@ -26,13 +24,13 @@
     - common
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }}  {{ mktemp.stdout }} {{ ansible_ssh_user }}@{{ inventory_hostname }}:/common.rsc
+  local_action: command scp -P {{ ansible_ssh_port }}  {{ mktemp.stdout }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }}:/common.rsc
   tags:
     - import
     - common
 
 - name: "import script on device"
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ inventory_hostname }} "/import verbose=yes common.rsc"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/import verbose=yes common.rsc"
   tags:
     - import
     - common

@@ -7,7 +7,7 @@ sec3.sco.memhamwan.net
 ptpleb.sco.memhamwan.net
 
 [sco-base-station-core-routers]
-r1.sco.memhamwan.net
+r1.sco.memhamwan.net ansible_ssh_host=10.0.7.96
 
 [sco:children]
 sco-base-station-core-routers

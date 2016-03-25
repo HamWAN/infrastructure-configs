@@ -4,4 +4,4 @@
   connection: paramiko
   serial: 1
   roles:
-    - mikrotik-cell-core-routers
+    - routeros-base-station-core-router

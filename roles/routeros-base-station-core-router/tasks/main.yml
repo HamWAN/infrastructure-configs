@@ -1,0 +1,45 @@
+---
+- set_fact:
+    ether1_ip:  "{{ lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] }}"
+
+- name: Create temp directory
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Create template for common changes
+  local_action: template src=cell-core-router.j2 dest={{ mktemp.stdout }} backup=no
+  tags:
+    - generate
+    - cell-core-router
+
+- name: Copy common changes script to router
+  local_action: command scp -P {{ ansible_ssh_port|default('22') }} {{ mktemp.stdout }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }}:/cell-core-router.rsc
+  tags:
+    - import
+    - cell-core-router
+
+- name: "import script on device"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/import verbose=yes cell-core-router.rsc"
+  tags:
+    - import
+    - cell-core-router
+  register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script cell-core-router.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - cell-core-router
+    - import
+  when: "'failure:' in import_result.stdout"
+
+- name: "remove script from device"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/file remove cell-core-router.rsc"
+  tags:
+    - cell-core-router
+    - cleanup
+
+- name: remove script from generated-scripts directory
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup
+    - cell-core-router

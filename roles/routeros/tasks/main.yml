@@ -1,2 +1,4 @@
 ---
+- include: query.yml
+- include: add_users.yml
 - include: upgrade_ros.yml
