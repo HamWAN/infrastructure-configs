@@ -121,6 +121,9 @@ jira.leb.memhamwan.net letsencrypt_domains=jira.memhamwan.net
 [quagga]
 ns1.leb.memhamwan.net
 
+[sensu]
+sensu.leb.memhamwan.net
+
 [general-linux]
 dmr.leb.memhamwan.net
 www.leb.memhamwan.net
@@ -132,6 +135,7 @@ shinysdr
 quagga
 prometheus-server
 general-linux
+sensu
 
 [memhamwan:children]
 base-station
@@ -140,6 +144,7 @@ quagga
 linux_fresh
 jira
 linux
+sensu
 
 [vault:children]
 memhamwan

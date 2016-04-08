@@ -34,6 +34,12 @@ Get each piece of equipment connected to your lan. Add it to your DNS and add th
 ansible-playbook -i locales/memphis/hosts playbooks/mikrotik_fresh.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "default_user=admin scp_user=ryan_turner" -u admin
 ansible-playbook -i locales/memphis/hosts playbooks/mikrotik_site_setup.yml --vault-password-file ~/.vault_pass.txt -vvvv --extra-vars "scp_user=ryan_turner" -u ryan_turner
 ```
+
+Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.
+```bash
+ansible-playbook -i locales/memphis/hosts linux_setup.yml --limit sensu -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv
+```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
 
 ### SSH to servers

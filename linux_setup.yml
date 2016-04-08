@@ -1,4 +1,4 @@
 ---
-- hosts: linux_fresh
+- hosts: linux
   roles:
    - common-linux

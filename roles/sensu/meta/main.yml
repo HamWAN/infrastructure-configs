@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: sensu-prereqs }
+  - { role: cmacrae.sensu, sensu_master: true, rabbitmq_server: true, redis_server: true, sensu_include_dashboard: true, sensu_remote_plugins: [graphite, network-checks, http, filesystem-checks, dns, snmp], sensu_api_password: "{{ 999999999999999 |random }}" }

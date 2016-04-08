@@ -1,0 +1,47 @@
+---
+
+- name: Get iptables rules
+  command: /bin/cat /etc/rc.local
+  register: iptablesrules
+  always_run: yes
+  sudo: yes
+
+- name: Add iptable rule
+  sudo: yes
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 3000 -j ACCEPT \#sensu-3000"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("sensu-3000") == -1
+
+- name: Add iptable rule
+  sudo: yes
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 5671 -j ACCEPT \#sensu-5671"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("sensu-5671") == -1
+
+- name: Add iptable rule
+  sudo: yes
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 4567 -j ACCEPT \#sensu-4567"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("sensu-4567") == -1
+
+- name: Add iptable rule
+  sudo: yes
+  lineinfile:
+    dest=/etc/rc.local
+    line="iptables -A INPUT -p tcp --dport 6379 -j ACCEPT \#sensu-6379"
+    insertbefore="-----ROLE RULES END-----"
+    state="present"
+  when: iptablesrules.stdout.find("sensu-6379") == -1
+
+- name: Execute /etc/rc.local to place iptables rules
+  sudo: yes
+  command: /etc/rc.local
