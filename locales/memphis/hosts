@@ -124,6 +124,9 @@ ns1.leb.memhamwan.net
 [sensu]
 sensu.leb.memhamwan.net
 
+[gis]
+gis.leb.memhamwan.net
+
 [general-linux]
 dmr.leb.memhamwan.net
 www.leb.memhamwan.net
@@ -136,6 +139,7 @@ quagga
 prometheus-server
 general-linux
 sensu
+gis
 
 [memhamwan:children]
 base-station
@@ -145,6 +149,7 @@ linux_fresh
 jira
 linux
 sensu
+gis
 
 [vault:children]
 memhamwan

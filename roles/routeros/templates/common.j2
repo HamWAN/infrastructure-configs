@@ -1,8 +1,0 @@
-{% for netadmin in NETOPS_USERS %}
-/user remove [find name={{ netadmin }}]
-/user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
-/user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
-{% endfor %}
-/user remove [find name=hamwan]
-/user add group=full name=hamwan password={{ router_user_text_password }}
-/user remove [find name=admin]

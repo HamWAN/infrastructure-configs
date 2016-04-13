@@ -1,0 +1,40 @@
+---
+
+- name: Create temp directory
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Create template for common changes
+  local_action: template src=basic_config.j2 dest={{ mktemp.stdout }} backup=no
+  tags:
+    - generate
+
+- name: Copy common changes script to router
+  local_action: command scp -P {{ mikrotik_port }}  {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/basic_config.rsc
+  tags:
+    - import
+
+- name: "import script on device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes basic_config.rsc"
+  tags:
+    - import
+  register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script common.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - import
+  when: "'failure:' in import_result.stdout"
+
+- name: Redefine the mikrotik SSH user as the desired one
+  set_fact: mikrotik_user={{ mikrotik_desired_user }}
+  
+- name: "Remove script from device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=basic_config.rsc]"
+  tags:
+    - cleanup
+
+- name: remove script from generated-scripts directory
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup

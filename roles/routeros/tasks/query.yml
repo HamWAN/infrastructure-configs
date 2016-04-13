@@ -1,14 +1,46 @@
 ---
+- name: Define the mikrotik SSH port
+  set_fact: mikrotik_port=22
+
+- name: Redefine mikrotik SSH port if exists
+  set_fact: mikrotik_port={{ ansible_port }}
+  when: ansible_port is undefined or ansible_port|int < 1
+
+- name: Define the mikrotik SSH user as ansible user if set
+  set_fact: mikrotik_user={{ ansible_user }}
+  when: ansible_user is not none
+
+- name: Else, define the mikrotik SSH user as the current user
+  set_fact: mikrotik_user={{ lookup('env', 'USER') }}
+  when: mikrotik_user is not defined or mikrotik_user is none
+
+- name: Set the desired user for future use
+  set_fact: mikrotik_desired_user={{ mikrotik_user }}
+
+- name: Define the mikrotik SSH host
+  set_fact: mikrotik_host={{ ansible_host }}
+
+- name: Check to see if "admin" user can connect
+  local_action: command sshpass -p "" ssh -p {{ mikrotik_port }} admin@{{ mikrotik_host }} "/system routerboard print"
+  register: ansible_ssh_user_login_test
+  ignore_errors: yes
+
+- name: Switch to admin user if that worked
+  set_fact: mikrotik_user=admin
+  when: "'Permission denied' not in ansible_ssh_user_login_test.stderr"
+
 - name: query device for hardware
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/system routerboard print"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/system routerboard print"
   tags:
     - research
   register: routerboard_details
+
 - debug: msg=routerboard_details.stdout
 
 - name: query device for health and version
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ default_user|default(ansible_ssh_user) }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/system resource print"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/system resource print"
   tags:
     - research
   register: routeros_details
+
 - debug: msg=routeros_details.stdout

@@ -1,0 +1,3 @@
+---
+- include: configure_sector.yml
+  tags: [configure_sector]

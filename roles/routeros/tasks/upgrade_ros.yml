@@ -1,50 +1,60 @@
 ---
 # Tell the mikrotik router to download software updates and reboot.
 
-- name: Configure temp DNS servers before upgrade
-  local_action: command ssh -p {{ ansible_ssh_port }} {{ ansible_ssh_user }}@{{ ansible_ssh_host|default(inventory_hostname) }} "/ip dns set servers=8.8.8.8,8.8.4.4"
-  
 - name: Get current ROS version
   local_action: uri url=http://download2.mikrotik.com/routeros/LATEST.6 return_content=yes
   register: latest_routeros_version
 
-- debug: msg="Latest ROS version is {{ latest_routeros_version.content }}"
+- set_fact: latest_routeros_version="{{ latest_routeros_version.content.split(' ')[0] | trim }}"
+
+- debug: msg="Skipping upgrade because host is already running latest version"
+  when: latest_routeros_version in routeros_details.stdout
+
+- name: Create temp file
+  local_action: shell mktemp
+  register: mktemp
+  when: latest_routeros_version not in routeros_details.stdout
 
 - name: Create template for common changes
-  local_action: template src=update.j2 dest=/tmp/update.rsc backup=no
+  local_action: template src=update.j2 dest=/tmp/{{ mktemp.stdout }} backup=no
   tags:
     - generate
-    - upgrade-ros
+  when: latest_routeros_version not in routeros_details.stdout
 
 - name: Copy common changes script to router
-  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/update.rsc {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/update.rsc
   tags:
     - import
-    - upgrade-ros
+  when: latest_routeros_version not in routeros_details.stdout
 
 - name: "import script on device"
-  local_action: command ssh -p {{ ansible_ssh_port }}  {{ ansible_ssh_user }}@{{ ansible_ssh_host |default(inventory_hostname) }} "/import verbose=no update.rsc"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=no update.rsc"
   tags:
     - import
-    - upgrade-ros
   register: import_result
+  when: latest_routeros_version not in routeros_details.stdout
 
 - name: "import script on device failed"
   action: fail msg="importing script update.rsc on {{ inventory_hostname }} failed"
   tags:
     - import
-    - upgrade-ros
-  when: "'failure:' in import_result.stdout"
+  when: "import_result is defined and 'failure:' in import_result.stdout and latest_routeros_version not in routeros_details.stdout"
 
-- name: remove script from generated-scripts directory
-  local_action: file path=/tmp/update.rsc state=absent
+- name: "Remove script from device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=update.rsc]"
   tags:
     - cleanup
-    - upgrade-ros
+
+- name: remove script from generated-scripts directory
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup
+  when: latest_routeros_version not in routeros_details.stdout
 
 - name: Wait for server to restart
-  local_action: wait_for host={{ ansible_ssh_host |default(inventory_hostname) }} port=22 delay=60
-  tags:
-    - upgrade-ros
+  local_action: wait_for host={{ mikrotik_host }} port={{ mikrotik_port }} delay=60
+  when: latest_routeros_version not in routeros_details.stdout
+
 - name: pause 10 seconds for things to settle down
   local_action: pause seconds=10
+  when: latest_routeros_version not in routeros_details.stdout

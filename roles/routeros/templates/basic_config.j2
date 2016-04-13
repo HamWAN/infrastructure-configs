@@ -1,6 +1,16 @@
+/ip dns set servers=8.8.8.8,8.8.4.4
 {% for netadmin in NETOPS_USERS %}
 /user remove [find name={{ netadmin }}]
+/tool fetch url={{ KEYS_URL }}{{ netadmin }}.key
 /user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
+:delay 1
+/user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
+{% endfor %}
+{% for netadmin in LIMITED_USERS %}
+/user remove [find name={{ netadmin }}]
+/tool fetch url={{ KEYS_URL }}{{ netadmin }}.key
+/user add group=read name={{ netadmin }} password={{ 999999999999999 |random }}
+:delay 1
 /user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
 {% endfor %}
 /user remove [find name=hamwan]
@@ -8,8 +18,8 @@
 /user remove [find name=admin]
 /system logging remove [find default=no]
 /system logging action remove [find default=no]
-/system logging action add bsd-syslog=yes name=centrallogging remote=44.34.128.171 target=remote syslog-facility=syslog
-/system logging add action=centrallogging topics=error,warning,critical
+/system logging action add bsd-syslog=yes name=centrallogging remote={{ SERVER_REMOTE_LOGGING }} target=remote syslog-facility=syslog
+/system logging add action=remote disabled=no prefix="" topics=critical,error,info,warning
 /snmp set enabled=yes contact="#HamWAN on irc.freenode.org"
 /snmp community set name=hamwan addresses={{ SERVER_SNMP }} read-access=yes write-access=no numbers=0
 /ip dns set servers={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }}
@@ -22,3 +32,4 @@
 /ip service disable [find name=ftp]
 /ip dns set allow-remote-requests=no
 /tool romon set enabled=yes secrets={{ romon_secret }}
+/tool bandwidth-server set authenticate=no enabled=yes

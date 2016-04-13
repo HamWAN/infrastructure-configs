@@ -1,0 +1,36 @@
+---
+- name: Create temp file
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Create template for common changes
+  local_action: template src=sector.j2 dest={{ mktemp.stdout }}  backup=no
+  tags:
+    - generate
+
+- name: Copy sector changes script to router
+  local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/sector.rsc
+  tags:
+    - import
+
+- name: Import sector changes script on device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes sector.rsc"
+  tags:
+    - import
+  register: import_result
+
+- name: Importing sector changes failed!
+  action: fail msg="importing script sector.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - import
+  when: "'failure:' in import_result.stdout"
+
+- name: Remove sector changes script from device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove sector.rsc"
+  tags:
+    - cleanup
+
+- name: Remove sector changes script from local tmp dir
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup

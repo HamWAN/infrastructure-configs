@@ -1,4 +1,9 @@
 ---
 - include: query.yml
-- include: add_users.yml
+  tags: [query]
+
 - include: upgrade_ros.yml
+  tags: [upgrade_ros]
+
+- include: basic_config.yml
+  tags: [basic_config]
