@@ -16,7 +16,7 @@
   when: latest_routeros_version not in routeros_details.stdout
 
 - name: Create template for common changes
-  local_action: template src=update.j2 dest=/tmp/{{ mktemp.stdout }} backup=no
+  local_action: template src=update.j2 dest={{ mktemp.stdout }} backup=no
   tags:
     - generate
   when: latest_routeros_version not in routeros_details.stdout
@@ -40,11 +40,6 @@
     - import
   when: "import_result is defined and 'failure:' in import_result.stdout and latest_routeros_version not in routeros_details.stdout"
 
-- name: "Remove script from device"
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=update.rsc]"
-  tags:
-    - cleanup
-
 - name: remove script from generated-scripts directory
   local_action: file path={{ mktemp.stdout }} state=absent
   tags:
@@ -58,3 +53,8 @@
 - name: pause 10 seconds for things to settle down
   local_action: pause seconds=10
   when: latest_routeros_version not in routeros_details.stdout
+
+- name: "Remove script from device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=update.rsc]"
+  tags:
+    - cleanup

@@ -3,6 +3,13 @@
   local_action: shell mktemp
   register: mktemp
 
+- name: Discover wireless capabilities
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/interface wireless info hw-info [/interface wireless find default-name=wlan1]"
+  register: wireless_capabilities
+
+- set_fact: tx_chains={{ wireless_capabilities.stdout_lines[1].split()[-1] }}
+- set_fact: rx_chains={{ wireless_capabilities.stdout_lines[2].split()[-1] }}
+
 - name: Create template for common changes
   local_action: template src=sector.j2 dest={{ mktemp.stdout }}  backup=no
   tags:

@@ -1,3 +1,3 @@
 /ip dns set servers=8.8.8.8,8.8.4.4
-/tool fetch url=http://download2.mikrotik.com/routeros/{{ latest_routeros_version }}/routeros-mipsbe-{{ latest_routeros_version.content.split(' ')[0] | trim }}.npk
+/tool fetch url=http://download2.mikrotik.com/routeros/{{ latest_routeros_version }}/routeros-mipsbe-{{ latest_routeros_version }}.npk
 /system reboot

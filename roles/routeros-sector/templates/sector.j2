@@ -11,9 +11,7 @@
 {% set frequency = hamwan_channels[sector] %}
 
 /interface wireless channels remove [find list=HamWAN]]
-{% if router_type == "912UAG-5HPnD" %}
-/interface wireless set [ find default-name=wlan1 ] rx-chains=0,1 tx-chains=0,1
-{% endif %}
+/interface wireless set [ find default-name=wlan1 ] rx-chains={{ rx_chains }} tx-chains={{ tx_chains}}
 /system identity set name={{ sector }}.{{ site }}
 /interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ SECTOR_CHANNEL_WIDTH }}mhz disabled=no frequency={{ frequency }} frequency-mode=superchannel mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name={{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2 scan-list={{ frequency }}
 /interface vrrp remove [find name=vrrp1]
