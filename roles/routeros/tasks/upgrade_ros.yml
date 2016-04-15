@@ -58,3 +58,4 @@
   local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=update.rsc]"
   tags:
     - cleanup
+  when: latest_routeros_version not in routeros_details.stdout
