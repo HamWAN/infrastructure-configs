@@ -10,6 +10,16 @@
 - set_fact: tx_chains={{ wireless_capabilities.stdout_lines[1].split()[-1] }}
 - set_fact: rx_chains={{ wireless_capabilities.stdout_lines[2].split()[-1] }}
 
+- name: Check for static routes just in case
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/ip route print where static"
+  tags:
+    - sanity
+  register: static_routes
+
+- name: Fail if there's a static route and user didn't specify override
+  fail: msg="Found static routes on host {{ mikrotik_host }}! You probably don't want this. Define extra-var mikrotik_static_routes_ok to override this."
+  when: "'DST-ADDRESS' not in static_routes.stdout_lines[-1] and mikrotik_static_routes_ok is undefined"
+
 - name: Create template for common changes
   local_action: template src=sector.j2 dest={{ mktemp.stdout }}  backup=no
   tags:
