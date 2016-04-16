@@ -1,0 +1,5 @@
+---
+# Ensure aptitude is installed so the rest of ansible's commands can run
+
+- name: Ensure aptitude is installed
+  raw: apt-get install aptitude -y

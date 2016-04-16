@@ -1,4 +1,4 @@
 ---
-- hosts: linux
+- hosts: server
   roles:
    - common-linux
