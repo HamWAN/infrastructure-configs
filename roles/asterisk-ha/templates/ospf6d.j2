@@ -1,0 +1,14 @@
+password {{ ospf_password }}
+enable password {{ ospf_password }}
+log file /var/log/quagga/ospfd.conf
+
+interface eth0
+ ipv6 ospf6 priority 10
+
+router ospf6
+ ospf router-id {{ eth0_ip }}
+ redistribute connected
+ interface eth0 area 0.0.0.0
+ interface lo area 0.0.0.0
+ area 0.0.0.0 range {{ ipv6_anycast_subnet_1 }}
+ area 0.0.0.0 range {{ ipv6_anycast_subnet_2 }}

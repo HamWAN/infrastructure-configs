@@ -27,6 +27,7 @@ SERVER_DNS_PRIMARY: 44.34.132.1
 SERVER_DNS_SECONDARY: 44.34.133.1
 SERVER_SMTP: smtp-relay.gmail.com
 SNMP_COMMUNITY: hamwan
+voip_ha_ip: 44.34.132.5
 
 NETOPS_EMAIL: netops@memhamwan.org
 
