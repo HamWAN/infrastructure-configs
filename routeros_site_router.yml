@@ -1,0 +1,6 @@
+---
+- hosts: cellrouter
+  gather_facts: False
+  connection: paramiko
+  roles:
+    - routeros-site-router

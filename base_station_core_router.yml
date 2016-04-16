@@ -1,7 +1,0 @@
----
-- hosts: base-station-core-routers
-  gather_facts: False
-  connection: paramiko
-  serial: 1
-  roles:
-    - routeros-base-station-core-router

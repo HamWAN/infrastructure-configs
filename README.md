@@ -20,7 +20,7 @@ git clone https://github.com/HamWAN/infrastructure-configs
 
 A few examples:
 ```bash
-ansible-playbook -i locales/memphis/hosts linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit voip.leb.memhamwan.net
 ansible-playbook -i locales/memphis/hosts jira.yml -u ryan_turner -s --vault-password-file ~/.vault_pass.txt -vvvv
 ansible-playbook -i locales/memphis/hosts add_new_netop.yml -u ryan_turner -s --vault-password-file ~/.vault_pass.txt -vvvv
 ansible-playbook -i locales/seattle/hosts shinysdr.yml -u (your-remote-username) -s --vault-password-file ~/.vault_pass.txt -vvvv
@@ -31,6 +31,7 @@ ansible-playbook -i locales/memphis/hosts base_station_core_router.yml --vault-p
 Here's an example using our routeros_sectors playbook to configure an existing sector:
 ```bash
 ansible-playbook -i locales/memphis/hosts.sh routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit sec2.hil.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh routeros_site_router.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit r1.mno.memhamwan.net
 ```
 
 Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.

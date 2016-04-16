@@ -1,0 +1,3 @@
+---
+- include: configure_site_router.yml
+  tags: [configure_site_router]

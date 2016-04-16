@@ -37,4 +37,4 @@
 /routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=[ /interface ethernet find default-name=ether1 ] network-type=broadcast
 /routing ospf network remove [find]
 /routing ospf network add area=backbone network={{ ether1_ip_network }}{{ ether_netmask }}
-/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=as-type-1 router-id={{ ether1_ip }}
+/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=no router-id={{ ether1_ip }}
