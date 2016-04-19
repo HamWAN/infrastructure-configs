@@ -32,12 +32,13 @@ Here's an example using our routeros_sectors playbook to configure an existing s
 ```bash
 ansible-playbook -i locales/memphis/hosts.sh routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit sec2.hil.memhamwan.net
 ansible-playbook -i locales/memphis/hosts.sh routeros_site_router.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit r1.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh routeros_ptp.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit ptpleb.hil.memhamwan.net
 ```
 
 Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.
 ```bash
-ansible-playbook -i locales/memphis/hosts linux_setup.yml --limit sensu -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv
-ansible-playbook -i locales/memphis/hosts sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit sensu.leb.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit sensu.leb.memhamwan.net
 ```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
 

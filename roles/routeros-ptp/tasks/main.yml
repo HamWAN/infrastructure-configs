@@ -1,0 +1,2 @@
+- include: configure_ptp.yml
+  tags: [configure_ptp]
