@@ -2,3 +2,4 @@
 # default values
 ether_netmask: /28
 ansible_ssh_host: "{{ lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] }}"
+routeros_setup_base_config: true

@@ -15,6 +15,9 @@ apt-get update
 apt-get install python-pip python-netaddr ansible git software-properties-common -y
 pip install dnspython
 ansible-galaxy install yaegashi.blockinfile
+ansible-galaxy install DavidWittman.redis
+ansible-galaxy install Mayeu.RabbitMQ
+ansible-galaxy install Mayeu.sensu
 git clone https://github.com/HamWAN/infrastructure-configs
 ```
 
@@ -30,15 +33,17 @@ ansible-playbook -i locales/memphis/hosts base_station_core_router.yml --vault-p
 
 Here's an example using our routeros_sectors playbook to configure an existing sector:
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit sec2.hil.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn2.azo.memhamwan.net
 ansible-playbook -i locales/memphis/hosts.sh routeros_site_router.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit r1.mno.memhamwan.net
 ansible-playbook -i locales/memphis/hosts.sh routeros_ptp.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit ptpleb.hil.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh routeros_upgrade.yml --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook -i locales/memphis/hosts.sh routeros_omni.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn1.leb.memhamwan.net
 ```
 
 Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit sensu.leb.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit sensu.leb.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
 ```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
 

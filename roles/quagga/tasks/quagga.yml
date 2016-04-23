@@ -1,0 +1,30 @@
+---
+- name: Install quagga
+  apt: pkg={{item}} state=installed
+  with_items:
+    - quagga
+
+- name: Set quagga daemons file
+  template: src=daemons.j2 dest=/etc/quagga/daemons mode=0640 owner=root group=root
+
+- name: Add zebra.conf
+  template: src=zebra.j2 dest=/etc/quagga/zebra.conf mode=0640 owner=quagga group=quagga
+
+- name: Add ospfd.conf
+  template: src=ospfd.j2 dest=/etc/quagga/ospfd.conf mode=0640 owner=quagga group=quagga
+
+- name: Add ospf6d.conf
+  template: src=ospf6d.j2 dest=/etc/quagga/ospf6d.conf mode=0640 owner=quagga group=quagga
+  when: ipv6_support
+
+- name: Make zebra log directory
+  file: path=/var/log/quagga owner=quagga group=quagga mode=0640 state=directory
+
+- name: Make zebra log file
+  file: path=/var/log/quagga/zebra.log owner=quagga group=quagga mode=0640 state=touch
+
+- name: Make ospf log file
+  file: path=/var/log/quagga/ospfd.log owner=quagga group=quagga mode=0640 state=touch
+
+- name: Start quagga
+  service: name=quagga state=restarted

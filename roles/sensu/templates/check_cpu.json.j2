@@ -1,0 +1,13 @@
+{
+  "checks": {
+    "cpu_metrics": {
+      "type": "metric",
+      "command": "metrics-cpu.rb",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 10,
+      "handler": "debug"
+    }
+  }
+}

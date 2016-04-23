@@ -1,0 +1,6 @@
+---
+  sensu_server: true
+  sensu_client: true
+  sensu_check_configs_only: false
+  client_subscriptions: ["production"]
+  sensu_telegram_handler: false

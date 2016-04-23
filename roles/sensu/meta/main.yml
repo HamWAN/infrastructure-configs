@@ -1,4 +1,5 @@
 ---
 dependencies:
-  - { role: sensu-prereqs }
-  - { role: cmacrae.sensu, sensu_master: true, rabbitmq_server: true, redis_server: true, sensu_include_dashboard: true, sensu_remote_plugins: [graphite, network-checks, http, filesystem-checks, dns, snmp], sensu_api_password: "{{ 999999999999999 |random }}" }
+- { role: iptables-rules, when: "sensu_server == true and not sensu_check_configs_only", iptables_input_accept_rules: [{name: uchiwa, protocol: tcp, port: 3000}, {name: sensu-6379, protocol: tcp, port: 6379}]}
+- { role: iptables-rules, when: "sensu_client == true and not sensu_check_configs_only", iptables_input_accept_rules: [{name: sensu-client, protocol: tcp, port: 3030}]}
+- { role: queeno.uchiwa, when: "sensu_server == true and not sensu_check_configs_only" }

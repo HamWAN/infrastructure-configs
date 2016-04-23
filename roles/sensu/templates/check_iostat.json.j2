@@ -1,0 +1,13 @@
+{
+  "checks": {
+    "iostat": {
+      "type": "metric",
+      "command": "metrics-iostat-extended.rb",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 10,
+      "handler": "debug"
+    }
+  }
+}

@@ -47,8 +47,8 @@ romon_secret: "{{ vault_romon_secret }}"
 wpa_psk: "{{ vault_p2p_wpa_psk }}"
 router_user_text_password: "{{ vault_router_user_text_password }}"
 
-rabbitmq_host: sensu.leb.memhamwan.net
-redis_host: sensu.leb.memhamwan.net
-sensu_api_host: sensu.leb.memhamwan.net
-dynamic_data_store: data_store
-static_data_store: sensu/static_data_store
+monitor_host: monitor.memhamwan.net
+monitor_rabbitmq_secret: "{{ vault_monitor_rabbitmq_secret }}"
+monitor_telegram_api_token: "{{ vault_monitor_telegram_api_token }}"
+monitor_telegram_chat_token: "-100920353"
+sensu_telegram_handler: true

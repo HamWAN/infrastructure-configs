@@ -1,4 +1,0 @@
----
-- hosts: sensu
-  roles:
-    - { role: sensu }

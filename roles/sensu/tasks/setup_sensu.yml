@@ -1,0 +1,54 @@
+---
+  - apt_key: url=http://repositories.sensuapp.org/apt/pubkey.gpg state=present
+
+  - apt_repository: repo='deb http://repositories.sensuapp.org/apt sensu main' state=present
+
+  - name: Install apt packages
+    apt: pkg={{item}} state=installed update_cache=yes
+    with_items:
+      - sensu
+      - git
+      - nodejs
+      - npm
+      - sysstat
+
+  - name: Set transport config
+    template: src=transport.json.j2 dest=/etc/sensu/conf.d/transport.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Set api config
+    template: src=api.json.j2 dest=/etc/sensu/conf.d/api.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Set dashboard config
+    template: src=dashboard.json.j2 dest=/etc/sensu/conf.d/dashboard.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Install server plugins
+    shell: sensu-install -p {{item}}
+    with_items:
+      - snmp
+      - rabbitmq
+      - mailer
+
+  - name: Install sensu telegram handler
+    shell: sensu-install -p telegram
+    when: sensu_telegram_handler
+
+  - name: Set handlers config
+    template: src=handlers.json.j2 dest=/etc/sensu/conf.d/handlers.json mode=0640 owner=sensu group=sensu force=yes
+    when: sensu_telegram_handler
+
+  - name: Set telegram config
+    template: src=telegram.json.j2 dest=/etc/sensu/conf.d/telegram.json mode=0640 owner=sensu group=sensu force=yes
+    when: sensu_telegram_handler
+
+  - name: Set sensu-server to run on boot
+    shell: update-rc.d sensu-server defaults
+
+  - name: Set sensu-api to run on boot
+    shell: update-rc.d sensu-api defaults
+
+  - name: Set uchiwa to run on boot
+    shell: update-rc.d uchiwa defaults
+
+  - service: name=sensu-server state=restarted
+  - service: name=sensu-api state=restarted
+  - service: name=uchiwa state=restarted

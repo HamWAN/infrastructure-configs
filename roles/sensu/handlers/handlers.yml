@@ -1,0 +1,10 @@
+---
+
+  - name: Restart sensu-server
+    action: service name=sensu-server state=restarted
+
+  - name: Restart sensu-client
+    action: service name=sensu-client state=restarted
+
+  - name: Restart sensu-api
+    action: service name=sensu-api state=restarted

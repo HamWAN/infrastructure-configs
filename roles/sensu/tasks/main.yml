@@ -1,47 +1,14 @@
 ---
+  - include: setup_sensu.yml
+    tags: setup_sensu
+    when: sensu_server == true and not sensu_check_configs_only
 
-- name: Get iptables rules
-  command: /bin/cat /etc/rc.local
-  register: iptablesrules
-  always_run: yes
-  sudo: yes
+  - include: setup_checks.yml
+    tags: setup_checks
+    when: sensu_server == true
 
-- name: Add iptable rule
-  sudo: yes
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 3000 -j ACCEPT \#sensu-3000"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("sensu-3000") == -1
+  - include: setup_sensu_client.yml
+    tags: setup_sensu_client
+    when: sensu_client == true and not sensu_check_configs_only
 
-- name: Add iptable rule
-  sudo: yes
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 5671 -j ACCEPT \#sensu-5671"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("sensu-5671") == -1
-
-- name: Add iptable rule
-  sudo: yes
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 4567 -j ACCEPT \#sensu-4567"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("sensu-4567") == -1
-
-- name: Add iptable rule
-  sudo: yes
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p tcp --dport 6379 -j ACCEPT \#sensu-6379"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("sensu-6379") == -1
-
-- name: Execute /etc/rc.local to place iptables rules
-  sudo: yes
-  command: /etc/rc.local
+#Download MIB http://download2.mikrotik.com/Mikrotik.mib

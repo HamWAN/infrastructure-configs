@@ -7,3 +7,4 @@
 
 - include: basic_config.yml
   tags: [basic_config]
+  when: routeros_setup_base_config == true

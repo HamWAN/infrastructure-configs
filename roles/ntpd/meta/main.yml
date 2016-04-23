@@ -1,0 +1,4 @@
+---
+dependencies:
+    - { role: quagga }
+    - { role: iptables-rules, iptables_input_accept_rules: [{name: ntp-u, protocol: udp, port: 123}, {name: ntp-t, protocol: tcp, port: 123}]}

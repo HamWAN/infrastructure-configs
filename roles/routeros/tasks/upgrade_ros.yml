@@ -21,14 +21,14 @@
     - generate
   when: latest_routeros_version not in routeros_details.stdout
 
-- name: Copy common changes script to router
+- name: Copy upgrade ros script to router
   local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/update.rsc
   tags:
     - import
   when: latest_routeros_version not in routeros_details.stdout
 
 - name: "import script on device"
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=no update.rsc"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes update.rsc"
   tags:
     - import
   register: import_result

@@ -8,24 +8,40 @@
 {% set dhcp_pool_bottom_ip = [wlan1_ip_network, '/28'] | join("") | ipsubnet(32,2) | replace('/32', '', 1) %}
 {% set dhcp_pool_top_ip = [wlan1_ip_network, '/28'] | join("") | ipsubnet(32,-2) | replace('/32', '', 1) %}
 {% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
-{% set frequency = hamwan_channels[sector] %}
 
 /interface wireless channels remove [find list=HamWAN]]
 /interface wireless set [ find default-name=wlan1 ] rx-chains={{ rx_chains }} tx-chains={{ tx_chains}}
 /system identity set name={{ sector }}.{{ site }}
-/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ SECTOR_CHANNEL_WIDTH }}mhz disabled=no frequency={{ frequency }} frequency-mode=superchannel mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name={{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2 scan-list={{ frequency }}
+/interface wireless set [ find default-name=wlan1 ] disabled=no frequency-mode=superchannel mtu=2290 mode=ap-bridge nv2-cell-radius=100 radio-name={{ sector }}.{{ site }} ssid=HamWAN tdma-period-size=4 wireless-protocol=nv2
+{% if sector in hamwan_channels and supported_freq_range[0] < hamwan_channels[sector]['frequency'] and supported_freq_range[1] > hamwan_channels[sector]['frequency'] %}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn channel-width={{ hamwan_channels[sector]['channel_width'] }}mhz frequency={{ hamwan_channels[sector]['frequency'] }} scan-list={{ hamwan_channels[sector]['frequency'] }}
+{% else %}
+/interface wireless set [ find default-name=wlan1 ] wireless-protocol=802.11
+{% endif %}
 /interface vrrp remove [find name=vrrp1]
-/interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 /ip address remove [ find address="{{ ether1_ip }}{{ ether_netmask }}" ]
 /ip address remove [ find interface=vrrp1 ]
 /ip address remove [ find invalid ]
 /ip address remove [ find address="{{ wlan1_ip }}/28" ]
-/ip address add address={{ ether1_ip }}{{ ether_netmask }} interface=ether1
+/interface bridge remove [find]
+/interface bridge port remove [find]
+{% set ether_interface = "ether1" %}
+{% if router_type == "UPA-5HnD" %}
+/interface ethernet set [ find default-name=ether3 ] master-port=ether2-master-local
+/interface ethernet set [ find default-name=ether4 ] master-port=ether2-master-local
+/interface ethernet set [ find default-name=ether5 ] master-port=ether2-master-local
+/interface bridge add name=bridge1
+/interface bridge port add bridge=bridge1 interface=ether2-master-local
+/interface bridge port add bridge=bridge1 interface=ether1-gateway
+{% set ether_interface = "bridge1" %}
+{% endif %}
+/ip address add address={{ ether1_ip }}{{ ether_netmask }} interface={{ ether_interface }}
+/interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
 /ip address add address={{ wlan1_ip }}/28 interface=wlan1
 /ip address add address={{ vrrp1_ip }} interface=vrrp1
 /ip pool remove [find name=pool1]
 /ip pool add name=pool1 ranges={{ dhcp_pool_bottom_ip }}-{{ dhcp_pool_top_ip }}
-/ip dhcp-server remove [find name=dhcp1]
+/ip dhcp-server remove [find]
 /ip dhcp-server add address-pool=pool1 disabled=no interface=wlan1 lease-time=1h name=dhcp1
 /ip dhcp-server network remove [find]
 /ip dhcp-server network add address={{ wlan1_ip_network }}/28 dns-server={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }} domain={{ LOCALE_DOMAIN }} gateway={{ wlan1_ip }} netmask=28 ntp-server={{ SERVER_NTP_PRIMARY }},{{ SERVER_NTP_SECONDARY }}
@@ -33,15 +49,14 @@
 /ip firewall mangle remove [find action=change-mss]
 /ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
 /ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
-/interface bridge remove [find]
-/interface bridge port remove [find]
+
 /routing filter remove [find]
 /routing filter add action=accept chain=AMPR-default prefix=44.0.0.0/8 prefix-length=8-32
 /routing filter add action=accept chain=AMPR-default prefix=0.0.0.0/0
 /routing filter add action=reject chain=AMPR-default
 
 /routing ospf interface remove [find]
-/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1 network-type=broadcast
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface={{ ether_interface }} network-type=broadcast
 /routing ospf network remove [find]
 /routing ospf network add area=backbone network={{ ether1_ip_network }}{{ ether_netmask }}
 /routing ospf network add area=backbone network={{ wlan1_ip_network }}/28

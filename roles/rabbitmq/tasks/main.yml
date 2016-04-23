@@ -1,0 +1,5 @@
+---
+  - include: install.yml
+    tags: [install-rabbitmq]
+  - include: setup_vhost_and_user.yml
+    tags: [setup-rabbitmq]

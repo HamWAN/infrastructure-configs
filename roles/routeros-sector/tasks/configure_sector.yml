@@ -9,6 +9,7 @@
 
 - set_fact: tx_chains={{ wireless_capabilities.stdout_lines[1].split()[-1] }}
 - set_fact: rx_chains={{ wireless_capabilities.stdout_lines[2].split()[-1] }}
+- set_fact: supported_freq_range={{ wireless_capabilities.stdout_lines[0].split()[-1].split("/")[0].split("-") }}
 
 - name: Check for static routes just in case
   local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/ip route print where static"

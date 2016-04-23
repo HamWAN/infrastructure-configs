@@ -1,0 +1,14 @@
+---
+# Run these one at a time, because we may have a dependency here!
+- hosts: [sector]
+  gather_facts: False
+  connection: paramik
+  roles:
+    - { role: routeros, routeros_setup_base_config: false }
+
+- hosts: [ptp, cellrouter]
+  gather_facts: False
+  connection: paramiko
+  serial: 1
+  roles:
+    - { role: routeros, routeros_setup_base_config: false }

@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "disk_capacity_metric": {
+      "type": "metric",
+      "command": "metrics-disk-capacity.rb",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 60,
+      "handler": "debug"
+    },
+    "disk_metric": {
+      "type": "metric",
+      "command": "metrics-disk.rb",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 60,
+      "handler": "debug"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "client": {
+    "name": "{{ inventory_hostname }}",
+    "address": "{{ inventory_hostname }}",
+    "environment": "production",
+    "subscriptions": [
+      {% for item in client_subscriptions %}
+      "{{item}}"{% if not loop.last %},{% endif %}
+
+      {% endfor %}
+    ],
+    "socket": {
+      "bind": "127.0.0.1",
+      "port": 3030
+    }
+  }
+}
