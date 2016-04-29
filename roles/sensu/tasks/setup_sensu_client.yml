@@ -31,6 +31,7 @@
       - io-checks
       - network-checks
       - load-checks
+      - http
 
   - name: Set sensu-client to run on boot
     shell: update-rc.d sensu-client defaults

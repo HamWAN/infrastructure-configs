@@ -12,7 +12,7 @@
     },
     "ping_check_{{ item|replace(".", "-") }}": {
       "source": "{{ item }}",
-      "command": "check-ping.rb -h {{item}} -r",
+      "command": "check-ping.rb -c 10 -h {{item}} -r",
       "subscribers": [
         "snmp-checker"
       ],

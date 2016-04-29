@@ -36,6 +36,10 @@
     template: src=handlers.json.j2 dest=/etc/sensu/conf.d/handlers.json mode=0640 owner=sensu group=sensu force=yes
     when: sensu_telegram_handler
 
+  - name: Set filters config
+    template: src=filters.json.j2 dest=/etc/sensu/conf.d/filters.json mode=0640 owner=sensu group=sensu force=yes
+    when: sensu_telegram_handler
+
   - name: Set telegram config
     template: src=telegram.json.j2 dest=/etc/sensu/conf.d/telegram.json mode=0640 owner=sensu group=sensu force=yes
     when: sensu_telegram_handler
