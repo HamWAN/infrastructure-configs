@@ -50,5 +50,5 @@ router_user_text_password: "{{ vault_router_user_text_password }}"
 monitor_host: monitor.memhamwan.net
 monitor_rabbitmq_secret: "{{ vault_monitor_rabbitmq_secret }}"
 monitor_telegram_api_token: "{{ vault_monitor_telegram_api_token }}"
-monitor_telegram_chat_token: "-100920353"
+monitor_telegram_chat_token: "-116092899"
 sensu_telegram_handler: true
