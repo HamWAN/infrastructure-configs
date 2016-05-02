@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "asterisk_process_exists": {
+      "command": "/opt/sensu/embedded/bin/check-process.rb -p /usr/sbin/asterisk",
+      "subscribers": [
+        "voip"
+      ],
+      "interval": 60
+    },
+    "asterisk_listening_iax_sip_ports": {
+      "command": "/opt/sensu/embedded/bin/check-ports.rb -H localhost -p 5060,4569 -P udp",
+      "subscribers": [
+        "voip"
+      ],
+      "interval": 60
+    }
+  }
+}

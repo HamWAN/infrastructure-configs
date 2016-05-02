@@ -2,7 +2,9 @@
   "filters": {
     "recurrences": {
       "attributes": {
-        "occurrences": "eval: value == 2 || value % 30 == 0"
+        "check": {
+          "type": "eval: value != 'metric'"
+        }
       }
     }
   }

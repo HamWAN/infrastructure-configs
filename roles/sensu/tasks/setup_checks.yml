@@ -9,5 +9,7 @@
       - check_memory.json
       - check_network.json
       - check_disk.json
+      - check_www.json
+      - check_voip.json
 
   - service: name=sensu-server state=restarted

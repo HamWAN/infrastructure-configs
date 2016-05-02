@@ -12,11 +12,12 @@
     },
     "ping_check_{{ item|replace(".", "-") }}": {
       "source": "{{ item }}",
-      "command": "check-ping.rb -c 10 -h {{item}} -r",
+      "command": "check-ping.rb -c 2 -h {{item}} -r",
       "subscribers": [
         "snmp-checker"
       ],
-      "interval": 120
+      "interval": 60,
+      "handler": "less-chatty"
     },
     "under_voltage_check_{{ item|replace(".", "-") }}": {
       "source": "{{ item }}",
