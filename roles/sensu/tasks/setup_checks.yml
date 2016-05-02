@@ -11,5 +11,6 @@
       - check_disk.json
       - check_www.json
       - check_voip.json
+      - check_jira.json
 
   - service: name=sensu-server state=restarted
