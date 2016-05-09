@@ -7,6 +7,15 @@
         "production"
       ],
       "interval": 10
+    },
+    "cpu_check": {
+      "command": "check-cpu.rb",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 10,
+      "occurrences": 5,
+      "refresh": 60
     }
   }
 }
