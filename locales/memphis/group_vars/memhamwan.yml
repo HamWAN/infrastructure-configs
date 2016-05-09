@@ -35,7 +35,7 @@ SECTOR_CHANNEL_WIDTH: 10
 
 ansible_ssh_port: 22
 network: memhamwan
-anycast_ipv4_host_and_cidr: 44.34.132.0/21
+anycast_ipv4_host_and_cidr: 44.34.132.0/23
 ipv6_support: false
 
 AUTHORITATIVE_DNS_PRIMARY: 44.34.132.2
