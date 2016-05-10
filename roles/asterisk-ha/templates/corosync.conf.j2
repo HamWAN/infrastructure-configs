@@ -46,9 +46,11 @@ cluster_name: ha-asterisk
 }
 
 nodelist {
+{% for voip_cluster_node_ip in voip_cluster_node_ips %}
 node {
-ring0_addr: {{ eth0_ip }}
+ring0_addr: {{ voip_cluster_node_ip }}
 }
+{% endfor %}
 }
 
 amf {

@@ -70,7 +70,7 @@
     force=yes
   notify:
     - Restart corosync
-    -   Restart pacemaker
+    - Restart pacemaker
 
 - name: Disable unused STONITH command
   shell: "crm configure property stonith-enabled=false"
