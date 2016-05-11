@@ -42,13 +42,14 @@ mcastport: 5405
 ttl: 1
 }
 transport: udpu
-cluster_name: ha-asterisk
+cluster_name: ha-{{ ha_service }}
 }
 
 nodelist {
-{% for voip_cluster_node_ip in voip_cluster_node_ips %}
+{% for node in ha_nodes %}
 node {
-ring0_addr: {{ voip_cluster_node_ip }}
+ring0_addr: {{ lookup('dig', node) }}
+name: {{ node }}
 }
 {% endfor %}
 }
@@ -60,7 +61,7 @@ mode: disabled
 quorum {
 # Quorum for the Pacemaker Cluster Resource Manager
 provider: corosync_votequorum
-expected_votes: 1
+expected_votes: {{ ha_nodes|length }}
 }
 
 aisexec {

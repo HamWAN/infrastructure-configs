@@ -1,0 +1,4 @@
+---
+dependencies:
+    - { role: quagga }
+    - { role: iptables-rules, iptables_input_accept_rules: [{name: corosync-5405, protocol: udp, port: 5405},{name: corosync-5404, protocol: udp, port: 5404}]}

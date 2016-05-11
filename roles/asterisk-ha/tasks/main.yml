@@ -1,17 +1,3 @@
 ---
-- name: Get iptables rules
-  command: /bin/cat /etc/rc.local
-  register: iptablesrules
-  always_run: yes
-
-- name: Lookup host IP
-  set_fact: eth0_ip={{lookup('dig', 'eth0.' + inventory_hostname + './A', wantlist=True)[0]}}
-
-- name: Calculate network IP
-  set_fact: eth0_ip_network={{[eth0_ip, ether_netmask] | join("") | ipaddr('network')}}
-
-- include: setup_quagga.yml
-  tags: [quagga]
-
 - include: install_asterisk.yml
   tags: [asterisk]

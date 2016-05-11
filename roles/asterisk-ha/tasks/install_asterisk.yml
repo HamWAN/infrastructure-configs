@@ -1,36 +1,4 @@
 ---
-- name: Get iptables rules
-  command: /bin/cat /etc/rc.local
-  register: iptablesrules
-  always_run: yes
-
-- name: Add asterisk iptable rule
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p udp -m udp --dport 5060 -j ACCEPT {{ '#' }}asterisk-5060"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("asterisk-5060") == -1
-
-- name: Add asterisk iptable rule
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p udp -m udp --dport 5036 -j ACCEPT {{ '#' }}asterisk-5036"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("asterisk-5036") == -1
-
-- name: Add asterisk iptable rule
-  lineinfile:
-    dest=/etc/rc.local
-    line="iptables -A INPUT -p udp -m udp --dport 10000:20000 -j ACCEPT {{ '#' }}asterisk-rtp"
-    insertbefore="-----ROLE RULES END-----"
-    state="present"
-  when: iptablesrules.stdout.find("asterisk-rtp") == -1
-
-- name: Execute /etc/rc.local to place iptables rules
-  command: /etc/rc.local
-
 - name: Ensure asterisk is installed
   apt:
     pkg={{ item }}
@@ -38,57 +6,11 @@
     update_cache=yes
   with_items:
     - asterisk
-    - pacemaker
-    - corosync
 
-- name: Setup cman template if there are fewer than 3 hosts
-  template:
-    backup=no
-    dest=/etc/default/cman
-    src=cman.j2
-    force=yes
-
-- name: Setup corosync to start on boot
-  template:
-    backup=no
-    dest=/etc/default/corosync
-    src=corosync.j2
-    force=yes
-
-- name: Set pacemaker to run on boot
-  shell: update-rc.d pacemaker defaults
-
-- name: Get bindnetaddr
-  shell: "ip addr | grep 'inet ' | tail -n 1 | awk '{print $4}' | sed s/255/0/"
-  register: bindnetaddr
-
-- name: Setup corosync to start on boot
-  template:
-    backup=no
-    dest=/etc/corosync/corosync.conf
-    src=corosync.conf.j2
-    force=yes
-  notify:
-    - Restart corosync
-    - Restart pacemaker
-
-- name: Disable unused STONITH command
-  shell: "crm configure property stonith-enabled=false"
-
-- name: If you only have two nodes, configure the cluster to ignore the fact that it doesn't have quorum in the case of a failure
-  shell: "crm configure property no-quorum-policy=ignore"
-
-- name: Configure the cluster with resource stickiness
-  shell: "crm configure rsc_defaults resource-stickiness=100"
-
-- name: Configure a Highly Available IP
-  shell: "crm configure primitive HA-Asterisk-IP ocf:heartbeat:IPaddr2 params ip={{ voip_ha_ip }} cidr_netmask=32 op monitor interval=30s"
-
-- name: Configure a service to be managed
-  shell: "crm configure primitive HA-Asterisk-Service lsb:asterisk op monitor interval=30s"
-
-- name: Configure pacemaker to keep the services (IP and Asterisk) together
-  shell: "crm configure colocation Service-With-IP INFINITY: HA-Asterisk-Service HA-Asterisk-IP"
-
-- name: Configure pacemaker to start the Asterisk service after the IP is started
-  shell: "crm configure order Service-After-IP mandatory: HA-Asterisk-IP HA-Asterisk-Service"
+- name: Add config files
+  template: src="locales/{{LOCALE}}/private_configs/{{ item }}.j2" dest="/etc/asterisk/{{ item }}" mode=0640 owner=asterisk group=asterisk
+  with_items:
+    - extensions.conf
+    - iax.conf
+    - sip.conf
+    - voicemail.conf

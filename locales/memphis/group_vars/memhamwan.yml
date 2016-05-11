@@ -4,7 +4,7 @@
 LOCALE_DOMAIN: memhamwan.net
 LOCALE_CALLSIGN: KM4ECM
 LOCALE_SUBNET: 44.34.128.0/21
-LOCALE: "Memphis Metro"
+LOCALE: "memphis"
 
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"
@@ -27,10 +27,10 @@ SERVER_DNS_PRIMARY: 44.34.132.1
 SERVER_DNS_SECONDARY: 44.34.133.1
 SERVER_SMTP: smtp-relay.gmail.com
 SNMP_COMMUNITY: hamwan
-voip_ha_ip: 44.34.132.5
-voip_cluster_node_ips:
-  - 44.34.129.54
-  - 44.34.128.173
+asterisk_ha_ip: 44.34.132.5
+asterisk_ha_nodes:
+  - voip.leb.memhamwan.net
+  - voip.mno.memhamwan.net
 
 NETOPS_EMAIL: netops@memhamwan.org
 

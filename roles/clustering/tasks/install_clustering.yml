@@ -1,0 +1,66 @@
+---
+  #This uses ha_ip, ha_service, and ha_nodes
+- name: Ensure clustering is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - pacemaker
+    - corosync
+
+- name: Setup cman template if there are fewer than 3 hosts
+  template:
+    backup=no
+    dest=/etc/default/cman
+    src=cman.j2
+    force=yes
+  when: ha_nodes|length < 3
+
+- name: Setup corosync to start on boot
+  template:
+    backup=no
+    dest=/etc/default/corosync
+    src=corosync.j2
+    force=yes
+
+- name: Set pacemaker to run on boot
+  shell: update-rc.d pacemaker defaults
+
+- name: Get bindnetaddr
+  shell: "ip addr | grep 'inet ' | tail -n 1 | awk '{print $4}' | sed s/255/0/"
+  register: bindnetaddr
+
+- name: Setup corosync to start on boot
+  template:
+    backup=no
+    dest=/etc/corosync/corosync.conf
+    src=corosync.conf.j2
+    force=yes
+
+- service: name=corosync state=restarted
+- service: name=pacemaker state=restarted
+
+- pause: seconds=5
+
+- name: If you only have two nodes, configure the cluster to ignore the fact that it doesn't have quorum in the case of a failure
+  shell: "crm configure property no-quorum-policy=ignore"
+  when: ha_nodes|length < 3
+
+- name: Disable unused STONITH command
+  shell: "crm configure property stonith-enabled=false"
+
+- name: Configure the cluster with resource stickiness
+  shell: "crm configure rsc_defaults resource-stickiness=100"
+
+- name: Configure a Highly Available IP
+  shell: "crm configure primitive HA-{{ ha_service }}-IP ocf:heartbeat:IPaddr2 params ip={{ ha_ip }} cidr_netmask=32 op monitor interval=30s"
+
+- name: Configure a service to be managed
+  shell: "crm configure primitive HA-{{ ha_service }}-Service lsb:{{ ha_service }} op monitor interval=30s"
+
+- name: Configure pacemaker to keep the services (IP and Service) together
+  shell: "crm configure colocation Service-With-IP INFINITY: HA-{{ ha_service }}-Service HA-{{ ha_service }}-IP"
+
+- name: Configure pacemaker to start the Service after the IP is started
+  shell: "crm configure order Service-After-IP mandatory: HA-{{ ha_service }}-IP HA-{{ ha_service }}-Service"
