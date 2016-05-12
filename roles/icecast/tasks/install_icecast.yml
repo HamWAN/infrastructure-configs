@@ -1,0 +1,14 @@
+---
+- name: Ensure icecast is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - icecast2
+
+- name: Enable icecast2
+  lineinfile: dest=/etc/default/icecast2 regexp=^ENABLE= line=ENABLE=true
+
+- name: Add config files
+  template: src=icecast.xml.j2 dest="/etc/icecast2/icecast.xml" mode=0640 owner=icecast2 group=icecast

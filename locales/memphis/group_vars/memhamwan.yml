@@ -32,6 +32,12 @@ asterisk_ha_nodes:
   - voip.leb.memhamwan.net
   - voip.mno.memhamwan.net
 
+stream_ha_nodes:
+  - stream.mno.memhamwan.net
+
+bigbluebutton_ha_nodes:
+  - bigbluebutton.mno.memhamwan.net
+
 NETOPS_EMAIL: netops@memhamwan.org
 
 SECTOR_CHANNEL_WIDTH: 10
@@ -49,6 +55,9 @@ ospf_password: "{{ vault_ospf_password }}"
 romon_secret: "{{ vault_romon_secret }}"
 wpa_psk: "{{ vault_p2p_wpa_psk }}"
 router_user_text_password: "{{ vault_router_user_text_password }}"
+stream_source_password: "{{ vault_stream_source_password }}"
+stream_relay_password: "{{ vault_stream_relay_password }}"
+stream_admin_password: "{{ vault_stream_admin_password }}"
 
 monitor_host: monitor.memhamwan.net
 monitor_rabbitmq_secret: "{{ vault_monitor_rabbitmq_secret }}"

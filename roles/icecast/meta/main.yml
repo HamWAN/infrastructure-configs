@@ -1,0 +1,3 @@
+---
+dependencies:
+    - { role: iptables-rules, iptables_input_accept_rules: [{name: icecast-8000, protocol: tcp, port: 8000},{name: icecast-8001, protocol: tcp, port: 8001}]}
