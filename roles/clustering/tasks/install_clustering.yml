@@ -57,7 +57,7 @@
   shell: "crm configure primitive HA-{{ ha_service }}-IP ocf:heartbeat:IPaddr2 params ip={{ ha_ip }} cidr_netmask=32 op monitor interval=30s"
 
 - name: Configure a service to be managed
-  shell: "crm configure primitive HA-{{ ha_service }}-Service lsb:{{ ha_service }} op monitor interval=30s"
+  shell: "crm configure primitive HA-{{ ha_service }}-Service lsb:{{ ha_service }} {{ ha_service_monitoring }}"
 
 - name: Configure pacemaker to keep the services (IP and Service) together
   shell: "crm configure colocation Service-With-IP INFINITY: HA-{{ ha_service }}-Service HA-{{ ha_service }}-IP"
