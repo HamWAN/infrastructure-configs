@@ -2,3 +2,4 @@
 - hosts: server
   roles:
     - asterisk-ha
+    - { role: clustering, ha_ip: "{{ asterisk_ha_ip }}", ha_service: "asterisk", ha_nodes: "{{ asterisk_ha_nodes }}", ha_service_monitoring: "op monitor interval=30s" }
