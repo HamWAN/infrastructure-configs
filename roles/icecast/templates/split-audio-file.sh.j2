@@ -1,0 +1,18 @@
+#! /bin/bash
+
+dt=$(date --iso-8601=minutes)
+for file in /var/www/html/archives/current/*.mp3
+do
+    name=${file%.*}
+    cp ${file} ${name}_${dt}.mp3
+    echo "" > ${file}
+    # Below here is all stuff to generate the waveform images
+    sox ${name}_${dt}.mp3 ${name}_${dt}.dat #create plaintext file of amplitude values
+    tail -n+3 ${name}_${dt}.dat > /var/www/html/archives/audio_only.dat #remove comments
+    cd /var/www/html/archives/
+    gnuplot /srv/audio.gpi #run script
+    mv /var/www/html/archives/audio.png ${name}_${dt}.png
+    rm /var/www/html/archives/audio_only.dat ${name}_${dt}.dat
+    # Above here is all stuff to generate the waveform images
+    mv ${name}_${dt}.* /var/www/html/archives/ #Move the final products into place
+done

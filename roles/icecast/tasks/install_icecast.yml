@@ -6,9 +6,22 @@
     update_cache=yes
   with_items:
     - icecast2
+    - libcurl4-gnutls-dev #this is here due to https://stackoverflow.com/questions/30223129/icecast-stream-authentication#comment48641970_30248361
+    - apache2
+    - sox
+    - gnuplot
+    - libsox-fmt-mp3
 
 - name: Enable icecast2
   lineinfile: dest=/etc/default/icecast2 regexp=^ENABLE= line=ENABLE=true
 
 - name: Add config files
   template: src=icecast.xml.j2 dest="/etc/icecast2/icecast.xml" mode=0640 owner=icecast2 group=icecast
+
+- name: Add split-audio-file.sh files
+  template: src=split-audio-file.sh.j2 dest="/srv/split-audio-file.sh" mode=0777 owner=icecast2 group=icecast
+
+- name: Add split-audio-file.sh files
+  template: src=audio.gpi.j2 dest="/srv/audio.gpi" mode=0777 owner=icecast2 group=icecast
+
+- cron: name="Add split job" minute="*/15" job="/srv/split-audio-file.sh"
