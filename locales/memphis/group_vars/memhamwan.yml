@@ -64,3 +64,5 @@ monitor_rabbitmq_secret: "{{ vault_monitor_rabbitmq_secret }}"
 monitor_telegram_api_token: "{{ vault_monitor_telegram_api_token }}"
 monitor_telegram_chat_token: "-116092899"
 sensu_telegram_handler: true
+
+eden_admin_password: "awfefweaa"
