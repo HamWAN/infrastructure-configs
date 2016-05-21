@@ -24,10 +24,6 @@ git clone https://github.com/HamWAN/infrastructure-configs
 A few examples:
 ```bash
 ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit voip.leb.memhamwan.net
-ansible-playbook -i locales/memphis/hosts jira.yml -u ryan_turner -s --vault-password-file ~/.vault_pass.txt -vvvv
-ansible-playbook -i locales/memphis/hosts add_new_netop.yml -u ryan_turner -s --vault-password-file ~/.vault_pass.txt -vvvv
-ansible-playbook -i locales/seattle/hosts shinysdr.yml -u (your-remote-username) -s --vault-password-file ~/.vault_pass.txt -vvvv
-ansible-playbook -i locales/memphis/hosts base_station_core_router.yml --vault-password-file ~/.vault_pass.txt -vvvv -u ryan_turner --limit sco --extra-vars "default_user=admin"
 ```
 ~/.vault_pass.txt should contain the vault password for your locale's secret values.
 
@@ -42,8 +38,9 @@ ansible-playbook -i locales/memphis/hosts.sh routeros_omni.yml --vault-password-
 
 Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh sensu.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh sensu_client.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh sensu_checks.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
 ```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
 
