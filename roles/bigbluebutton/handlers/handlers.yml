@@ -1,0 +1,9 @@
+---
+- name: Restart corosync
+  action: service name=corosync state=restarted
+
+- name: Restart pacemaker
+  action: service name=pacemaker state=restarted
+
+- name: Restart ansible
+  action: service name=ansible state=restarted
