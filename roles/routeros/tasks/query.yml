@@ -19,9 +19,18 @@
 
 - name: Define the mikrotik SSH host
   set_fact: mikrotik_host={{ ansible_host }}
+  when: mikrotik_host is not defined or mikrotik_host is none
+
+- name: Check if we can use rsa for ssh
+  local_action: command ssh-keyscan -t rsa 10.10.0.247
+  register: keyscan_rsa
+
+- name: Add additional flags to handle
+  set_fact: mikrotik_connect_flags="-oHostKeyAlgorithms=+ssh-dss"
+  when: keyscan_rsa.stdout|length < 1
 
 - name: Check to see if "admin" user can connect
-  local_action: command sshpass -p "" ssh -p {{ mikrotik_port }} admin@{{ mikrotik_host }} "/system routerboard print"
+  local_action: command sshpass -p "" ssh -p {{ mikrotik_port }} admin@{{ mikrotik_host }} {{ mikrotik_connect_flags }} "/system routerboard print"
   register: ansible_ssh_user_login_test
   ignore_errors: yes
 
@@ -30,15 +39,20 @@
   when: "'Permission denied' not in ansible_ssh_user_login_test.stderr"
 
 - name: query device for hardware
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/system routerboard print"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} {{ mikrotik_connect_flags }} "/system routerboard print"
   tags:
     - research
   register: routerboard_details
 
+- name: Define router type
+  set_fact: router_type="{{ routerboard_details['stdout_lines'][1].split()[-1] }}"
+
+- debug: msg={{router_type}}
+
 - debug: msg=routerboard_details.stdout
 
 - name: query device for health and version
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/system resource print"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} -oHostKeyAlgorithms=+ssh-dss "/system resource print"
   tags:
     - research
   register: routeros_details

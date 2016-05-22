@@ -1,0 +1,67 @@
+/ip dns set servers=8.8.8.8,8.8.4.4
+/ip address remove [find interface=capsman-general]
+/ip address remove [find interface=switch-bridge]
+/interface bridge remove [find name=capsman-general]
+/interface bridge add name=capsman-general disabled=no
+/interface bridge remove [find name=capsman-hamwan]
+/interface bridge add name=capsman-hamwan disabled=no
+/caps-man manager set enabled=yes
+/caps-man configuration remove [find]
+/caps-man configuration add name=fieldday-wifi ssid="WiFi by HamWAN" datapath.bridge=capsman-general
+/caps-man configuration add name=fieldday-hamwan ssid="HamWAN" datapath.bridge=capsman-hamwan
+/caps-man provisioning remove [find]
+/caps-man provisioning add action=create-dynamic-enabled master-configuration=fieldday-wifi slave-configuration=fieldday-hamwan
+/interface bridge port remove [find bridge="switch-bridge"]
+/interface bridge remove [find name="switch-bridge"]
+/interface bridge add name="switch-bridge" disabled=no
+/interface bridge port add interface=ether2 bridge="switch-bridge"
+/interface bridge port add interface=ether6 bridge="switch-bridge"
+/ip dhcp-client remove [find]
+/interface ethernet set master-port=none [find default-name=ether2]
+/interface ethernet set master-port=ether2 [find default-name=ether3]
+/interface ethernet set master-port=ether2 [find default-name=ether4]
+/interface ethernet set master-port=ether2 [find default-name=ether5]
+/interface ethernet set [ find default-name=ether7 ] master-port=ether6
+/interface ethernet set [ find default-name=ether8 ] master-port=ether6
+/interface ethernet set [ find default-name=ether9 ] master-port=ether6
+/interface ethernet set [ find default-name=ether10 ] master-port=ether6
+/ip dhcp-client add interface=ether1 disabled=no
+
+/ip address remove [find interface=capsman-general]
+/ip address add address=10.10.10.1/24 interface=capsman-general
+/ip dhcp-server lease remove [find server=dhcp1]
+/ip dhcp-server remove [find name=dhcp1]
+/ip pool remove [find name=pool1]
+/ip pool add name=pool1 ranges=10.10.10.2-10.10.10.254
+/ip dhcp-server add address-pool=pool1 disabled=no interface=capsman-general lease-time=1h name=dhcp1
+/ip dhcp-server network remove [find]
+/ip dhcp-server network add address=10.10.10.0/24 dns-server=8.8.8.8,8.8.4.4 domain=memhamwan.org gateway=10.10.10.1 netmask=24 ntp-server=44.34.132.5 comment=dhcp1
+/ip firewall nat remove [find comment=capsman-general]
+/ip firewall nat add chain=srcnat src-address=10.10.10.0/24 action=masquerade comment=capsman-general
+
+/ip address remove [find interface=capsman-hamwan]
+/ip address add address=10.10.20.1/24 interface=capsman-hamwan
+/ip dhcp-server lease remove [find server=dhcp3]
+/ip dhcp-server remove [find name=dhcp3]
+/ip pool remove [find name=pool3]
+/ip pool add name=pool3 ranges=10.10.20.2-10.10.20.254
+/ip dhcp-server add address-pool=pool3 disabled=no interface=capsman-hamwan lease-time=1h name=dhcp3
+/ip dhcp-server network remove [find comment=dhcp3]
+/ip dhcp-server network add address=10.10.20.0/24 dns-server=8.8.8.8,8.8.4.4 domain=memhamwan.org gateway=10.10.20.1 netmask=24 ntp-server=44.34.132.5 comment=dhcp3
+/ip firewall nat remove [find comment=capsman-hamwan]
+/ip firewall nat add chain=srcnat src-address=10.10.20.0/24 action=masquerade comment=capsman-hamwan
+
+/ip address remove [find interface=switch-bridge]
+/ip address add address=10.10.0.1/24 interface=switch-bridge
+/ip dhcp-server lease remove [find server=dhcp2]
+/ip dhcp-server remove [find name=dhcp2]
+/ip pool remove [find name=pool2]
+/ip pool add name=pool2 ranges=10.10.0.2-10.10.0.254
+/ip dhcp-server add address-pool=pool2 disabled=no interface=switch-bridge lease-time=1h name=dhcp2
+/ip dhcp-server network remove [find comment=dhcp2]
+/ip dhcp-server network add address=10.10.0.0/24 dns-server=8.8.8.8,8.8.4.4 domain=memhamwan.org gateway=10.10.0.1 netmask=24 ntp-server=44.34.132.5 comment=dhcp2
+
+/ip firewall nat remove [find comment=switch-bridge]
+/ip firewall nat add chain=srcnat src-address=10.10.0.0/24 action=masquerade comment="switch-bridge"
+/tool romon set enabled=yes secrets={{ romon_secret }}
+/tool bandwidth-server set authenticate=no enabled=yes

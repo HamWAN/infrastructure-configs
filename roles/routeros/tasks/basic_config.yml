@@ -19,12 +19,7 @@
   tags:
     - import
   register: import_result
-
-- name: "import script on device failed"
-  action: fail msg="importing script common.rsc on {{ inventory_hostname }} failed"
-  tags:
-    - import
-  when: "'failure:' in import_result.stdout"
+  failed_when: "'failure:' in import_result.stdout"
 
 - name: Redefine the mikrotik SSH user as the desired one
   set_fact: mikrotik_user={{ mikrotik_desired_user }}
