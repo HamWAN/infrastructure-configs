@@ -10,60 +10,30 @@
 - debug: msg="Skipping upgrade because host is already running latest version"
   when: latest_routeros_version in routeros_details.stdout
 
-- name: Create temp file
-  local_action: shell mktemp
-  register: mktemp
-  when: latest_routeros_version not in routeros_details.stdout
-
-- name: Create template for common changes
-  local_action: template src=update.j2 dest={{ mktemp.stdout }} backup=no
-  tags:
-    - generate
-  when: latest_routeros_version not in routeros_details.stdout
-
-- name: Copy upgrade ros script to router
-  local_action: command scp {{ mikrotik_connect_flags }} -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/update.rsc
-  tags:
-    - import
-  when: latest_routeros_version not in routeros_details.stdout
-
-- name: "import script on device"
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} {{ mikrotik_connect_flags }} "/import verbose=yes update.rsc"
-  tags:
-    - import
-  register: import_result
-  when: latest_routeros_version not in routeros_details.stdout
-
-- name: "import script on device failed"
-  action: fail msg="importing script update.rsc on {{ inventory_hostname }} failed"
-  tags:
-    - import
-  when: "import_result is defined and 'failure:' in import_result.stdout and latest_routeros_version not in routeros_details.stdout"
-
-- name: remove script from generated-scripts directory
-  local_action: file path={{ mktemp.stdout }} state=absent
-  tags:
-    - cleanup
+- include: import_script.yml
+  vars:
+    item: update
+    dont_switch_user: True
+    skip_removing: True
   when: latest_routeros_version not in routeros_details.stdout
 
 - name: Wait for server to restart
   local_action: wait_for host={{ mikrotik_host }} port={{ mikrotik_port }} delay=60
-  when: latest_routeros_version not in routeros_details.stdout
+  when: is_upgrade is defined and is_upgrade == true and latest_routeros_version not in routeros_details.stdout
 
 - name: pause 10 seconds for things to settle down
   local_action: pause seconds=10
-  when: latest_routeros_version not in routeros_details.stdout
+  when: is_upgrade is defined and is_upgrade == true and latest_routeros_version not in routeros_details.stdout
 
 - name: remove known_hosts entry since its old ssh-dss stuff
   local_action: known_hosts state=absent name={{ mikrotik_host }}
+  when: is_upgrade is defined and is_upgrade == true
+
 - name: Get the new key
   local_action: command ssh-keyscan -t rsa {{ mikrotik_host }}
   register: ssh_keyscan
+  when: is_upgrade is defined and is_upgrade == true
+
 - name: Add the new key
   local_action: known_hosts state=present name={{ mikrotik_host }} key="{{ ssh_keyscan.stdout }}"
-
-- name: "Remove script from device"
-  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=update.rsc]"
-  tags:
-    - cleanup
-  when: latest_routeros_version not in routeros_details.stdout
+  when: is_upgrade is defined and is_upgrade == true

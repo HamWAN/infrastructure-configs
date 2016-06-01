@@ -22,7 +22,7 @@
   when: mikrotik_host is not defined or mikrotik_host is none
 
 - name: Check if we can use rsa for ssh
-  local_action: command ssh-keyscan -t rsa 10.10.0.247
+  local_action: command ssh-keyscan -t rsa {{ mikrotik_host }}
   register: keyscan_rsa
 
 - name: Add additional flags to handle
@@ -46,6 +46,17 @@
 
 - name: Define router type
   set_fact: router_type="{{ routerboard_details['stdout_lines'][1].split()[-1] }}"
+
+- name: Define architecture
+  set_fact: routeros_architecture="mipsbe" #default to mipsbe
+
+- name: Define architecture
+  set_fact: routeros_architecture="mipsbe"
+  when: "routerboard_details['stdout_lines'][3].split()[-1] == 'ar9344'"
+
+- name: Define architecture
+  set_fact: routeros_architecture="tile"
+  when: "routerboard_details['stdout_lines'][3].split()[-1] == 'tilegx'"
 
 - debug: msg={{router_type}}
 

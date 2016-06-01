@@ -1,0 +1,16 @@
+/interface ethernet set master-port=none [find default-name=ether2]
+/interface ethernet set master-port=ether2 [find default-name=ether3]
+/interface ethernet set master-port=ether2 [find default-name=ether4]
+/interface ethernet set master-port=ether2 [find default-name=ether5]
+/interface ethernet set [ find default-name=ether7 ] master-port=ether6
+/interface ethernet set [ find default-name=ether8 ] master-port=ether6
+/interface ethernet set [ find default-name=ether9 ] master-port=ether6
+/interface ethernet set [ find default-name=ether10 ] master-port=ether6
+/interface bridge port remove [find bridge="switch-bridge"]
+/interface bridge remove [find name="switch-bridge"]
+/interface bridge add name="switch-bridge" disabled=no
+/interface bridge port add interface=ether2 bridge="switch-bridge"
+/interface bridge port add interface=ether6 bridge="switch-bridge"
+
+/ip dhcp-client remove [find]
+/ip dhcp-client add interface=ether1 disabled=no

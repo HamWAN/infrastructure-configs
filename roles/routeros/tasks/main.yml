@@ -5,18 +5,17 @@
 - include: upgrade_ros.yml
   tags: [upgrade_ros]
 
-- include: basic_config.yml
-  tags: [basic_config]
+- include: import_script.yml item=basic_config
   when: routeros_setup_base_config == true
 
-- include: field_day_core.yml
-  tags: [field_day_core]
+- include: import_script.yml item=CCR1009-8G-1S-1S+
+  when: router_type == "CCR1009-8G-1S-1S+"
+
+- include: install_extra_packages.yml
   when: field_day_core == true
 
-- include: client_node.yml
-  tags: [client_node]
-  when: client_node == true
-
-- include: cap.yml
-  tags: [cap]
+- include: import_script.yml item=cap
   when: field_day_ap == true
+
+- include: import_script.yml item=field_day_core
+  when: field_day_core == true

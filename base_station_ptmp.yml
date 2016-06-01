@@ -1,7 +1,0 @@
----
-- hosts: mikrotik-sector-routers
-  gather_facts: False
-  connection: paramiko
-  serial: 1
-  roles:
-    - mikrotik-sector-routers

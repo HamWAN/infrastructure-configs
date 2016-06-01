@@ -33,3 +33,4 @@
 /ip dns set allow-remote-requests=no
 /tool romon set enabled=yes secrets={{ romon_secret }}
 /tool bandwidth-server set authenticate=no enabled=yes
+/system identity set name={{ inventory_hostname }}

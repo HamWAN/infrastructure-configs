@@ -1,4 +1,0 @@
----
- - include: base_station_ptmp.yml
- - include: base_station_ptp.yml
- - include: base_station_core_router.yml
