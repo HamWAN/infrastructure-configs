@@ -4,9 +4,13 @@
 
 - include: upgrade_ros.yml
   tags: [upgrade_ros]
+  when: upgrade_ros == true
 
 - include: import_script.yml item=basic_config
   when: routeros_setup_base_config == true
+
+- include: import_script.yml item=users
+  when: routeros_setup_users == true
 
 - include: import_script.yml item=CCR1009-8G-1S-1S+
   when: router_type == "CCR1009-8G-1S-1S+"

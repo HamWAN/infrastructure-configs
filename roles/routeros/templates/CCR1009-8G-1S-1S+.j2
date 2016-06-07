@@ -6,6 +6,7 @@
 /interface bridge remove [find name=switch-bridge]
 /interface bridge add name="switch-bridge" disabled=no
 /interface bridge port add interface=ether1 bridge="switch-bridge"
-
-/ip dhcp-client remove [find]
-/ip dhcp-client add interface=ether8 disabled=no
+/interface bridge port add interface=ether5 bridge="switch-bridge"
+/interface bridge port add interface=ether6 bridge="switch-bridge"
+/interface bridge port add interface=ether7 bridge="switch-bridge"
+/interface bridge port add interface=ether8 bridge="switch-bridge"
