@@ -21,10 +21,12 @@
 /caps-man channel add band=2ghz-b/g/n name=CH12 frequency=2467
 /caps-man channel add band=2ghz-b/g/n name=CH13 frequency=2472
 /caps-man configuration remove [find]
-/caps-man configuration add name=fieldday-wifi channels=CH1,CH6,CH11 ssid="WiFi by HamWAN" datapath.bridge=capsman-general
-/caps-man configuration add name=fieldday-hamwan ssid="HamWAN" datapath.bridge=capsman-hamwan security.authentication-types=wpa2-psk security.passphrase=wififorhams
+/caps-man configuration add name=fieldday-wifi-1 channel=CH1 ssid="WiFi by HamWAN" datapath.bridge=capsman-general
+/caps-man configuration add name=fieldday-wifi-5 channel=CH6 ssid="WiFi by HamWAN" datapath.bridge=capsman-general
+/caps-man configuration add name=fieldday-wifi-11 channel=CH11 ssid="WiFi by HamWAN" datapath.bridge=capsman-general
+/caps-man configuration add name=fieldday-hamwan-11 ssid="HamWAN" datapath.bridge=capsman-hamwan security.authentication-types=wpa2-psk security.passphrase=wififorhams
 /caps-man provisioning remove [find]
-/caps-man provisioning add action=create-dynamic-enabled master-configuration=fieldday-wifi slave-configuration=fieldday-hamwan
+/caps-man provisioning add action=create-dynamic-enabled master-configuration=fieldday-wifi-1 slave-configuration=fieldday-hamwan
 
 
 /ip address remove [find interface=capsman-general]
@@ -69,3 +71,8 @@
 
 /ip hotspot remove [find name=capsman-general]
 /ip hotspot add interface=capsman-general name=capsman-general address-pool=pool-capsman-general disabled=no
+
+/routing ospf interface remove [find]
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=switch-bridge network-type=broadcast
+/routing ospf network remove [find]
+/routing ospf network add area=backbone network=10.10.0.0/24

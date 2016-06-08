@@ -4,13 +4,13 @@
   gather_facts: False
   tasks:
     - name: add new host
-      add_host: name="r1.fieldday" groups="field_day_core,cellrouter,memhamwan" mikrotik_host=10.0.7.71
+      add_host: name="r1.fieldday" groups="field_day_core,cellrouter,memhamwan" mikrotik_host=10.10.0.1
     # - name: add new host
     #   add_host: name="ap1.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.250
     # - name: add new host
     #   add_host: name="ap2.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.248
-    - name: add new host
-      add_host: name="ap3.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.247
+    # - name: add new host
+    #   add_host: name="ap3.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.247
 
 # - hosts: [field_day_ap]
 #   gather_facts: False

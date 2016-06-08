@@ -6,20 +6,21 @@
   tags: [upgrade_ros]
   when: upgrade_ros == true
 
-- include: import_script.yml item=basic_config
-  when: routeros_setup_base_config == true
-
 - include: import_script.yml item=users
   when: routeros_setup_users == true
 
-- include: import_script.yml item=CCR1009-8G-1S-1S+
-  when: router_type == "CCR1009-8G-1S-1S+"
+- include: import_script.yml item=basic_config
+  when: routeros_setup_base_config == true
 
-- include: install_extra_packages.yml
-  when: field_day_core == true
+# - include: import_script.yml item=CCR1009-8G-1S-1S+
+#   when: router_type == "CCR1009-8G-1S-1S+"
 
 - include: import_script.yml item=cap
   when: field_day_ap == true
 
 - include: import_script.yml item=field_day_core
   when: field_day_core == true
+
+- include: install_extra_packages.yml
+  when: field_day_core == true
+  
