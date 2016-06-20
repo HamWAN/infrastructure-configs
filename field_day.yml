@@ -4,7 +4,7 @@
   gather_facts: False
   tasks:
     - name: add new host
-      add_host: name="r1.fieldday" groups="field_day_core,cellrouter,memhamwan" mikrotik_host=10.10.0.1
+      add_host: name="ptp15.fieldday" groups="field_day_core,cellrouter,memhamwan" mikrotik_host=10.10.0.249
     # - name: add new host
     #   add_host: name="ap1.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.250
     # - name: add new host
@@ -12,11 +12,11 @@
     # - name: add new host
     #   add_host: name="ap3.fieldday" groups="field_day_ap,cellrouter,memhamwan" mikrotik_host=10.10.0.247
 
-# - hosts: [field_day_ap]
-#   gather_facts: False
-#   connection: paramiko
-#   roles:
-#     - { role: routeros, field_day_ap: true }
+- hosts: [field_day_ap]
+  gather_facts: False
+  connection: paramiko
+  roles:
+    - { role: routeros, field_day_ap: true }
 
 - hosts: [field_day_core]
   gather_facts: False

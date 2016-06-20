@@ -71,8 +71,16 @@
 
 /ip hotspot remove [find name=capsman-general]
 /ip hotspot add interface=capsman-general name=capsman-general address-pool=pool-capsman-general disabled=no
+/ip hotspot profile set [ find default=yes ] rate-limit=1m/1m
+/ip hotspot user remove [find name=hamwan]
+/ip hotspot user add name=hamwan password=hamwan
+
 
 /routing ospf interface remove [find]
 /routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=switch-bridge network-type=broadcast
 /routing ospf network remove [find]
 /routing ospf network add area=backbone network=10.10.0.0/24
+
+/queue simple remove [find]
+/queue simple add max-limit=512k/512k name=capsman-hamwan target=capsman-hamwan
+/queue simple add max-limit=512k/512k name=capsman-hamwan target=capsman-general
