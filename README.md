@@ -40,9 +40,15 @@ Here's an example of configuring a new VM and then setting it up for sensu. Note
 ```bash
 ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
 ansible-playbook -i locales/memphis/hosts.sh sensu_client.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
+ansible-playbook -i locales/memphis/hosts.sh chat.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit chat.mno.memhamwan.net
 ansible-playbook -i locales/memphis/hosts.sh sensu_checks.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
 ```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
+
+Let's setup field day! For memhamwan, that means a core router, three APs for general public use, and two PtP links. The expectation is that the wireless interface of the PtP link will be manually configured, since that's site specific.
+```base
+ansible-playbook -i locales/memphis/hosts.sh field_day.yml --vault-password-file ~/.vault_pass.txt -vvvv -u ryan_turner
+```
 
 ### SSH to servers
 Since we use cert auth everywhere, you'll need to have SSH'd to that remote server at least once and have your cert installed locally for connecting to that server. Also, if your local use is different than your remote user, be sure to add -u remote_user to your ansible-playbook command!
