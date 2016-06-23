@@ -1,0 +1,10 @@
+---
+dependencies:
+#    - { role: iptables-rules, iptables_input_accept_rules: [{name: rocketchat-80, protocol: tcp, port: 80}, {name: rocketchat-443, protocol: tcp, port: 443}]}
+#    - { role: RocketChat.Server, rocket_chat_tarball_sha256sum: '4ab0baeb6f1ed3c7b7cb8366c49c1f50627b01bfd0f6b0d4df1d6ac9bb67e08d' }
+    - { role: letsencrypt,
+      letsencrypt_domains: [chat.memhamwan.net],
+      letsencrypt_existing_https_service: nginx,
+      letsencrypt_desired_chain_path: /etc/nginx/rocket_chat.crt,
+      letsencrypt_desired_key_path: /etc/nginx/rocket_chat.key,
+      letsencrypt_dhparam_path: /etc/nginx/rocket_chat.pem  }

@@ -1,4 +1,4 @@
-domains = {{ letsencrypt_domains }}
+domains = {{ letsencrypt_domains|join(',') }}
 text = True
 authenticator = standalone
 email = {{ NETOPS_EMAIL }}

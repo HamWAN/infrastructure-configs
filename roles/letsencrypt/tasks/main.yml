@@ -17,20 +17,40 @@
     backup=no
     dest=/etc/letsencrypt/cli.ini
     src=cli.ini.j2
-    force=yes
 
-- name: Allow HTTPS traffic
-  lineinfile:
-    dest=/etc/rc.local
-    state=present
-    insertbefore="#-----ROLE RULES END-----"
-    line="iptables -A INPUT -p tcp --dport 443 -j ACCEPT"
+- service: name={{ letsencrypt_existing_https_service }} state=stopped
+  when: letsencrypt_existing_https_service is defined
 
-- name: Execute /etc/rc.local to place iptables rules
-  command: /etc/rc.local
+- file: path=/etc/letsencrypt/live/{{  letsencrypt_domains[0] }} state=absent
+- file: path=/etc/letsencrypt/archive/{{  letsencrypt_domains[0] }} state=absent
+- file: path=/etc/letsencrypt/renewal/{{  letsencrypt_domains[0] }}.conf state=absent
 
 - name: Install and run letsencrypt
   shell: /opt/letsencrypt/letsencrypt-auto certonly --config /etc/letsencrypt/cli.ini
 
-- name:
-  shell: cat /etc/letsencrypt/live/jira.memhamwan.net/cert.pem /etc/letsencrypt/live/jira.memhamwan.net/privkey.pem > /etc/letsencrypt/live/jira.memhamwan.net/cert+privkey.pem
+- file: path={{ letsencrypt_desired_crt_path }} state=absent
+  when: letsencrypt_desired_crt_path is defined
+
+- file: src=/etc/letsencrypt/live/{{  letsencrypt_domains[0] }}/cert.pem dest={{ letsencrypt_desired_crt_path }} state=link
+  when: letsencrypt_desired_crt_path is defined
+
+- file: path={{ letsencrypt_desired_chain_path }} state=absent
+  when: letsencrypt_desired_chain_path is defined
+
+- file: src=/etc/letsencrypt/live/{{  letsencrypt_domains[0] }}/fullchain.pem dest={{ letsencrypt_desired_chain_path }} state=link
+  when: letsencrypt_desired_chain_path is defined
+
+- file: path={{ letsencrypt_desired_key_path }} state=absent
+  when: letsencrypt_desired_key_path is defined
+
+- file: src=/etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/privkey.pem dest={{ letsencrypt_desired_key_path }} state=link
+  when: letsencrypt_desired_key_path is defined
+
+- file: path={{ letsencrypt_dhparam_path }} state=absent
+  when: letsencrypt_dhparam_path is defined
+
+- command: openssl dhparam -out {{ letsencrypt_dhparam_path }} 2048
+  when: letsencrypt_dhparam_path is defined
+
+- service: name={{ letsencrypt_existing_https_service }} state=started
+  when: letsencrypt_existing_https_service is defined
