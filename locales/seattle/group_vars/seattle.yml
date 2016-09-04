@@ -9,7 +9,7 @@ LOCALE_SUBNET: 44.24.240.0/20
 SUDOERS_FILE: "hamwan"
 SUDOERS_GROUP: "hamwan"
 
-KEYS_URL: "https://hamwan.k7nvh.com/keys/"
+KEYS_URL: "https://monitoring.hamwan.net/keys/"
 
 NETOPS_USERS:
   - nigel

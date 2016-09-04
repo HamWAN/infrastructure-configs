@@ -29,7 +29,7 @@
     groups={{ SUDOERS_GROUP }}
     state=present
   sudo: yes
-  with_items: NETOPS_USERS
+  with_items: "{{ NETOPS_USERS }}"
 
 - name: Ensure HamWAN Limited users exist
   user:
@@ -37,18 +37,18 @@
     shell=/bin/bash
     state=present
   sudo: yes
-  with_items: LIMITED_USERS
+  with_items: "{{ LIMITED_USERS }}"
 
 - name: Ensure user keys are installed
   authorized_key:
     user={{ item }}
     key={{ KEYS_URL }}{{ item }}.key
   sudo: yes
-  with_items: NETOPS_USERS
+  with_items: "{{ NETOPS_USERS }}"
 
 - name: Ensure user keys are installed
   authorized_key:
     user={{ item }}
     key={{ KEYS_URL }}{{ item }}.key
   sudo: yes
-  with_items: LIMITED_USERS
+  with_items: "{{ LIMITED_USERS }}"

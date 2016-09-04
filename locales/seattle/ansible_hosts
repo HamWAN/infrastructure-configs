@@ -2,6 +2,7 @@
 linux
 mikrotik_clients
 linux_fresh
+server
 
 [linux]
 mail.hamwan.net			ansible_ssh_host=44.24.241.199 ansible_ssh_port=22
@@ -12,3 +13,6 @@ seattle-voip01.hamwan.net	ansible_ssh_host=44.24.241.102
 10.1.10.45
 
 [linux_fresh]
+
+[server]
+stream.tukwila.hamwan.net
