@@ -8,3 +8,6 @@
   - name: Disallow password authentication
     action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
     notify: Restart sshd
+
+  - name: Allow DSA Keys
+    action: lineinfile dest=/etc/ssh/sshd_config regexp="^PubkeyAcceptedKeyTypes" line="PubkeyAcceptedKeyTypes=+ssh-dss" state=present
