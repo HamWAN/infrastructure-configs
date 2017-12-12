@@ -12,7 +12,7 @@ seattle-voip01.hamwan.net	ansible_ssh_host=44.24.241.102
 [mikrotik_clients]
 10.1.10.45
 
-[linux_fresh]
-
 [server]
-stream.tukwila.hamwan.net
+#NEW SERVER HERE
+
+[linux_fresh]
