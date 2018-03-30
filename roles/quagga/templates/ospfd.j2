@@ -12,6 +12,9 @@ interface eth0
 router ospf
  ospf router-id {{ host_ip }}
  redistribute connected
+ distribute-list AMPR out connected
  network {{ host_ip_network }}{{ ether_netmask }} area 0.0.0.0
  network {{ anycast_ipv4_host_and_cidr }} area 0.0.0.0
  area 0 authentication message-digest
+
+access-list AMPR permit 44.0.0.0/8
