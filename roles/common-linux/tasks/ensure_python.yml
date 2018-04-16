@@ -2,4 +2,6 @@
 # Ensure python is installed so the rest of ansible's commands can run
 
 - name: Ensure python is installed
-  raw: apt-get install python -y
+  raw: test -e /usr/bin/python || apt-get install python -y
+  register: output
+  changed_when: output.stdout != ""

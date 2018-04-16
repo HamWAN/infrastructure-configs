@@ -1,4 +1,10 @@
 ---
 - hosts: server
+  become: true
+  gather_facts: false
+  pre_tasks:
+   - include: roles/common-linux/tasks/ensure_python.yml
+   - name: Gathering Facts
+     setup:
   roles:
    - common-linux
