@@ -14,7 +14,9 @@ librenms = json.loads(
 inventory = {
     "_meta": {
         "hostvars": {}
-    }
+    },
+    "all": [device['hostname'] for device in librenms['devices']],
+    "seattle": [device['hostname'] for device in librenms['devices']],
 }
 
 for key in ('os', 'sysName', 'type', 'version'):
