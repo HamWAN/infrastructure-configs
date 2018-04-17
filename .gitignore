@@ -1,3 +1,4 @@
+*.retry
 *.rsc
 locales/memphis/private_configs/extensions.conf.j2
 locales/memphis/private_configs/iax.conf.j2
