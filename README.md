@@ -19,35 +19,36 @@ ansible-galaxy install DavidWittman.redis
 ansible-galaxy install Mayeu.RabbitMQ
 ansible-galaxy install Mayeu.sensu
 git clone https://github.com/HamWAN/infrastructure-configs
+cp infrastructure-configs/.ansible.cfg ~
 ```
 
 A few examples:
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit voip.leb.memhamwan.net
+ansible-playbook linux_setup.yml -u hamwan -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit voip.leb.memhamwan.net
 ```
 ~/.vault_pass.txt should contain the vault password for your locale's secret values.
 
 Here's an example using our routeros_sectors playbook to configure an existing sector:
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn2.azo.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh routeros_site_router.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit r1.mno.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh routeros_ptp.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit ptpleb.hil.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh routeros_upgrade.yml --vault-password-file ~/.vault_pass.txt -vvvv
-ansible-playbook -i locales/memphis/hosts.sh routeros_omni.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn1.leb.memhamwan.net
+ansible-playbook routeros_sectors.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn2.azo.memhamwan.net
+ansible-playbook routeros_site_router.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit r1.mno.memhamwan.net
+ansible-playbook routeros_ptp.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit ptpleb.hil.memhamwan.net
+ansible-playbook routeros_upgrade.yml --vault-password-file ~/.vault_pass.txt -vvvv
+ansible-playbook routeros_omni.yml --vault-password-file ~/.vault_pass.txt -vvvv --limit omn1.leb.memhamwan.net
 ```
 
 Here's an example of configuring a new VM and then setting it up for sensu. Note that the user provided for the first command matches whatever you had configured during OS install, but then for the next command it uses your local user and key.
 ```bash
-ansible-playbook -i locales/memphis/hosts.sh linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh sensu_client.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh chat.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit chat.mno.memhamwan.net
-ansible-playbook -i locales/memphis/hosts.sh sensu_checks.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
+ansible-playbook linux_setup.yml -u ryan_turner -k -K -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
+ansible-playbook sensu_client.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit eden.mno.memhamwan.net
+ansible-playbook chat.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit chat.mno.memhamwan.net
+ansible-playbook sensu_checks.yml -s --vault-password-file ~/.vault_pass.txt -vvvv --limit monitor.mno.memhamwan.net
 ```
 The first command updates the routers and does some basic universal configuration; the second one then looks for each core router, sector, and ptp and configures them with their appropriate settings.
 
 Let's setup field day! For memhamwan, that means a core router, three APs for general public use, and two PtP links. The expectation is that the wireless interface of the PtP link will be manually configured, since that's site specific.
 ```base
-ansible-playbook -i locales/memphis/hosts.sh field_day.yml --vault-password-file ~/.vault_pass.txt -vvvv -u ryan_turner
+ansible-playbook field_day.yml --vault-password-file ~/.vault_pass.txt -vvvv -u ryan_turner
 ```
 
 ### SSH to servers
