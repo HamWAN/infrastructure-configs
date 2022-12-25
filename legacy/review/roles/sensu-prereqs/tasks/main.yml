@@ -1,5 +1,0 @@
-- name: Install Sensu Plugins Prerequisites
-  apt: pkg={{item}} state=installed
-  with_items:
-    - ruby-dev
-    - build-essential

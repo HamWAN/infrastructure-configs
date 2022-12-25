@@ -1,9 +1,0 @@
-{
-  "rabbitmq": {
-    "host": "{% if sensu_server %}127.0.0.1{% else %}{{ monitor_host }}{% endif %}",
-    "port": 5672,
-    "vhost": "/sensu",
-    "user": "sensu",
-    "password": "{{ monitor_rabbitmq_secret }}"
-  }
-}
