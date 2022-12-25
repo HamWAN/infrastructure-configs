@@ -1,3 +1,0 @@
----
-dependencies:
-    - { role: iptables-rules, iptables_input_accept_rules: [{name: bigbluebutton-80, protocol: tcp, port: 80}, {name: bigbluebutton-1935, protocol: tcp, port: 1935}, {name: bigbluebutton-9123, protocol: tcp, port: 9123}, {name: bigbluebutton-udp, protocol: udp, port: "16384:32768"}]}

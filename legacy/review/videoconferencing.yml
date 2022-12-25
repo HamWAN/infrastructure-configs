@@ -1,5 +1,0 @@
----
-- hosts: server
-  roles:
-    - bigbluebutton
-    # - { role: clustering, ha_ip: "{{ lookup('dig', 'videoconferencing.' + LOCALE_DOMAIN) }}", ha_service: "bbb-conf", ha_nodes: "{{ bigbluebutton_ha_nodes }}", ha_service_monitoring: "" }

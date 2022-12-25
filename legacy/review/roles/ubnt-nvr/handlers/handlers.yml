@@ -1,3 +1,0 @@
----
-- name: Restart unifi-video
-  action: service name=unifi-video state=restarted

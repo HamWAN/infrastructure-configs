@@ -1,3 +1,0 @@
----
-dependencies:
-- { role: iptables-rules, iptables_input_accept_rules: [{name: rabbitmq-5672, protocol: tcp, port: 5672}]}

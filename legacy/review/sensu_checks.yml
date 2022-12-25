@@ -1,4 +1,0 @@
----
-- hosts: server
-  roles:
-    - { role: sensu, sensu_check_configs_only: true }

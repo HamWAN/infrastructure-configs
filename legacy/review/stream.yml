@@ -1,5 +1,0 @@
----
-- hosts: server
-  roles:
-    - icecast
-    - { role: clustering, ha_ip: "{{ lookup('dig', 'stream.' + LOCALE_DOMAIN) }}", ha_service: "icecast2", ha_nodes: "{{ stream_ha_nodes }}", ha_service_monitoring: "" }

@@ -1,3 +1,0 @@
-- replace: dest=/etc/nginx/conf.d/rocket_chat.conf regexp='server_name .*$' replace='server_name chat.{{ LOCALE_DOMAIN }};'
-
-- service: name=nginx state=restarted

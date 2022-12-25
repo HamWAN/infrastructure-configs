@@ -1,4 +1,0 @@
----
-- hosts: server
-  roles:
-    - { role: sensu, sensu_server: false, sensu_client: true, client_subscriptions: ["production", "ubuntu"] }
