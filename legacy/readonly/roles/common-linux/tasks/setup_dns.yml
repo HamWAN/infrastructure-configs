@@ -1,0 +1,17 @@
+---
+# Remove resolvconf and configure resolvers
+
+- name: Ensure resolvconf is not installed
+  apt:
+    pkg={{ item }}
+    state=absent
+  with_items:
+    - resolvconf
+  tags: resolvconf
+
+- name: Generate resolv.conf template
+  template:
+    backup=no
+    dest=/etc/resolv.conf
+    src=resolv.conf.j2
+    force=yes

@@ -1,0 +1,19 @@
+{% set host = inventory_hostname.split(".")[0] %}
+{
+  "client": {
+    "name": "{{ inventory_hostname }}",
+    "address": "{{ inventory_hostname }}",
+    "environment": "production",
+    "subscriptions": [
+      {% for item in client_subscriptions %}
+      "{{item}}",
+
+      {% endfor %}
+      "{{ host }}"
+    ],
+    "socket": {
+      "bind": "127.0.0.1",
+      "port": 3030
+    }
+  }
+}

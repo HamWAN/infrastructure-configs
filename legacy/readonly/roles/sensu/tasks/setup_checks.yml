@@ -1,0 +1,16 @@
+---
+  - name: Set checks config
+    template: src={{item}}.j2 dest=/etc/sensu/conf.d/{{item}} mode=0640 owner=sensu group=sensu force=yes
+    with_items:
+      - check_cron.json
+      - check_cpu.json
+      - check_snmp.json
+      - check_iostat.json
+      - check_memory.json
+      - check_network.json
+      - check_disk.json
+      - check_www.json
+      - check_voip.json
+      - check_jira.json
+
+  - service: name=sensu-server state=restarted

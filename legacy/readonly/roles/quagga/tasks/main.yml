@@ -1,0 +1,3 @@
+---
+- include: quagga.yml
+  tags: [quagga]

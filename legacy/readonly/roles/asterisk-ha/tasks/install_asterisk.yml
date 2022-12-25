@@ -1,0 +1,16 @@
+---
+- name: Ensure asterisk is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - asterisk
+
+- name: Add config files
+  template: src="locales/{{LOCALE}}/private_configs/{{ item }}.j2" dest="/etc/asterisk/{{ item }}" mode=0640 owner=asterisk group=asterisk
+  with_items:
+    - extensions.conf
+    - iax.conf
+    - sip.conf
+    - voicemail.conf

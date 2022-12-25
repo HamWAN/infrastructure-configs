@@ -1,0 +1,49 @@
+---
+- set_fact:
+    ether1_ip:  "{{ lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] }}"
+
+- name: Create temp directory
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Create template for common changes
+  local_action: template src=cell-core-router.j2 dest={{ mktemp.stdout }} backup=no
+  tags:
+    - generate
+
+- name: Check for static routes just in case
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/ip route print where static"
+  tags:
+    - sanity
+  register: static_routes
+
+- name: Fail if there's a static route and user didn't specify override
+  fail: msg="Found static routes on host {{ mikrotik_host }}! You probably don't want this. Define extra-var mikrotik_static_routes_ok to override this."
+  when: "'DST-ADDRESS' not in static_routes.stdout_lines[-1] and mikrotik_static_routes_ok is undefined"
+
+- name: Copy common changes script to router
+  local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/cell-core-router.rsc
+  tags:
+    - import
+
+- name: "import script on device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes cell-core-router.rsc"
+  tags:
+    - import
+  register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script cell-core-router.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - import
+  when: "'failure:' in import_result.stdout"
+
+- name: "remove script from device"
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove cell-core-router.rsc"
+  tags:
+    - cleanup
+
+- name: remove script from generated-scripts directory
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup

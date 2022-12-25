@@ -1,0 +1,5 @@
+---
+dependencies:
+- { role: iptables-rules, when: "sensu_server == true and not sensu_check_configs_only", iptables_input_accept_rules: [{name: uchiwa, protocol: tcp, port: 3000}, {name: sensu-6379, protocol: tcp, port: 6379}]}
+- { role: iptables-rules, when: "sensu_client == true and not sensu_check_configs_only", iptables_input_accept_rules: [{name: sensu-client, protocol: tcp, port: 3030}]}
+- { role: queeno.uchiwa, when: "sensu_server == true and not sensu_check_configs_only" }

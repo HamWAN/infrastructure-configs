@@ -1,0 +1,40 @@
+{% set site = inventory_hostname.split(".")[1] %}
+{% set router = inventory_hostname.split(".")[0].replace("r", "", 1) %}
+{% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
+{% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set ether1_ip_network = [ether1_ip, ether_netmask] | join("") | ipaddr('network') %}
+{% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
+{% if router_type == "2011UiAS" %}
+/interface ethernet set [ find default-name=ether7 ] master-port=ether6
+/interface ethernet set [ find default-name=ether8 ] master-port=ether6
+/interface ethernet set [ find default-name=ether9 ] master-port=ether6
+/interface ethernet set [ find default-name=ether10 ] master-port=ether6
+/interface ethernet set [ find default-name=ether2 ] master-port=ether1
+/interface ethernet set [ find default-name=ether3 ] master-port=ether1
+/interface ethernet set [ find default-name=ether4 ] master-port=ether1
+/interface ethernet set [ find default-name=ether5 ] master-port=ether1
+/ip firewall filter remove [find action!=fasttrack-connection !dynamic ]
+/ip firewall filter add chain=forward action=fasttrack-connection connection-state=established,related
+{% endif %}
+
+/ip firewall mangle remove [find action !dynamic]
+
+/system identity set name=r{{ router }}.{{ site }}
+/interface vrrp remove [find name=vrrp1]
+/interface vrrp add authentication=ah interface=[ /interface ethernet find default-name=ether1 ] name=vrrp1 password={{ vrrp_password }} version=2
+/ip address remove [find address="{{ether1_ip}}{{ether_netmask}}"]
+/ip address add address={{ ether1_ip }}{{ether_netmask}} interface=[ /interface ethernet find default-name=ether1 ]
+/ip address add address={{ vrrp1_ip }} interface=vrrp1
+
+/ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+/ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+
+/routing filter remove [find]
+/routing filter add action=accept chain=AMPR-default prefix=44.0.0.0/8 prefix-length=8-32
+/routing filter add action=accept chain=AMPR-default prefix=0.0.0.0/0
+/routing filter add action=reject chain=AMPR-default
+/routing ospf interface remove [find]
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=[ /interface ethernet find default-name=ether1 ] network-type=broadcast
+/routing ospf network remove [find]
+/routing ospf network add area=backbone network={{ ether1_ip_network }}{{ ether_netmask }}
+/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 redistribute-static=no router-id={{ ether1_ip }}

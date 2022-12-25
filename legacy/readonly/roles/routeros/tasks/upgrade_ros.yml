@@ -1,0 +1,39 @@
+---
+# Tell the mikrotik router to download software updates and reboot.
+
+- name: Get current ROS version
+  local_action: uri url=http://download2.mikrotik.com/routeros/LATEST.6 return_content=yes
+  register: latest_routeros_version
+
+- set_fact: latest_routeros_version="{{ latest_routeros_version.content.split(' ')[0] | trim }}"
+
+- debug: msg="Skipping upgrade because host is already running latest version"
+  when: latest_routeros_version in routeros_details.stdout
+
+- include: import_script.yml
+  vars:
+    item: update
+    dont_switch_user: True
+    skip_removing: True
+  when: latest_routeros_version not in routeros_details.stdout
+
+- name: Wait for server to restart
+  local_action: wait_for host={{ mikrotik_host }} port={{ mikrotik_port }} delay=60
+  when: is_upgrade is defined and is_upgrade == true and latest_routeros_version not in routeros_details.stdout
+
+- name: pause 10 seconds for things to settle down
+  local_action: pause seconds=10
+  when: is_upgrade is defined and is_upgrade == true and latest_routeros_version not in routeros_details.stdout
+
+- name: remove known_hosts entry since its old ssh-dss stuff
+  local_action: known_hosts state=absent name={{ mikrotik_host }}
+  when: is_upgrade is defined and is_upgrade == true
+
+- name: Get the new key
+  local_action: command ssh-keyscan -t rsa {{ mikrotik_host }}
+  register: ssh_keyscan
+  when: is_upgrade is defined and is_upgrade == true
+
+- name: Add the new key
+  local_action: known_hosts state=present name={{ mikrotik_host }} key="{{ ssh_keyscan.stdout }}"
+  when: is_upgrade is defined and is_upgrade == true

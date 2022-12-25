@@ -1,0 +1,14 @@
+---
+  - include: setup_sensu.yml
+    tags: setup_sensu
+    when: sensu_server == true and not sensu_check_configs_only
+
+  - include: setup_checks.yml
+    tags: setup_checks
+    when: sensu_server == true
+
+  - include: setup_sensu_client.yml
+    tags: setup_sensu_client
+    when: sensu_client == true and not sensu_check_configs_only
+
+#Download MIB http://download2.mikrotik.com/Mikrotik.mib

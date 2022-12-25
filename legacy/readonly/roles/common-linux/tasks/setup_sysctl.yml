@@ -1,0 +1,16 @@
+---
+# Set some sysctls
+
+- name: Disable IPv6 privacy extensions
+  lineinfile:
+    dest=/etc/sysctl.conf
+    line="net.ipv6.conf.all.use_tempaddr = 0"
+
+  lineinfile:
+    dest=/etc/sysctl.conf
+    line="net.ipv6.conf.default.use_tempaddr = 0"
+
+- name: Reduce system swappiness
+  lineinfile:
+    dest=/etc/sysctl.conf
+    line="vm.swappiness = 1"

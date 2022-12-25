@@ -1,0 +1,6 @@
+---
+- hosts: ptp
+  gather_facts: False
+  connection: paramiko
+  roles:
+  - { role: routeros-ptp }

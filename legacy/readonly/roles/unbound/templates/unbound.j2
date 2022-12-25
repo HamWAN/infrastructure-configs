@@ -1,0 +1,22 @@
+include: "/etc/unbound/unbound.conf.d/*.conf"
+{% set host_ip = lookup('dig', inventory_hostname, wantlist=True)[0] %}
+    interface: {{ SERVER_DNS_PRIMARY }}
+    interface: {{ SERVER_DNS_SECONDARY }}
+{% if ipv6_support %}
+    do-ip6: yes
+    interface: {{ SERVER_DNS_IPv6_PRIMARY }}
+    interface: {{ SERVER_DNS_IPv6_SECONDARY }}
+    access-control: {{ IPV6_SUBNET }}
+{% endif %}
+    access-control: {{ LOCALE_SUBNET }} allow
+    outgoing-interface: {{ host_ip }}
+    rrset-roundrobin: yes
+server:
+        extended-statistics: yes
+        statistics-cumulative: no
+        statistics-interval: 0
+        pidfile: "/var/lib/unbound/unbound.pid"
+        logfile: "/var/log/unbound.log"
+        verbosity: 2
+remote-control:
+        control-enable: yes

@@ -1,0 +1,58 @@
+{% set site = inventory_hostname.split(".")[1] %}
+{% set to_site = inventory_hostname.split(".")[0].replace("ptp", "", 1) %}
+{% set wlan1_ip = lookup('dig', 'wlan1.' + inventory_hostname + './A', wantlist=True)[0] %}
+{% set wlan1_ip_int = wlan1_ip.split('.')[-1] | int %}
+{% set ether1_ip = lookup('dig', 'ether1.' + inventory_hostname + './A', wantlist=True)[0] %}
+{% set vrrp1_ip = lookup('dig', 'vrrp.' + site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set wlan1_ip_network = lookup('dig', 'wlan1.ptp' + site + '.' + to_site + '.' + LOCALE_DOMAIN + './A', wantlist=True)[0] %}
+{% set ether1_ip_network = [ether1_ip, ether_netmask] | join("") | ipaddr('network') %}
+{% set router_type = routerboard_details['stdout_lines'][1].split()[-1] %}
+
+/ip address remove [find interface=vrrp1]
+/interface vrrp remove [find name=vrrp1]
+/interface vrrp add authentication=ah interface=ether1 name=vrrp1 password={{ vrrp_password }} version=2
+
+/system identity set name=ptp{{ to_site }}.{{ site }}
+/ip address remove [find interface=bridge1]
+
+/interface bridge remove [find name=bridge1]
+/interface bridge add mtu=1500 name=bridge1
+/interface bridge port remove [find]
+/interface bridge port add bridge=bridge1 interface=wlan1
+
+/ip address remove [find address="{{ vrrp1_ip }}"]
+/ip address remove [find address="{{ wlan1_ip }}/32"]
+/ip address add address={{ vrrp1_ip }} interface=vrrp1
+/ip address add address={{ wlan1_ip }}/32 interface=bridge1 network={{ wlan1_ip_network }}
+/routing ospf instance set [ find default=yes ] distribute-default=if-installed-as-type-1 in-filter=AMPR-default out-filter=AMPR-default redistribute-bgp=as-type-1 redistribute-connected=as-type-1 redistribute-other-ospf=as-type-1 router-id={{ wlan1_ip }}
+/routing ospf interface remove [find]
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=ether1 network-type=broadcast
+/routing ospf interface add authentication=md5 authentication-key={{ ospf_password }} interface=bridge1 network-type=point-to-point
+/routing ospf network remove [find]
+/routing ospf network add area=backbone network={{ ether1_ip_network }}{{ ether_netmask }}
+/routing ospf network add area=backbone network={{ wlan1_ip_network }}/32
+
+/interface wireless security-profiles remove [find name=hamwan]
+/interface wireless security-profiles add authentication-types=wpa-psk,wpa2-psk eap-methods="" management-protection=allowed mode=dynamic-keys name=hamwan supplicant-identity="" wpa-pre-shared-key={{ wpa_psk }} wpa2-pre-shared-key={{ wpa_psk }}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-onlyn country="united states" adaptive-noise-immunity=ap-and-client-mode channel-width=20mhz disabled=no frequency-mode=regulatory-domain mtu=1600 name=wlan1 security-profile=hamwan ssid=HamWAN dfs-mode=radar-detect wireless-protocol=nv2 scan-list=default frequency=auto rx-chains={{ rx_chains }} tx-chains={{ tx_chains}}
+{% if router_type == "911G-5HPnD" %}
+/interface wireless set [ find default-name=wlan1 ] channel-width=20mhz
+{% elif router_type == "921UAGS-5SHPacT" %}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-a/n/ac channel-width=20/40/80mhz-Ceee
+{% elif router_type == "G-5HPacD" %}
+/interface wireless set [ find default-name=wlan1 ] band=5ghz-a/n/ac channel-width=20/40/80mhz-Ceee
+{% endif %}
+:put "{{ wlan1_ip_int }}"
+{% if wlan1_ip_int is odd %}
+/interface wireless set [ find default-name=wlan1 ] mode=bridge
+/interface wireless set [ find default-name=wlan1 ] ssid=HamWAN-{{ site }}-{{ to_site }}
+{% else %}
+/interface wireless set [ find default-name=wlan1 ] mode=station
+/interface wireless set [ find default-name=wlan1 ]  ssid=HamWAN-{{ to_site }}-{{ site }}
+{% endif %}
+/ip firewall mangle add action=change-mss chain=forward new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+/ip firewall mangle add action=change-mss chain=output new-mss=1378 protocol=tcp tcp-flags=syn tcp-mss=!0-1378
+/routing filter remove [find]
+/routing filter add action=accept chain=AMPR-default prefix=44.0.0.0/8 prefix-length=8-32
+/routing filter add action=accept chain=AMPR-default prefix=0.0.0.0/0
+/routing filter add action=reject chain=AMPR-default

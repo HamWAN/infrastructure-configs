@@ -1,0 +1,10 @@
+---
+# Run apt-get update and apt-get upgrade
+
+- name: Apt update cache
+  apt:
+    update_cache=yes
+
+- name: Apt upgrade
+  apt:
+    upgrade=yes

@@ -1,0 +1,7 @@
+---
+- include: ensure_aptitude.yml
+  tags: [aptitude]
+- include: apt_update_upgrade.yml
+  tags: [apt_update]
+- include: add_users_groups.yml
+  tags: [users]

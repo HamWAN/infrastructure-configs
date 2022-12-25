@@ -1,0 +1,22 @@
+/ip dns set servers=8.8.8.8,8.8.4.4
+:delay 5
+{% for netadmin in NETOPS_USERS %}
+/user remove [find name={{ netadmin }}]
+/tool fetch url={{ KEYS_URL }}{{ netadmin }}.key
+/user add group=full name={{ netadmin }} password={{ 999999999999999 |random }}
+{% endfor %}
+{% for netadmin in LIMITED_USERS %}
+/user remove [find name={{ netadmin }}]
+/tool fetch url={{ KEYS_URL }}{{ netadmin }}.key
+/user add group=read name={{ netadmin }} password={{ 999999999999999 |random }}
+{% endfor %}
+/file print
+{% for netadmin in NETOPS_USERS %}
+/user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
+{% endfor %}
+{% for netadmin in LIMITED_USERS %}
+/user ssh-keys import public-key-file={{ netadmin }}.key user={{ netadmin }}
+{% endfor %}
+/user remove [find name=hamwan]
+/user add group=full name=hamwan password={{ router_user_text_password }}
+/user remove [find name=admin]

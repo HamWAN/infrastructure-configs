@@ -1,0 +1,23 @@
+---
+- include: ensure_python.yml
+  tags: [python]
+- include: ensure_aptitude.yml
+  tags: [aptitude]
+- include: apt_update_upgrade.yml
+  tags: [apt_update]
+- include: setup_sysctl.yml
+  tags: [sysctl]
+- include: setup_dns.yml
+  tags: [dns]
+- include: add_users_groups.yml
+  tags: [users]
+- include: restrict_ssh.yml
+  tags: [ssh]
+- include: restrict_firewall.yml
+  tags: [firewall]
+- include: install_ntp.yml
+  tags: [ntp]
+- include: install_postfix.yml
+  tags: [postfix]
+- include: install_snmpd.yml
+  tags: [snmpd]

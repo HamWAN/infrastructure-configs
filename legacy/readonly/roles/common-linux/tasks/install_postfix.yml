@@ -1,0 +1,27 @@
+---
+# Install and configure Postfix as the system MTA
+
+- name: Ensure postfix is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - postfix
+  tags: postfix
+
+- name: Generate postfix conf template
+  template:
+    backup=no
+    dest=/etc/postfix/main.conf
+    src=postfix_main.conf.j2
+    force=yes
+  notify: Restart postfix
+
+- name: Generate postfix aliases template
+  template:
+    backup=no
+    dest=/etc/aliases
+    src=postfix_aliases.j2
+    force=yes
+  notify: Reload postfix aliases

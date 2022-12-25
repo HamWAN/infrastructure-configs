@@ -1,0 +1,17 @@
+---
+  - name: Install graphing packages
+    apt: pkg={{item}} state=installed update_cache=yes
+    with_items:
+      - graphite-carbon
+      - graphite-web
+      - apache2
+      - apache2-mpm-worker
+      - libapache2-mod-wsgi
+
+  - name: Enable graphite-carbon
+    lineinfile:
+      dest="/etc/default/graphite-carbon"
+      line="CARBON_CACHE_ENABLED=true"
+      state="present"
+
+  - service: name=graphite-carbon state=restarted

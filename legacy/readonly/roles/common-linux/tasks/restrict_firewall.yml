@@ -1,0 +1,21 @@
+---
+# Run apt-get update and apt-get upgrade
+
+- name: Ensure iptables is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - iptables
+  tags: iptables
+
+- name: Generate rc.local template
+  template:
+    backup=no
+    dest=/etc/rc.local
+    src=rc.local.j2
+    force=yes
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local

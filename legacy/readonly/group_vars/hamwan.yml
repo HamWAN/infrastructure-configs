@@ -1,0 +1,19 @@
+hamwan_channels:
+  sec1:
+    frequency: 5920
+    channel_width: 10
+  sec2:
+    frequency: 5900
+    channel_width: 10
+  sec3:
+    frequency: 5880
+    channel_width: 10
+  omn1:
+    frequency: 5865
+    channel_width: 5
+  r1:
+    frequency:  5855
+    channel_width: 5
+  omn3:
+    frequency: 5845
+    channel_width: 5

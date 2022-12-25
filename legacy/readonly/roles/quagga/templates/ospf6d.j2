@@ -1,0 +1,16 @@
+{% set host_ip = lookup('dig', inventory_hostname, wantlist=True)[0] %}
+password {{ ospf_password }}
+enable password {{ ospf_password }}
+log file /var/log/quagga/ospfd.conf
+
+interface eth0
+ ipv6 ospf6 priority 10
+{% if ipv6_anycast_subnet_1 is defined and ipv6_anycast_subnet_2 is defined %}
+router ospf6
+ ospf router-id {{ host_ip }}
+ redistribute connected
+ interface eth0 area 0.0.0.0
+ interface lo area 0.0.0.0
+ area 0.0.0.0 range {{ ipv6_anycast_subnet_1 }}
+ area 0.0.0.0 range {{ ipv6_anycast_subnet_2 }}
+{% endif %}

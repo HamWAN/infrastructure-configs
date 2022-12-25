@@ -1,0 +1,19 @@
+---
+- name: Create temp file
+  local_action: shell mktemp -d
+  register: mktemp
+
+- local_action: unarchive src=http://download2.mikrotik.com/routeros/{{ latest_routeros_version }}/all_packages-{{ routeros_architecture }}-{{ latest_routeros_version }}.zip dest={{ mktemp.stdout }} copy=no
+
+- local_action: "shell scp -r -P {{ mikrotik_port }} {{ mktemp.stdout }}/* {{ mikrotik_user }}@{{ mikrotik_host }}:/" #Have to use shell instead of command  of the scp /* part.
+
+- local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=wireless-rep-{{ latest_routeros_version }}-tile.npk]"
+- local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove [find name=wireless-fp-{{ latest_routeros_version }}-tile.npk]"
+
+- name: Remove changes script from local tmp dir
+  local_action: file path={{ mktemp.stdout }} state=absent
+
+- include: import_script.yml
+  vars:
+    item: reboot
+    skip_removing: True

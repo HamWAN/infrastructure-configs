@@ -1,0 +1,24 @@
+#set output format and size
+set term png size 320,180
+
+#set output file
+set output "audio.png"
+
+# set y range
+set yr [-1:1]
+
+# we want just the data
+unset key
+unset tics
+unset border
+set lmargin 0
+set rmargin 0
+set tmargin 0
+set bmargin 0
+
+# draw rectangle to change background color
+set obj 1 rectangle behind from screen 0,0 to screen 1,1
+set obj 1 fillstyle solid 1.0 fillcolor rgbcolor "#222222"
+
+# draw data with foreground color
+plot "audio_only.dat" with lines lt rgb 'white'

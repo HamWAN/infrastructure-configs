@@ -1,0 +1,3 @@
+---
+dependencies:
+    - { role: iptables-rules, iptables_input_accept_rules: [{name: asterisk-5060, protocol: udp, port: 5060}, {name: asterisk-5036, protocol: udp, port: 5036}, {name: asterisk-rtp, protocol: udp, port: "10000:20000"}]}

@@ -1,0 +1,7 @@
+---
+- hosts: server
+  roles:
+    - { role: DavidWittman.redis,
+      redis_bind: 127.0.0.1 }
+    - { role: rabbitmq }
+    - { role: sensu, client_subscriptions: ["production", "ubuntu", "sensu", "snmp-checker"] }

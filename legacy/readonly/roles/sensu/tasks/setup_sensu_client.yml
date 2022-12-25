@@ -1,0 +1,39 @@
+---
+  - apt_key: url=http://repositories.sensuapp.org/apt/pubkey.gpg state=present
+
+  - apt_repository: repo='deb http://repositories.sensuapp.org/apt sensu main' state=present
+
+  - name: Install apt packages
+    apt: pkg={{item}} state=installed update_cache=yes
+    with_items:
+      - sensu
+      - git
+      - nodejs
+      - npm
+      - sysstat
+
+  - name: Set client config
+    template: src=client.json.j2 dest=/etc/sensu/conf.d/client.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Set transport config
+    template: src=transport.json.j2 dest=/etc/sensu/conf.d/transport.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Set rabbitmq config
+    template: src=rabbitmq.json.j2 dest=/etc/sensu/conf.d/rabbitmq.json mode=0640 owner=sensu group=sensu force=yes
+
+  - name: Install client plugins
+    shell: sensu-install -p {{item}}
+    with_items:
+      - memory-checks
+      - cpu-checks
+      - process-checks
+      - disk-checks
+      - io-checks
+      - network-checks
+      - load-checks
+      - http
+
+  - name: Set sensu-client to run on boot
+    shell: update-rc.d sensu-client defaults
+
+  - service: name=sensu-client state=restarted

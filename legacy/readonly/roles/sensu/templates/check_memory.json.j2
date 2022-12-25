@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "memory_percent": {
+      "command": "check-memory-percent.rb -w 70 -c 80",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 10
+    },
+    "memory_swap_percent": {
+      "command": "check-swap-percent.rb -w 10 -c 50",
+      "subscribers": [
+        "production"
+      ],
+      "interval": 10
+    }
+  }
+}

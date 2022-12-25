@@ -1,0 +1,32 @@
+- name: Install ntpd
+  apt: pkg={{item}} state=installed
+  with_items:
+    - ntp
+
+- name: Set ntp config
+  template: src=ntp.conf.j2 dest=/etc/ntp.conf mode=0640 owner=root group=root
+
+- name: Start ntp
+  service: name=ntp state=restarted
+
+- name: Add the anycast network interfaces
+  blockinfile:
+    dest: /etc/network/interfaces
+    block: |
+      auto any-ntp
+      iface any-ntp inet manual
+        pre-up ip tuntap add dev any-ntp mode tap
+        pre-up ip l set dev any-ntp mtu 1418
+        post-up ip a add {{ SERVER_NTP_PRIMARY }}/32 dev any-ntp
+        post-up ip a add {{ SERVER_NTP_SECONDARY }}/32 dev any-ntp
+        post-up ip l set dev any-ntp up
+        post-up service ntp restart
+        post-down ip tuntap del dev any-ntp mode tap
+
+- name: Put lo interface up
+  command: ifup lo
+  sudo: yes
+
+- name: Put any-ntp interface up
+  command: ifup any-ntp
+  sudo: yes

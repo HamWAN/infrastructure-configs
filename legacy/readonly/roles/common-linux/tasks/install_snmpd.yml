@@ -1,0 +1,29 @@
+---
+# Install and configure SNMPd
+
+- name: Ensure snmpd is installed
+  apt:
+    pkg={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - snmpd
+  tags: snmpd
+
+- name: Generate snmpd.conf template
+  template:
+    backup=no
+    dest=/etc/snmp/snmpd.conf
+    src=snmpd.conf.j2
+    mode=0644
+  notify: Restart snmpd
+
+- name: Allow SNMP traffic from monitoring
+  lineinfile:
+    dest=/etc/rc.local
+    state=present
+    insertbefore="#-----ROLE RULES END-----"
+    line="iptables -A INPUT -p udp --dport 161 -j ACCEPT -s {{ SERVER_SNMP }}"
+
+- name: Execute /etc/rc.local to place iptables rules
+  command: /etc/rc.local

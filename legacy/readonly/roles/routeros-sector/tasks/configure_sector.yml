@@ -1,0 +1,54 @@
+---
+- name: Create temp file
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Discover wireless capabilities
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/interface wireless info hw-info [/interface wireless find default-name=wlan1]"
+  register: wireless_capabilities
+
+- set_fact: tx_chains={{ wireless_capabilities.stdout_lines[1].split()[-1] }}
+- set_fact: rx_chains={{ wireless_capabilities.stdout_lines[2].split()[-1] }}
+- set_fact: supported_freq_range={{ wireless_capabilities.stdout_lines[0].split()[-1].split("/")[0].split("-") }}
+
+- name: Check for static routes just in case
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/ip route print where static"
+  tags:
+    - sanity
+  register: static_routes
+
+- name: Fail if there's a static route and user didn't specify override
+  fail: msg="Found static routes on host {{ mikrotik_host }}! You probably don't want this. Define extra-var mikrotik_static_routes_ok to override this."
+  when: "'DST-ADDRESS' not in static_routes.stdout_lines[-1] and mikrotik_static_routes_ok is undefined"
+
+- name: Create template for common changes
+  local_action: template src=sector.j2 dest={{ mktemp.stdout }}  backup=no
+  tags:
+    - generate
+
+- name: Copy sector changes script to router
+  local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/sector.rsc
+  tags:
+    - import
+
+- name: Import sector changes script on device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes sector.rsc"
+  tags:
+    - import
+  register: import_result
+
+- name: Importing sector changes failed!
+  action: fail msg="importing script sector.rsc on {{ inventory_hostname }} failed"
+  tags:
+    - import
+  when: "'failure:' in import_result.stdout"
+
+- name: Remove sector changes script from device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove sector.rsc"
+  tags:
+    - cleanup
+
+- name: Remove sector changes script from local tmp dir
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup

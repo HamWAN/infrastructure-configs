@@ -1,0 +1,3 @@
+---
+- name: Restart ntpd
+  action: service name=ntpd state=restarted

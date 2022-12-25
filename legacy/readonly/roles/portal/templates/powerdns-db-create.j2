@@ -1,0 +1,2 @@
+CREATE USER pdns WITH PASSWORD '{{ lookup('ini, 'gpgsql-password type=property file=/etc/powerdns/pdns.d/pdns.local.gpgsql.conf') }}'
+CREATE DATABASE pdns

@@ -1,0 +1,13 @@
+---
+# Disable root ssh access without keys and turn off password auth generally
+
+  - name: Disallow root SSH access
+    action: lineinfile dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin without-password" state=present
+    notify: Restart sshd
+
+  - name: Disallow password authentication
+    action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+    notify: Restart sshd
+
+  - name: Allow DSA Keys
+    action: lineinfile dest=/etc/ssh/sshd_config regexp="^PubkeyAcceptedKeyTypes" line="PubkeyAcceptedKeyTypes=+ssh-dss" state=present

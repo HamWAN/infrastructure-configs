@@ -1,0 +1,14 @@
+/system logging remove [find default=no]
+/system logging action remove [find default=no]
+/system logging action add bsd-syslog=yes name=centrallogging remote={{ SERVER_REMOTE_LOGGING }} target=remote syslog-facility=syslog
+/system logging add action=remote disabled=no prefix="" topics=critical,error,info,warning
+/system logging add action=memory disabled=no prefix="" topics=critical,error,info,warning
+/snmp set enabled=yes contact="#HamWAN on irc.freenode.org"
+/snmp community set name=hamwan addresses={{ SERVER_SNMP }} read-access=yes write-access=no numbers=0
+/ip dns set servers={{ SERVER_DNS_PRIMARY }},{{ SERVER_DNS_SECONDARY }}
+/system ntp client set enabled=yes primary-ntp={{ SERVER_NTP_PRIMARY }} secondary-ntp={{ SERVER_NTP_SECONDARY }}
+/ip service disable [find name=ftp]
+/ip dns set allow-remote-requests=no
+/tool romon set enabled=yes secrets={{ romon_secret }}
+/tool bandwidth-server set authenticate=no enabled=yes
+/system identity set name={{ inventory_hostname }}

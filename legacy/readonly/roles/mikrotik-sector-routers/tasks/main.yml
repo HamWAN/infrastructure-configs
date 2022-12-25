@@ -1,0 +1,38 @@
+---
+- name: Create template for common changes
+  local_action: template src=sector.j2 dest=/tmp/sector.rsc backup=no
+  tags: 
+    - generate
+    - sector
+
+- name: Copy common changes script to router
+  local_action: command scp -P {{ ansible_ssh_port }}  /tmp/sector.rsc {{ scp_user }}@{{ ansible_ssh_host |default(inventory_hostname) }}:/
+  tags: 
+    - import
+    - sector
+
+- name: "import script on device"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ scp_user }}@{{ ansible_ssh_host }} "/import verbose=yes sector.rsc"
+  tags: 
+    - import
+    - sector
+  register: import_result
+
+- name: "import script on device failed"
+  action: fail msg="importing script sector.rsc on {{ inventory_hostname }} failed"
+  tags: 
+    - import
+    - sector
+  when: "'failure:' in import_result.stdout"
+
+- name: "remove script from device"
+  local_action: command ssh -p {{ ansible_ssh_port }} {{ scp_user }}@{{ ansible_ssh_host }} "/file remove sector.rsc"
+  tags: 
+    - cleanup
+    - sector
+
+- name: remove script from generated-scripts directory
+  local_action: file path=/tmp/sector.rsc state=absent
+  tags: 
+    - cleanup
+    - sector

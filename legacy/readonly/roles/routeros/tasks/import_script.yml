@@ -1,0 +1,41 @@
+---
+- name: Create temp file
+  local_action: shell mktemp
+  register: mktemp
+
+- name: Creates template for {{ item }}'s changes
+  local_action: template src={{ item }}.j2 dest={{ mktemp.stdout }}  backup=no
+  tags:
+    - generate
+
+- name: Copy {{ item }}'s changes script to router
+  local_action: command scp -P {{ mikrotik_port }} {{ mktemp.stdout }} {{ mikrotik_user }}@{{ mikrotik_host }}:/{{ item }}.rsc
+  tags:
+    - import
+
+- name: Import {{ item }}'s changes script on device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/import verbose=yes {{ item }}.rsc"
+  tags:
+    - import
+  register: import_result
+  failed_when: "'failure:' in import_result.stdout or 'bad command' in import_result.stdout or 'input does not match any value of interface' in import_result.stdout"
+
+- name: Redefine the mikrotik SSH user as the desired one
+  set_fact: mikrotik_user={{ mikrotik_desired_user }}
+  when: mikrotik_user != mikrotik_desired_user and (dont_switch_user is not defined or dont_switch_user != true)
+
+- set_fact: skip_removing=false
+  when: skip_removing is not defined
+
+- debug: var=skip_removing
+
+- name: Remove {{ item }}'s changes script from device
+  local_action: command ssh -p {{ mikrotik_port }} {{ mikrotik_user }}@{{ mikrotik_host }} "/file remove {{ item }}.rsc"
+  tags:
+    - cleanup
+  when: skip_removing == false
+
+- name: Remove {{ item }}'s changes script from local tmp dir
+  local_action: file path={{ mktemp.stdout }} state=absent
+  tags:
+    - cleanup

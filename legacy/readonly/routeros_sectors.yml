@@ -1,0 +1,6 @@
+---
+- hosts: sector
+  gather_facts: False
+  connection: paramiko
+  roles:
+  - { role: routeros-sector }

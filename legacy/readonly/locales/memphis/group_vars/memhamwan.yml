@@ -1,0 +1,68 @@
+---
+# memhamwan specific stuff
+
+LOCALE_DOMAIN: memhamwan.net
+LOCALE_CALLSIGN: KM4ECM
+LOCALE_SUBNET: 44.34.128.0/21
+LOCALE: "memphis"
+
+SUDOERS_FILE: "hamwan"
+SUDOERS_GROUP: "hamwan"
+
+KEYS_URL: "https://raw.githubusercontent.com/ryanturner/memhamwan-net-configs/client/"
+
+NETOPS_USERS:
+  - ns4b
+  - ryan_turner
+  - haksaw
+
+LIMITED_USERS:
+  - memhamwan
+
+SERVER_REMOTE_LOGGING: 44.34.128.171
+SERVER_NTP_PRIMARY: 44.34.132.3
+SERVER_NTP_SECONDARY: 44.34.133.3
+SERVER_SNMP: 44.34.128.0/21
+SERVER_DNS_PRIMARY: 44.34.132.1
+SERVER_DNS_SECONDARY: 44.34.133.1
+SERVER_SMTP: smtp-relay.gmail.com
+SNMP_COMMUNITY: hamwan
+asterisk_ha_ip: 44.34.132.5
+asterisk_ha_nodes:
+  - voip.leb.memhamwan.net
+  - voip.mno.memhamwan.net
+
+stream_ha_nodes:
+  - stream.mno.memhamwan.net
+
+bigbluebutton_ha_nodes:
+  - bigbluebutton.mno.memhamwan.net
+
+NETOPS_EMAIL: netops@memhamwan.org
+
+SECTOR_CHANNEL_WIDTH: 10
+
+ansible_ssh_port: 22
+network: memhamwan
+anycast_ipv4_host_and_cidr: 44.34.132.0/23
+ipv6_support: false
+
+AUTHORITATIVE_DNS_PRIMARY: 44.34.132.2
+AUTHORITATIVE_DNS_SECONDARY: 44.34.133.2
+
+vrrp_password: "{{ vault_vrrp_password }}"
+ospf_password: "{{ vault_ospf_password }}"
+romon_secret: "{{ vault_romon_secret }}"
+wpa_psk: "{{ vault_p2p_wpa_psk }}"
+router_user_text_password: "{{ vault_router_user_text_password }}"
+stream_source_password: "{{ vault_stream_source_password }}"
+stream_relay_password: "{{ vault_stream_relay_password }}"
+stream_admin_password: "{{ vault_stream_admin_password }}"
+
+monitor_host: monitor.memhamwan.net
+monitor_rabbitmq_secret: "{{ vault_monitor_rabbitmq_secret }}"
+monitor_telegram_api_token: "{{ vault_monitor_telegram_api_token }}"
+monitor_telegram_chat_token: "-116092899"
+sensu_telegram_handler: true
+
+eden_admin_password: "awfefweaa"
