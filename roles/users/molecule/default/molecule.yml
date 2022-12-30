@@ -1,0 +1,12 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: delegated
+platforms:
+  - name: test.missing.users
+  - name: test.extra.users
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

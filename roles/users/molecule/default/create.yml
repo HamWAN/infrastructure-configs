@@ -1,0 +1,54 @@
+---
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: "{{ molecule_no_log }}"
+  tasks:
+
+    # TODO: Developer must implement and populate 'server' variable
+
+    - name: Ensure Vagrant instances are up
+      ansible.builtin.command:
+        cmd: "vagrant up {{ item.name }}"
+      throttle: 1
+      loop: "{{ molecule_yml.platforms }}"
+
+    - name: Get Ansible test inventory
+      ansible.builtin.command:
+        cmd: "../../../../inventories/test/hosts.py"
+      register: inventory
+      changed_when: false
+    
+    - name: Transform inventory into Molecule compatible format
+      ansible.builtin.set_fact:
+        server: {
+          'changed': true,
+          'results': "{{ (inventory.stdout | from_json)._meta.hostvars }}",
+        }
+
+    - when: server.changed | default(false) | bool
+      block:
+        - name: Populate instance config dict
+          ansible.builtin.set_fact:
+            instance_conf_dict: {
+              'instance': "{{ server.results[item].instance }}",
+              'address': "{{ server.results[item].ansible_host }}",
+              'user': "{{ server.results[item].ansible_user }}",
+              'port': "{{ server.results[item].ansible_port  }}",
+              'identity_file': "{{ server.results[item].ansible_ssh_private_key_file }}", }
+          with_items: "{{ server.results }}"
+          register: instance_config_dict
+
+        - name: Convert instance config dict to a list
+          ansible.builtin.set_fact:
+            instance_conf: "{{ instance_config_dict.results | map(attribute='ansible_facts.instance_conf_dict') | list }}"
+
+        - name: Dump instance config
+          ansible.builtin.copy:
+            content: |
+              # Molecule managed
+
+              {{ instance_conf | to_json | from_json | to_yaml }}
+            dest: "{{ molecule_instance_config }}"
+            mode: 0600
