@@ -1,0 +1,45 @@
+---
+# tasks file for users
+
+- name: Ensure groups exists
+  become: true
+  ansible.builtin.group:
+    name: "{{ item }}"
+  loop:
+    - "{{ group_admin }}"
+    - "{{ group_user }}"
+
+- name: Ensure admins exist
+  become: true
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "{{ group_admin }}"
+    shell: "/bin/bash"
+  loop: "{{ users_admin | flatten(1) }}"
+
+- name: Ensure users exist
+  become: true
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "{{ group_user }}"
+    shell: "/bin/bash"
+  loop: "{{ users_user | flatten(1) }}"
+
+- name: Ensure ssh keys are present
+  become: true
+  ansible.posix.authorized_key:
+    user: "{{ item }}"
+    key: "{{ url_keys }}{{ item }}.key"
+  loop: "{{ users_admin + users_user | flatten(1) }}"
+
+- name: Ensure sudo access for admin group
+  become: true
+  ansible.builtin.template:
+    src: "sudoers.j2"
+    dest: "/etc/sudoers.d/{{ group_admin }}"
+    owner: "root"
+    group: "root"
+    mode: "0640"
+    validate: "/usr/sbin/visudo -cf %s"
+
+# TODO: Erase any extraneous accounts in group_admin and group_user.

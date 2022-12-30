@@ -1,0 +1,11 @@
+---
+# vars file for users
+users_admin:
+  - eo
+  - nigel
+  - tom
+users_user:
+  - monitoring
+group_admin: hamadmin
+group_user: ham
+url_keys: https://monitoring.hamwan.net/keys/
