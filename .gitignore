@@ -1,4 +1,1 @@
 .vagrant
-# Not sure how relevant the below entries are still
-*.retry
-*.rsc
