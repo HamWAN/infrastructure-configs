@@ -1,10 +1,40 @@
 ---
-# This is an example playbook to execute Ansible tests.
-
-- name: Verify
+- name: Verify deployment of users, groups, and sudo config
   hosts: all
   gather_facts: false
   tasks:
-  - name: Example assertion
-    ansible.builtin.assert:
-      that: true
+  - name: Verify wanted users are present
+    check_mode: true
+    ansible.builtin.user:
+      name: "{{ item }}"
+      state: present
+    register: ret
+    failed_when: ret.changed
+    loop: "{{ ['eo', 'nigel', 'tom'] }}"
+
+  - name: Verify unwanted users are not present
+    check_mode: true
+    ansible.builtin.user:
+      name: "{{ item }}"
+      state: absent
+    register: ret
+    failed_when: ret.changed
+    loop: "{{ ['haxxxor', 'soyboy'] }}"
+
+  - name: Verify wanted groups are present
+    check_mode: true
+    ansible.builtin.group:
+      name: "{{ item }}"
+      state: present
+    register: ret
+    failed_when: ret.changed
+    loop: "{{ ['hamadmin', 'ham'] }}"
+
+  - name: Verify hamadmin group can sudo
+    check_mode: true
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers.d/hamadmin
+      line: "%hamadmin ALL=(ALL) NOPASSWD:ALL"
+      state: present
+    register: ret
+    failed_when: ret.changed
