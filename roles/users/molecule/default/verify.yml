@@ -1,5 +1,5 @@
 ---
-- name: Verify deployment of users, groups, and sudo config
+- name: Verify deployment of users, authorized_keys, groups, and sudo config
   hosts: all
   gather_facts: false
   tasks:
@@ -7,6 +7,15 @@
     check_mode: true
     ansible.builtin.user:
       name: "{{ item }}"
+      state: present
+    register: ret
+    failed_when: ret.changed
+    loop: "{{ ['eo', 'nigel', 'tom'] }}"
+
+  - name: Verify authorized_keys are present for all users
+    check_mode: true
+    ansible.builtin.file:
+      name: "{{ '/home/' + item + '/.ssh/authorized_keys' }}"
       state: present
     register: ret
     failed_when: ret.changed
