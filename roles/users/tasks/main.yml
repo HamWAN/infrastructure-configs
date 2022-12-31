@@ -30,6 +30,7 @@
   ansible.posix.authorized_key:
     user: "{{ item }}"
     key: "{{ url_keys }}{{ item }}.key"
+    exclusive: true
   loop: "{{ users_admin + users_user | flatten(1) }}"
 
 - name: Ensure sudo access for admin group
