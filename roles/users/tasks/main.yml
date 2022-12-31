@@ -42,4 +42,24 @@
     mode: "0640"
     validate: "/usr/sbin/visudo -cf %s"
 
-# TODO: Erase any extraneous accounts in group_admin and group_user.
+- name: Audit users in admin group
+  ansible.builtin.getent:
+    database: group
+    key: "{{ group_admin }}"
+- ansible.builtin.set_fact:
+    users_to_purge: "{{ getent_group[group_admin][2].split(',') | difference(users_admin) }}"
+
+- name: Audit users in user group
+  ansible.builtin.getent:
+    database: group
+    key: "{{ group_user }}"
+- ansible.builtin.set_fact:
+    users_to_purge: "{{ getent_group[group_user][2].split(',') | difference(users_user) + users_to_purge }}"
+
+- name: Purge extraneous users
+  become: true
+  ansible.builtin.user:
+    name: "{{ item }}"
+    remove: true
+    state: absent
+  loop: "{{ users_to_purge }}"
