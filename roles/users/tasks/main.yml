@@ -1,6 +1,27 @@
 ---
 # tasks file for users
 
+#####
+# "Kill Persistent SSH Connection" is an ugly, no good, horrible hack to enable testing.
+# There is simply no way I can find to convince Molecule to not use persistent connections.
+#
+# The module "ansible.builtin.meta: reset_connection" is incompatible with "when:" clauses.
+# None of the "use_persistent_connections: false" variables seem to work.
+# As long as the delegated Molecule driver is in the Managed mode, it pulls in defaults that
+# force persistent connections.  Re-implementing everything to not be in Managed mode may work.
+#####
+
+  # There may be an existing Persistent SSH from other commands.
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+  failed_when: false
+
 - name: Ensure groups exists
   become: true
   ansible.builtin.group:
@@ -8,6 +29,14 @@
   loop:
     - "{{ group_admin }}"
     - "{{ group_user }}"
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
 
 - name: Ensure admins exist
   become: true
@@ -17,6 +46,14 @@
     shell: "/bin/bash"
   loop: "{{ users_admin | flatten(1) }}"
 
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
 - name: Ensure users exist
   become: true
   ansible.builtin.user:
@@ -25,13 +62,29 @@
     shell: "/bin/bash"
   loop: "{{ users_user | flatten(1) }}"
 
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
 - name: Ensure ssh keys are present
   become: true
   ansible.posix.authorized_key:
     user: "{{ item }}"
-    key: "{{ url_keys }}{{ item }}.key"
+    key: "{{ lookup(authorized_key_scheme, authorized_key_location + item + '.key') }}"
     exclusive: true
   loop: "{{ users_admin + users_user | flatten(1) }}"
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
 
 - name: Ensure sudo access for admin group
   become: true
@@ -43,12 +96,28 @@
     mode: "0640"
     validate: "/usr/sbin/visudo -cf %s"
 
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
 - name: Audit users in admin group
   ansible.builtin.getent:
     database: group
     key: "{{ group_admin }}"
 - ansible.builtin.set_fact:
     users_to_purge: "{{ getent_group[group_admin][2].split(',') | difference(users_admin) }}"
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
 
 - name: Audit users in user group
   ansible.builtin.getent:
@@ -57,6 +126,14 @@
 - ansible.builtin.set_fact:
     users_to_purge: "{{ getent_group[group_user][2].split(',') | difference(users_user) + users_to_purge }}"
 
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
 - name: Purge extraneous users
   become: true
   ansible.builtin.user:
@@ -64,3 +141,14 @@
     remove: true
     state: absent
   loop: "{{ users_to_purge }}"
+
+  # The previous task may not run, so there may be nothing to kill.
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+  failed_when: false

@@ -2,6 +2,7 @@
 import json
 import subprocess
 import locale
+import os
 
 class VagrantIdentityFiles:
     """Caches all Vagrant SSH IdentityFile locations for fast lookup"""
@@ -26,6 +27,19 @@ class VagrantIdentityFiles:
         return ''
 
 
+class LocalIdentityFile:
+    """ Always returns the same local identity file """
+
+    __identityfile = ""
+
+    def __init__(self, relative_filename):
+        self.__identityfile = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                           relative_filename)
+
+    def get_identityfile_or_empty(self, host):
+        return self.__identityfile
+
+
 def make_hostvars(hosts, identities, common_vars):
     hostvars = {}
     for host in hosts.keys():
@@ -42,13 +56,14 @@ def make_hostvars(hosts, identities, common_vars):
 
 
 if __name__ == "__main__":
-    identities = VagrantIdentityFiles()        
+    identities = LocalIdentityFile("test_ed25519")
     hosts = {
         "test.missing.users": "192.168.222.10",
         "test.extra.users": "192.168.222.11",
+        "test.group.change": "192.168.222.12",
     }
     common_vars = {
-        "ansible_user": "vagrant",
+        "ansible_user": "eo",
         "ansible_port": "222",
         "ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa",
     }
