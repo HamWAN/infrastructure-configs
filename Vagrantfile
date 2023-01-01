@@ -9,6 +9,10 @@ Vagrant.configure("2") do |config|
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
 
+  #
+  # WARNING: Keep "inventories/test/hosts.py" in sync with these hosts!
+  #
+
   VMs = [
     {
       "name" => 'test.missing.users',
@@ -17,6 +21,11 @@ Vagrant.configure("2") do |config|
         groupadd hamadmin
         groupadd ham
         useradd eo -G hamadmin
+        mkdir -m 0700 ~eo/.ssh
+        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        chmod 0600 ~eo/.ssh/authorized_keys
+        chown -R eo:eo ~eo/.ssh
+        echo "%hamadmin ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamadmin
         useradd monitoring -G ham
       ',
     },
@@ -27,9 +36,28 @@ Vagrant.configure("2") do |config|
         groupadd hamadmin
         groupadd ham
         useradd eo -G hamadmin
+        mkdir -m 0700 ~eo/.ssh
+        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        chmod 0600 ~eo/.ssh/authorized_keys
+        chown -R eo:eo ~eo/.ssh
+        echo "%hamadmin ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamadmin
         useradd haxxxor -G hamadmin
         useradd monitoring -G ham
         useradd soyboy -G ham
+      ',
+    },
+    {
+      "name" => 'test.group.change',
+      "ip" => '192.168.222.12',
+      "custom" => '
+        groupadd hamwan
+        useradd eo -G hamwan
+        mkdir -m 0700 ~eo/.ssh
+        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        chmod 0600 ~eo/.ssh/authorized_keys
+        chown -R eo:eo ~eo/.ssh
+        echo "%hamwan ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamwan
+        useradd monitoring
       ',
     },
   ]

@@ -6,3 +6,7 @@
     - name: "Include hamwan.users"
       ansible.builtin.include_role:
         name: "hamwan.users"
+      vars:
+        authorized_key_scheme: file
+        authorized_key_location: test_keys/
+        test_flaky_network: true

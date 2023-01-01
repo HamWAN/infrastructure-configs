@@ -6,6 +6,7 @@ driver:
 platforms:
   - name: test.missing.users
   - name: test.extra.users
+  - name: test.group.change
 provisioner:
   name: ansible
 verifier:

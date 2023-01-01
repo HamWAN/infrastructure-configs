@@ -8,4 +8,5 @@ users_user:
   - monitoring
 group_admin: hamadmin
 group_user: ham
-url_keys: https://monitoring.hamwan.net/keys/
+authorized_key_scheme: https
+authorized_key_location: monitoring.hamwan.net/keys/
