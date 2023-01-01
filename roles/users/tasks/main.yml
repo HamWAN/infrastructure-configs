@@ -38,6 +38,24 @@
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
 
+- name: Ensure sudo access for admin group
+  become: true
+  ansible.builtin.template:
+    src: "sudoers.j2"
+    dest: "/etc/sudoers.d/{{ group_admin }}"
+    owner: "root"
+    group: "root"
+    mode: "0640"
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
 - name: Ensure admins exist
   become: true
   ansible.builtin.user:
@@ -77,24 +95,6 @@
     key: "{{ lookup(authorized_key_scheme, authorized_key_location + item + '.key') }}"
     exclusive: true
   loop: "{{ users_admin + users_user | flatten(1) }}"
-
-- name: Kill Persistent SSH Connection
-  local_action: >
-    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
-    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
-  run_once: true
-  with_items: "{{ play_hosts }}"
-  when: test_flaky_network
-
-- name: Ensure sudo access for admin group
-  become: true
-  ansible.builtin.template:
-    src: "sudoers.j2"
-    dest: "/etc/sudoers.d/{{ group_admin }}"
-    owner: "root"
-    group: "root"
-    mode: "0640"
-    validate: "/usr/sbin/visudo -cf %s"
 
 - name: Kill Persistent SSH Connection
   local_action: >
