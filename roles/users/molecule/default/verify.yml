@@ -47,3 +47,20 @@
       state: present
     register: ret
     failed_when: ret.changed
+
+  - name: Verify unwanted groups are absent
+    check_mode: true
+    ansible.builtin.group:
+      name: "{{ item }}"
+      state: absent
+    register: ret
+    failed_when: ret.changed
+    loop:
+      - hamwan
+    when: inventory_hostname == 'test.group.change'
+
+  - name: Verify group management scope contains only wanted groups
+    check_mode: true
+    ansible.builtin.copy:
+      dest: /etc/group_managed_scope
+      content: "hamadmin\nham\n"
