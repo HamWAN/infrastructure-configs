@@ -8,5 +8,6 @@ users_user:
   - monitoring
 group_admin: hamadmin
 group_user: ham
+group_managed_scope: /etc/group_managed_scope
 authorized_key_scheme: https
 authorized_key_location: monitoring.hamwan.net/keys/

@@ -51,6 +51,7 @@ Vagrant.configure("2") do |config|
       "ip" => '192.168.222.12',
       "custom" => '
         groupadd hamwan
+        echo -e "hamwan\nhamadmin\nham" > /etc/group_managed_scope
         useradd eo -G hamwan
         mkdir -m 0700 ~eo/.ssh
         echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys

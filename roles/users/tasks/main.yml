@@ -152,3 +152,67 @@
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
   failed_when: false
+
+- name: Check group management scope
+  ansible.builtin.stat:
+    path: "{{ group_managed_scope }}"
+  register: scope
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+
+- name: Get group management scope data
+  when:
+    - scope.stat.exists
+    - scope.stat.isreg
+  block:
+    - ansible.builtin.slurp:
+        src: "{{ group_managed_scope }}"
+      register: scope_data
+    - name: Kill Persistent SSH Connection
+      local_action: >
+        ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+        -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+      run_once: true
+      with_items: "{{ play_hosts }}"
+      when: test_flaky_network
+    - ansible.builtin.set_fact:
+        managed_groups: "{{ (scope_data['content'] | ansible.builtin.b64decode).splitlines() }}"
+    - ansible.builtin.set_fact:
+        groups_to_purge: "{{ managed_groups | difference([group_admin, group_user]) }}"
+    - name: Purge unwanted groups
+      become: true
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ groups_to_purge }}"
+
+  # The previous task may not run, so there may be nothing to kill.
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+  failed_when: false
+
+- name: Ensure group management scope is configured
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ group_managed_scope }}"
+    content: "{{ [group_admin, group_user] | join('\n') + '\n' }}"
+
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
