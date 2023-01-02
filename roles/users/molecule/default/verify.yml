@@ -59,6 +59,17 @@
       - hamwan
     when: inventory_hostname == 'test.group.change'
 
+  - name: Verify unwanted sudoers configs are absent
+    check_mode: true
+    ansible.builtin.file:
+      name: "{{ item }}"
+      state: absent
+    register: ret
+    failed_when: ret.changed
+    loop:
+      - /etc/sudoers.d/hamwan
+    when: inventory_hostname == 'test.group.change'
+
   - name: Verify group management scope contains only wanted groups
     check_mode: true
     ansible.builtin.copy:
