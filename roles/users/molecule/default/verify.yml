@@ -64,3 +64,5 @@
     ansible.builtin.copy:
       dest: /etc/group_managed_scope
       content: "hamadmin\nham\n"
+    register: ret
+    failed_when: ret.changed
