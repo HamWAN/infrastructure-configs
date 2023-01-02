@@ -203,6 +203,45 @@
   when: test_flaky_network
   failed_when: false
 
+- name: Check for old sudoers configs
+  become: true
+  ansible.builtin.stat:
+    path: "{{ '/etc/sudoers.d/' + item }}"
+  loop: "{{ groups_to_purge }}"
+  register: sudoers
+
+  # The previous task may not run, so there may be nothing to kill.
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+  failed_when: false
+
+- name: Purge old sudoers configs
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.stat.path }}"
+    state: absent
+  loop: "{{ sudoers.results }}"
+  when:
+    - item.stat.exists
+    - item.stat.isreg
+
+  # The previous task may not run, so there may be nothing to kill.
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
+  run_once: true
+  with_items: "{{ play_hosts }}"
+  when: test_flaky_network
+  failed_when: false
+
 - name: Ensure group management scope is configured
   become: true
   ansible.builtin.copy:
