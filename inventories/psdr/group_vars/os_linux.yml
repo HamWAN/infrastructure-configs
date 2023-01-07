@@ -1,0 +1,3 @@
+---
+ansible_ssh_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+ansible_port: 222
