@@ -1,8 +1,7 @@
 ---
 - name: Linux User Management
   # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
-  #hosts: os_linux:&owner_HamWAN:!type_container
-  hosts: name_docker0.Westin
+  hosts: os_linux:&owner_HamWAN:!type_container
   gather_facts: false
   tasks:
     - ansible.builtin.import_role:
