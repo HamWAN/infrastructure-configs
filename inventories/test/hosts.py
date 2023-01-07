@@ -3,6 +3,7 @@ import json
 import subprocess
 import locale
 import os
+import stat
 
 class VagrantIdentityFiles:
     """Caches all Vagrant SSH IdentityFile locations for fast lookup"""
@@ -35,6 +36,7 @@ class LocalIdentityFile:
     def __init__(self, relative_filename):
         self.__identityfile = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                            relative_filename)
+        os.chmod(self.__identityfile, stat.S_IRUSR | stat.S_IWUSR)
 
     def get_identityfile_or_empty(self, host):
         return self.__identityfile
