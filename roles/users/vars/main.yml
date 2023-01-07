@@ -1,13 +1,22 @@
 ---
 # vars file for users
 users_admin:
+  - dylan
   - eo
+  - kc7aad
+  - KD7DK
+  - kennyr
   - nigel
+  - NQ1E
+  - nr3o
+  - osburn
   - tom
+  - ve7alb
 users_user:
   - monitoring
 group_admin: hamadmin
 group_user: ham
 group_managed_scope: /etc/group_managed_scope
-authorized_key_scheme: https
-authorized_key_location: monitoring.hamwan.net/keys/
+authorized_key_scheme: ansible.builtin.url
+authorized_key_location: https://monitoring.hamwan.net/keys/
+test_flaky_network: false

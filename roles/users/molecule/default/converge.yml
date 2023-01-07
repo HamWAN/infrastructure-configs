@@ -7,6 +7,15 @@
       ansible.builtin.include_role:
         name: "hamwan.users"
       vars:
-        authorized_key_scheme: file
+        users_admin:
+          - eo
+          - nigel
+          - tom
+        users_user:
+          - monitoring
+        group_admin: hamadmin
+        group_user: ham
+        group_managed_scope: /etc/group_managed_scope
+        authorized_key_scheme: ansible.builtin.file
         authorized_key_location: test_keys/
         test_flaky_network: true
