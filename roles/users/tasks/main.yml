@@ -20,6 +20,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
   failed_when: false
 
 - name: Ensure groups exists
@@ -37,6 +38,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Ensure sudo access for admin group
   become: true
@@ -55,6 +57,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Ensure admins exist
   become: true
@@ -71,6 +74,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Ensure users exist
   become: true
@@ -87,6 +91,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Ensure ssh keys are present
   become: true
@@ -103,6 +108,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Audit users in admin group
   ansible.builtin.getent:
@@ -118,6 +124,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Audit users in user group
   ansible.builtin.getent:
@@ -133,6 +140,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Purge extraneous users
   become: true
@@ -151,6 +159,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
   failed_when: false
 
 - name: Check group management scope
@@ -165,6 +174,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
 
 - name: Get group management scope data
   when:
@@ -181,6 +191,7 @@
       run_once: true
       with_items: "{{ play_hosts }}"
       when: test_flaky_network
+      changed_when: false
     - ansible.builtin.set_fact:
         managed_groups: "{{ (scope_data['content'] | ansible.builtin.b64decode).splitlines() }}"
     - ansible.builtin.set_fact:
@@ -201,13 +212,14 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
   failed_when: false
 
 - name: Check for old sudoers configs
   become: true
   ansible.builtin.stat:
     path: "{{ '/etc/sudoers.d/' + item }}"
-  loop: "{{ groups_to_purge }}"
+  loop: "{{ groups_to_purge | default([]) }}"
   register: sudoers
 
   # The previous task may not run, so there may be nothing to kill.
@@ -219,6 +231,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
   failed_when: false
 
 - name: Purge old sudoers configs
@@ -240,6 +253,7 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
   failed_when: false
 
 - name: Ensure group management scope is configured
@@ -255,3 +269,4 @@
   run_once: true
   with_items: "{{ play_hosts }}"
   when: test_flaky_network
+  changed_when: false
