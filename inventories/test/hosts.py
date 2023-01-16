@@ -54,7 +54,7 @@ def make_hostvars(hosts, identities, common_vars):
 
 
 if __name__ == "__main__":
-    identities = LocalIdentityFile("test_ed25519")
+    identities = LocalIdentityFile("test_rsa")
     hosts = {
         "test.missing.users": "192.168.222.10",
         "test.extra.users": "192.168.222.11",

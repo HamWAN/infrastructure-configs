@@ -22,7 +22,7 @@ Vagrant.configure("2") do |config|
         groupadd ham
         useradd eo -G hamadmin
         mkdir -m 0700 ~eo/.ssh
-        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Jg50ERitZ+TR5I8nJMl6wFKgV/g9qHSDJa9S2qF+r2sGlrbhy6feYzmfXAzsE9fy1Id3LEMOy8qHyTC0FtCeXzaOOKILyEUrL9aXNs8Nd3YTx2vYadIEzZRz5rl+WnCRAhJqixgx8/KxNuwSFP1S1zHXNmVHkPB7IeK4LdUZcS0sCQEH2aoDDbJ9a3PPbgrtr+hFar69s1sm2yQILIIqh1QVuU0Hy5+hFzY+oJ2TWFnUdkwVFcpSnL3uVBuwB3NFijnOR9pp3Qbnh6upK78jdqE8uDYr9pD+XCh5ig9ywCRnPkiBxtx4W3OhL0763gfmhLotERxN1lqLimsGsjFHIBqWD43lX67fC1XLE0hX7eq7EgVHiJv9ypqmibkwUEY/y4Zl3G/VdhQVHHkYAKk84MYa9/XpAjFSfqrnVOHQPe+xwqkROK4VNB0rTvneGeyXjSoQNHknj0zeSoRqas7j+2xmq1q9CBX/SxdlF2dQ1jnQnxBVHZfXUFpI0WHqFmM= eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
         chmod 0600 ~eo/.ssh/authorized_keys
         chown -R eo:eo ~eo/.ssh
         echo "%hamadmin ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamadmin
@@ -37,7 +37,7 @@ Vagrant.configure("2") do |config|
         groupadd ham
         useradd eo -G hamadmin
         mkdir -m 0700 ~eo/.ssh
-        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Jg50ERitZ+TR5I8nJMl6wFKgV/g9qHSDJa9S2qF+r2sGlrbhy6feYzmfXAzsE9fy1Id3LEMOy8qHyTC0FtCeXzaOOKILyEUrL9aXNs8Nd3YTx2vYadIEzZRz5rl+WnCRAhJqixgx8/KxNuwSFP1S1zHXNmVHkPB7IeK4LdUZcS0sCQEH2aoDDbJ9a3PPbgrtr+hFar69s1sm2yQILIIqh1QVuU0Hy5+hFzY+oJ2TWFnUdkwVFcpSnL3uVBuwB3NFijnOR9pp3Qbnh6upK78jdqE8uDYr9pD+XCh5ig9ywCRnPkiBxtx4W3OhL0763gfmhLotERxN1lqLimsGsjFHIBqWD43lX67fC1XLE0hX7eq7EgVHiJv9ypqmibkwUEY/y4Zl3G/VdhQVHHkYAKk84MYa9/XpAjFSfqrnVOHQPe+xwqkROK4VNB0rTvneGeyXjSoQNHknj0zeSoRqas7j+2xmq1q9CBX/SxdlF2dQ1jnQnxBVHZfXUFpI0WHqFmM= eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
         chmod 0600 ~eo/.ssh/authorized_keys
         chown -R eo:eo ~eo/.ssh
         echo "%hamadmin ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamadmin
@@ -54,7 +54,7 @@ Vagrant.configure("2") do |config|
         echo -e "hamwan\nhamadmin\nham" > /etc/group_managed_scope
         useradd eo -G hamwan
         mkdir -m 0700 ~eo/.ssh
-        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILkuO+XcdH7AVa326qU6Sw8Ly4Ju3mszmU4ydL6LqHhO eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
+        echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Jg50ERitZ+TR5I8nJMl6wFKgV/g9qHSDJa9S2qF+r2sGlrbhy6feYzmfXAzsE9fy1Id3LEMOy8qHyTC0FtCeXzaOOKILyEUrL9aXNs8Nd3YTx2vYadIEzZRz5rl+WnCRAhJqixgx8/KxNuwSFP1S1zHXNmVHkPB7IeK4LdUZcS0sCQEH2aoDDbJ9a3PPbgrtr+hFar69s1sm2yQILIIqh1QVuU0Hy5+hFzY+oJ2TWFnUdkwVFcpSnL3uVBuwB3NFijnOR9pp3Qbnh6upK78jdqE8uDYr9pD+XCh5ig9ywCRnPkiBxtx4W3OhL0763gfmhLotERxN1lqLimsGsjFHIBqWD43lX67fC1XLE0hX7eq7EgVHiJv9ypqmibkwUEY/y4Zl3G/VdhQVHHkYAKk84MYa9/XpAjFSfqrnVOHQPe+xwqkROK4VNB0rTvneGeyXjSoQNHknj0zeSoRqas7j+2xmq1q9CBX/SxdlF2dQ1jnQnxBVHZfXUFpI0WHqFmM= eo@ansible.bartk.us" > ~eo/.ssh/authorized_keys
         chmod 0600 ~eo/.ssh/authorized_keys
         chown -R eo:eo ~eo/.ssh
         echo "%hamwan ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/hamwan
