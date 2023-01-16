@@ -8,8 +8,6 @@ import stat
 class VagrantIdentityFiles:
     """Caches all Vagrant SSH IdentityFile locations for fast lookup"""
 
-    __identities = []
-
     def __init__(self):
         completed = subprocess.run(['/bin/sh', '-c', 'vagrant ssh-config | grep -F IdentityFile'],
                                    capture_output=True, encoding=locale.getpreferredencoding())
@@ -30,8 +28,6 @@ class VagrantIdentityFiles:
 
 class LocalIdentityFile:
     """ Always returns the same local identity file """
-
-    __identityfile = ""
 
     def __init__(self, relative_filename):
         self.__identityfile = os.path.join(os.path.abspath(os.path.dirname(__file__)),
