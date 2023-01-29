@@ -6,7 +6,9 @@
 cd ~
 sudo dnf -y install ansible git jq
 git clone --recursive https://github.com/HamWAN/infrastructure-configs.git
-cp infrastructure-configs/.ansible.cfg ~
+cd infrastructure-configs
+cp .ansible.cfg ~
+ansible-galaxy install -r roles/requirements.yml
 ```
 
 ### Listing all hosts in PSDR inventory
