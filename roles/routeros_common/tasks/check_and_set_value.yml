@@ -12,11 +12,11 @@
   ansible.builtin.debug:
     msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}, desired_value: {{ item.desired_value }}"
 
-- name: "Check if {{ item.name }} is correct"
+- name: "Check correctness of {{ item.name }}"
   ansible.builtin.set_fact:
     is_correct: '{{ item.desired_value in query_result.stdout[0] }}'
 
-- name: "Extract the current {{ item.name }} value"
+- name: "Extract current value of {{ item.name }}"
   ansible.builtin.set_fact:
     current_value: '{{ query_result.stdout[0] | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
   vars:

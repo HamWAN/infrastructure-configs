@@ -6,27 +6,27 @@ simple_settings:
     desired_value: 'remote=44.25.0.8'
     pattern: '.*remote=(\S*).*'
     set_command: '/system logging action set [find name=remote] remtoe=44.25.0.8'
-  
+
   - name: snmp_community_addresses
     query_command: '/snmp community print detail where default=yes'
     desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
     pattern: '.*addresses=(\S*).*'
     set_command: '/snmp community set [ find default=yes ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16'
-  
+
   # HACK: We look up primary but set both primary and secondary rather than having a second task
   - name: ntp_client
     query_command: /system ntp client print
     desired_value: 'primary-ntp: 44.25.0.4'
     pattern: '.*primary-ntp: (\S*).*'
     set_command: '/system ntp client set primary-ntp=44.25.0.4 secondary-ntp=44.25.1.4 enabled=yes '
-  
+
   # Using find here in so we deal gracefully with no DHCP server defined
   - name: dhcp_dns_server
     query_command: '/ip dhcp-server network print detail where dns-server~"44.24.24"'
     desired_value: 'dns-server=44.25.0.1,44.25.1.1'
     pattern: '.*dns-server=(\S*).*'
     set_command: '/ip dhcp-server network set [ find dns-server~"44.24.24" ] dns-server=44.25.0.1,44.25.1.1'
-  
+
   # Using find here in so we deal gracefully with no DHCP server defined
   - name: dhcp_ntp_server
     query_command: '/ip dhcp-server network print detail where ntp-server~"44.24.24"'
