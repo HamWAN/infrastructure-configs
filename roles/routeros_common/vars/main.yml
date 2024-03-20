@@ -18,7 +18,13 @@ simple_settings:
     query_command: /system ntp client print
     desired_value: 'primary-ntp: 44.25.0.4'
     pattern: '.*primary-ntp: (\S*).*'
-    set_command: '/system ntp client set primary-ntp=44.25.0.4 secondary-ntp=44.25.1.4 enabled=yes '
+    set_command: '/system ntp client set primary-ntp=44.25.0.4 secondary-ntp=44.25.1.4 enabled=yes'
+
+  - name: dns_servers
+    query_command: '/ip dns print'
+    desired_value: 'servers: 44.25.0.1,44.25.1.1'
+    pattern: '^servers: (\S*).*'
+    set_command: '/ip dns set servers=44.25.0.1,44.25.1.1'
 
   # Using find here in so we deal gracefully with no DHCP server defined
   - name: dhcp_dns_server
