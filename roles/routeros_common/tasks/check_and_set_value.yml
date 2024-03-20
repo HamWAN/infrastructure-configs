@@ -1,0 +1,36 @@
+---
+# name: Check and correct RouterOS setting
+
+- name: "Collect the parameter {{ item.name }}"
+  community.routeros.command:
+    commands:
+      - "{{ item.query_command }}"
+  register: query_result
+  changed_when: false
+
+- name: "Show variables {{ item.name }}"
+  ansible.builtin.debug:
+    msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}, desired_value: {{ item.desired_value }}"
+
+- name: "Check if {{ item.name }} is correct"
+  ansible.builtin.set_fact:
+    is_correct: '{{ item.desired_value in query_result.stdout[0] }}'
+
+- name: "Extract the current {{ item.name }} value"
+  ansible.builtin.set_fact:
+    current_value: '{{ query_result.stdout[0] | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
+  vars:
+    replacement: '\1'
+    newline: '\n'
+    space: ' '
+
+- name: "Show diff and corrective action for {{ item.name }}"
+  ansible.builtin.debug:
+    msg: "Setting correct: {{ is_correct }}, current value: {{ current_value }}, correction: {{ item.set_command }}"
+  when: ansible_diff_mode or ansible_check_mode
+
+- name: "Set the correct {{ item.name }}"
+  community.routeros.command:
+    commands:
+      - "{{ item.set_command }}"
+  when: not is_correct and not ansible_check_mode
