@@ -26,6 +26,12 @@ simple_settings:
     pattern: '^servers: (\S*).*'
     set_command: '/ip dns set servers=44.25.0.1,44.25.1.1'
 
+  - name: dns_allow_remote_requests
+    query_command: '/ip dns print'
+    desired_value: 'allow-remote-requests: no'
+    pattern: '.* allow-remote-requests: (\S*).*'
+    set_command: '/ip dns set allow-remote-requests=no'
+
   # Using find here in so we deal gracefully with no DHCP server defined
   - name: dhcp_dns_server
     query_command: '/ip dhcp-server network print detail where dns-server~"44.24.24"'
