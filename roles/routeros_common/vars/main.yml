@@ -1,5 +1,14 @@
 ---
 # vars file for routeros
+
+"connection": "network_cli"
+"ansible_connection": "ansible.netcommon.network_cli"
+"ansible_network_cli_ssh_type": "libssh"
+"ansible_network_os": "routeros"
+"ansible_port": "222"
+"ansible_ssh_host_key_auto_add": "true"
+"ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+
 simple_settings:
   - name: logging_destination
     query_command: '/system logging action print detail where name=remote'
