@@ -1,0 +1,7 @@
+---
+# tasks for common settings
+
+- name: call common task template
+  ansible.builtin.include_tasks:
+    file: check_and_set_value.yml
+  loop: "{{ simple_settings }}"
