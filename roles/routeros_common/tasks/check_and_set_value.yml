@@ -11,22 +11,32 @@
 - name: "Show variables {{ item.name }}"
   ansible.builtin.debug:
     msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}, desired_value: {{ item.desired_value }}"
+    verbosity: 1
 
 - name: "Check correctness of {{ item.name }}"
   ansible.builtin.set_fact:
     is_correct: '{{ item.desired_value in query_result.stdout[0] }}'
 
 - name: "Extract current value of {{ item.name }}"
-  ansible.builtin.set_fact:
-    current_value: '{{ query_result.stdout[0] | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
-  vars:
-    replacement: '\1'
-    newline: '\n'
-    space: ' '
+  block:
+    - name: Filter out standalone header lines
+      ansible.builtin.set_fact:
+        current_value: '{{ query_result.stdout[0] | regex_replace(header_re, empty) }}'
+      vars:
+        header_re: 'Flags: [^\n]+$'
+        empty: ''
+    - name: Join and extract value
+      ansible.builtin.set_fact:
+        current_value: '{{ current_value | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
+      vars:
+        replacement: '\1'
+        newline: '\n'
+        space: ' '
 
 - name: "Show diff and corrective action for {{ item.name }}"
   ansible.builtin.debug:
-    msg: "Setting correct: {{ is_correct }}, current value: {{ current_value }}, correction: {{ item.set_command }}"
+    msg: "Setting {% if is_correct %}correct{% else %}wrong{% endif %}\
+      {% if not is_correct %}, current value: {{ current_value }}, ACTION: {{ item.set_command }} {% endif %}"
   when: ansible_diff_mode or ansible_check_mode
 
 - name: "Set the correct {{ item.name }}"
