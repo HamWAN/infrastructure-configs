@@ -13,25 +13,25 @@
     msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}, desired_value: {{ item.desired_value }}"
     verbosity: 1
 
-- name: "Check correctness of {{ item.name }}"
-  ansible.builtin.set_fact:
-    is_correct: '{{ item.desired_value in query_result.stdout[0] }}'
-
 - name: "Extract current value of {{ item.name }}"
   block:
-    - name: Filter out standalone header lines
+    - name: "Filter out standalone header lines {{ item.name }}"
       ansible.builtin.set_fact:
         current_value: '{{ query_result.stdout[0] | regex_replace(header_re, empty) }}'
       vars:
         header_re: 'Flags: [^\n]+$'
         empty: ''
-    - name: Join and extract value
+    - name: "Join and extract value {{ item.name }}"
       ansible.builtin.set_fact:
         current_value: '{{ current_value | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
       vars:
         replacement: '\1'
         newline: '\n'
         space: ' '
+
+- name: "Check correctness of {{ item.name }}"
+  ansible.builtin.set_fact:
+    is_correct: "{{ item.desired_value in query_result.stdout[0] or (item.missing_ok and current_value == '') }}"
 
 - name: "Show diff and corrective action for {{ item.name }}"
   ansible.builtin.debug:
@@ -43,4 +43,7 @@
   community.routeros.command:
     commands:
       - "{{ item.set_command }}"
+  register: result
+  changed_when: result.stdout[0] == ""
+  failed_when: result.stdout[0] != ""
   when: not is_correct and not ansible_check_mode
