@@ -22,24 +22,28 @@ simple_settings:
     desired_value: 'remote=44.25.0.8'
     pattern: '.*remote=(\S*).*'
     set_command: '/system logging action set [find name=remote] remote=44.25.0.8'
+    missing_ok: false
 
   - name: snmp_community_addresses
     query_command: '/snmp community print detail where default=yes'
     desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
     pattern: '.*addresses=(\S*).*'
     set_command: '/snmp community set [ find default=yes ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16'
+    missing_ok: false
 
   - name: dns_servers
     query_command: '/ip dns print'
     desired_value: 'servers: 44.25.0.1,44.25.1.1'
     pattern: '^servers: (\S*).*'
     set_command: '/ip dns set servers=44.25.0.1,44.25.1.1'
+    missing_ok: false
 
   - name: dns_allow_remote_requests
     query_command: '/ip dns print'
     desired_value: 'allow-remote-requests: no'
     pattern: '.* allow-remote-requests: (\S*).*'
     set_command: '/ip dns set allow-remote-requests=no'
+    missing_ok: false
 
   - name: dhcp_dns_server
     query_command: '/ip dhcp-server network print detail'
@@ -62,6 +66,7 @@ simple_settings:
     desired_value: 'time-zone-name: America/Los_Angeles'
     pattern: '.*time-zone-name: (\S*).*'
     set_command: '/system clock set time-zone-autodetect=no time-zone-name=America/Los_Angeles'
+    missing_ok: false
 
 # Settings only for RouterOS 6.x
 v6_simple_settings:
@@ -71,6 +76,7 @@ v6_simple_settings:
     desired_value: 'primary-ntp: 44.25.0.4'
     pattern: '.*primary-ntp: (\S*).*'
     set_command: '/system ntp client set primary-ntp=44.25.0.4 secondary-ntp=44.25.1.4 enabled=yes'
+    missing_ok: false
 
 # Settings only for RouterOS 7.x
 v7_simple_settings:
@@ -79,3 +85,4 @@ v7_simple_settings:
     desired_value: 'servers: 44.25.0.4,44.25.1.4'
     pattern: '.*servers: (\S*).*'
     set_command: '/system ntp client set servers=44.25.0.4,44.25.1.4 enabled=yes'
+    missing_ok: false
