@@ -25,10 +25,10 @@ simple_settings:
     missing_ok: false
 
   - name: snmp_community_addresses
-    query_command: '/snmp community print detail where default=yes'
+    query_command: '/snmp community print detail where name=hamwan'
     desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
     pattern: '.*addresses=(\S*).*'
-    set_command: '/snmp community set [ find default=yes ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16'
+    set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16'
     missing_ok: false
 
   - name: dns_servers
