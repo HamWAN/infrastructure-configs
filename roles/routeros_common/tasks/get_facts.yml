@@ -1,0 +1,30 @@
+---
+# name: Check and correct RouterOS setting
+
+- name: "Collect the parameter {{ item.name }}"
+  community.routeros.command:
+    commands:
+      - "{{ item.query_command }}"
+  register: query_result
+  changed_when: false
+
+- name: "Show variables {{ item.name }}"
+  ansible.builtin.debug:
+    msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}"
+    verbosity: 1
+
+- name: "Extract current value of {{ item.name }}"
+  block:
+    - name: Filter out standalone header lines
+      ansible.builtin.set_fact:
+        temp: '{{ query_result.stdout[0] | regex_replace(header_re, empty) }}'
+      vars:
+        header_re: 'Flags: [^\n]+$'
+        empty: ''
+    - name: Join and extract value
+      ansible.builtin.set_fact:
+        '{{ item.fact }}': '{{ temp | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
+      vars:
+        replacement: '\1'
+        newline: '\n'
+        space: ' '
