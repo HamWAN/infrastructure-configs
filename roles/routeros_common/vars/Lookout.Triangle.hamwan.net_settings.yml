@@ -20,7 +20,7 @@ simple_settings:
     query_command: '/snmp community print detail where name=hamwan'
     desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
     pattern: '.*addresses=(\S*).*'
-    set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16,44.135.193.0/24,44.135.219.0/24'
+    set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16,44.135.193.0/24,44.135.219.0/24,158.51.112.0/24'
     missing_ok: false
 
   - name: dns_servers
@@ -36,14 +36,6 @@ simple_settings:
     pattern: '.* allow-remote-requests: (\S*).*'
     set_command: '/ip dns set allow-remote-requests=no'
     missing_ok: false
-
-  - name: dhcp_ntp_server
-    query_command: '/ip dhcp-server network print detail'
-    desired_value: 'ntp-server=44.25.0.4,44.25.1.4'
-    pattern: '.*ntp-server=(\S*).*'
-    # Using find here in so we deal gracefully with multiple or no DHCP servers
-    set_command: '/ip dhcp-server network set [ find ntp-server~"44.24.24" ] ntp-server=44.25.0.4,44.25.1.4'
-    missing_ok: true
 
   - name: time_zone_name
     query_command: '/system clock print'
