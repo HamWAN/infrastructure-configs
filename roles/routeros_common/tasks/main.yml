@@ -1,6 +1,18 @@
 ---
 # tasks for common settings
 
+- name: load override if present
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ inventory_hostname }}_settings.yml"
+        - settings.yml
+      paths:
+        - '../vars'
+      skip: true
+
+
 - name: call common task template
   block:
     - name: collect facts

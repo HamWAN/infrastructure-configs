@@ -1,0 +1,80 @@
+---
+# vars file for routeros settings
+
+routeros_facts:
+  - name: routeros_version
+    fact: routeros_version
+    query_command: '/system resource print'
+    pattern: '.*version: (\S*).*'
+
+# Settings only for RouterOS 6 and 7
+simple_settings:
+  - name: logging_destination
+    query_command: '/system logging action print detail where name=remote'
+    desired_value: 'remote=44.25.0.8'
+    pattern: '.*remote=(\S*).*'
+    set_command: '/system logging action set [find name=remote] remote=44.25.0.8'
+    missing_ok: false
+
+  - name: snmp_community_addresses
+    query_command: '/snmp community print detail where name=hamwan'
+    desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
+    pattern: '.*addresses=(\S*).*'
+    set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16'
+    missing_ok: false
+
+  - name: dns_servers
+    query_command: '/ip dns export'
+    desired_value: 'servers=44.25.0.1,44.25.1.1'
+    pattern: '.*servers=(\S*).*'
+    set_command: '/ip dns set servers=44.25.0.1,44.25.1.1'
+    missing_ok: false
+
+  - name: dns_allow_remote_requests
+    query_command: '/ip dns print'
+    desired_value: 'allow-remote-requests: no'
+    pattern: '.* allow-remote-requests: (\S*).*'
+    set_command: '/ip dns set allow-remote-requests=no'
+    missing_ok: false
+
+  - name: dhcp_dns_server
+    query_command: '/ip dhcp-server network print detail'
+    desired_value: 'dns-server=44.25.0.1,44.25.1.1'
+    pattern: '.*dns-server=(\S*).*'
+    # Using find here in so we deal gracefully with multiple or no DHCP servers
+    set_command: '/ip dhcp-server network set [ find dns-server~"44.24.24" ] dns-server=44.25.0.1,44.25.1.1'
+    missing_ok: true
+
+  - name: dhcp_ntp_server
+    query_command: '/ip dhcp-server network print detail'
+    desired_value: 'ntp-server=44.25.0.4,44.25.1.4'
+    pattern: '.*ntp-server=(\S*).*'
+    # Using find here in so we deal gracefully with multiple or no DHCP servers
+    set_command: '/ip dhcp-server network set [ find ntp-server~"44.24.24" ] ntp-server=44.25.0.4,44.25.1.4'
+    missing_ok: true
+
+  - name: time_zone_name
+    query_command: '/system clock print'
+    desired_value: 'time-zone-name: America/Los_Angeles'
+    pattern: '.*time-zone-name: (\S*).*'
+    set_command: '/system clock set time-zone-autodetect=no time-zone-name=America/Los_Angeles'
+    missing_ok: false
+
+# Settings only for RouterOS 6.x
+v6_simple_settings:
+  # HACK: We look up primary but set both primary and secondary rather than having a second task
+  - name: ntp_client
+    query_command: /system ntp client print
+    desired_value: 'primary-ntp: 44.25.0.4'
+    pattern: '.*primary-ntp: (\S*).*'
+    set_command: '/system ntp client set primary-ntp=44.25.0.4 secondary-ntp=44.25.1.4 enabled=yes'
+    missing_ok: false
+
+# Settings only for RouterOS 7.x
+v7_simple_settings:
+  - name: ntp_client
+    query_command: /system ntp client print
+    desired_value: 'servers: 44.25.0.4,44.25.1.4'
+    pattern: '.*servers: (\S*).*'
+    set_command: '/system ntp client set servers=44.25.0.4,44.25.1.4 enabled=yes'
+    missing_ok: false

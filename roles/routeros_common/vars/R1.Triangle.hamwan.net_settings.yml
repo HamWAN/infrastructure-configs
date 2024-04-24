@@ -1,0 +1,18 @@
+---
+# vars file for routeros settings
+
+routeros_facts:
+  - name: routeros_version
+    fact: routeros_version
+    query_command: '/system resource print'
+    pattern: '.*version: (\S*).*'
+
+# Settings only for RouterOS 6 and 7
+simple_settings: []
+
+# Settings only for RouterOS 6.x
+v6_simple_settings: []
+
+# Settings only for RouterOS 7.x
+v7_simple_settings: []
+
