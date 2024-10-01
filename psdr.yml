@@ -6,6 +6,9 @@
   gather_facts: false
   roles:
     - routeros_common
+  tags:
+    - routeros
+
 
 - name: Linux User Management
   # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
@@ -13,3 +16,5 @@
   gather_facts: false
   roles:
     - users
+  tags:
+    - linux

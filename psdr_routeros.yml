@@ -1,8 +1,0 @@
----
-
-- name: RouterOS Management
-  # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
-  hosts: os_routeros:&owner_HamWAN
-  gather_facts: false
-  roles:
-    - routeros_common
