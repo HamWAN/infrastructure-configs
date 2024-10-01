@@ -1,5 +1,19 @@
 ---
-# vars file for routeros settings
+# vars file for routeros settings that are common across an implemented network
+# routeros_facts establishes the version of routeros on a particular device as some
+#   commands vary between versions.  routeros_version is used later in this file.
+# simple_settings has a list setting to manage and provides:
+#   a query command - the routeros command that will return the setting information
+#   the desired setting (for comparison with existing)
+#   a regexp pattern to extract the existing value from the results of the query command
+#   a set command that will apply the desired value to the device
+#   missing_ok: whether the setting is OK if missing.  If not, it will be set if missing.
+#
+# v6_simple_setting and v7_simple_settings follow the same format but are relevant to
+# routeros v6 and v7 respectively.
+#
+# TODO(dpk): move actual values out or roles/* tree and into a network specific vars file
+# TODO(dpk): look to use variable substitution instead of replicating desired_value in set_command.
 
 routeros_facts:
   - name: routeros_version
@@ -7,7 +21,7 @@ routeros_facts:
     query_command: '/system resource print'
     pattern: '.*version: (\S*).*'
 
-# Settings only for RouterOS 6 and 7
+# Settings for both RouterOS 6 and 7
 simple_settings:
   - name: logging_destination
     query_command: '/system logging action print detail where name=remote'
@@ -60,7 +74,7 @@ simple_settings:
     set_command: '/system clock set time-zone-autodetect=no time-zone-name=America/Los_Angeles'
     missing_ok: false
 
-# Settings only for RouterOS 6.x
+# Settings only for RouterOS 6
 v6_simple_settings:
   # HACK: We look up primary but set both primary and secondary rather than having a second task
   - name: ntp_client
