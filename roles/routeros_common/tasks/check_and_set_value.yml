@@ -1,33 +1,9 @@
 ---
 # name: Check and correct RouterOS setting
 
-- name: "Collect the parameter {{ item.name }}"
-  community.routeros.command:
-    commands:
-      - "{{ item.query_command }}"
-  register: query_result
-  changed_when: false
-
-- name: "Show variables {{ item.name }}"
-  ansible.builtin.debug:
-    msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}, desired_value: {{ item.desired_value }}"
-    verbosity: 1
-
-- name: "Extract current value of {{ item.name }}"
-  block:
-    - name: "Filter out standalone header lines {{ item.name }}"
-      ansible.builtin.set_fact:
-        current_value: '{{ query_result.stdout[0] | regex_replace(header_re, empty) }}'
-      vars:
-        header_re: 'Flags: [^\n]+$'
-        empty: ''
-    - name: "Join and extract value {{ item.name }}"
-      ansible.builtin.set_fact:
-        current_value: '{{ current_value | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
-      vars:
-        replacement: '\1'
-        newline: '\n'
-        space: ' '
+- name: get_facts
+  ansible.builtin.include_tasks:
+    file: get_facts.yml
 
 - name: "Check correctness of {{ item.name }}"
   ansible.builtin.set_fact:

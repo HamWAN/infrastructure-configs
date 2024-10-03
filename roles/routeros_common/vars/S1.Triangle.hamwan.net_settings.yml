@@ -18,7 +18,7 @@ simple_settings:
 
   - name: snmp_community_addresses
     query_command: '/snmp community print detail where name=hamwan'
-    desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16'
+    desired_value: 'addresses=44.24.240.0/20,44.25.0.0/16,44.135.193.0/24,44.135.219.0/24'
     pattern: '.*addresses=(\S*).*'
     set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses=44.24.240.0/20,44.25.0.0/16,44.135.193.0/24,44.135.219.0/24'
     missing_ok: false

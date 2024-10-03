@@ -8,23 +8,27 @@
   register: query_result
   changed_when: false
 
-- name: "Show variables {{ item.name }}"
+- name: "Show variable {{ item.name }}"
   ansible.builtin.debug:
     msg: "query_result.stdout[0]: {{ query_result.stdout[0] }}"
     verbosity: 1
 
 - name: "Extract current value of {{ item.name }}"
   block:
-    - name: Filter out standalone header lines
+    - name: "Filter out standalone header lines - {{ item.name }}"
       ansible.builtin.set_fact:
         temp: '{{ query_result.stdout[0] | regex_replace(header_re, empty) }}'
       vars:
         header_re: 'Flags: [^\n]+$'
         empty: ''
-    - name: Join and extract value
+    - name: "Join and extract value - {{ item.name }}"
       ansible.builtin.set_fact:
-        '{{ item.fact }}': '{{ temp | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
+        current_value: '{{ temp | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
       vars:
         replacement: '\1'
         newline: '\n'
         space: ' '
+    - name: "Store in dict if key 'fact' is present - {{ item.name }}"
+      ansible.builtin.set_fact:
+        '{{ item.fact }}': '{{ current_value }}'
+      when: item.fact is defined
