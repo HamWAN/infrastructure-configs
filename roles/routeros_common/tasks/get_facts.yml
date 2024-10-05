@@ -23,7 +23,7 @@
         empty: ''
     - name: "Join and extract value - {{ item.name }}"
       ansible.builtin.set_fact:
-        current_value: '{{ temp | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}'
+        current_value: "{{ temp | regex_replace(newline, space) | regex_replace(item.pattern, replacement) }}"
       vars:
         replacement: '\1'
         newline: '\n'

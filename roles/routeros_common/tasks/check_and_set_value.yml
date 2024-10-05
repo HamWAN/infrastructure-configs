@@ -12,7 +12,7 @@
 - name: "Show diff and corrective action for {{ item.name }}"
   ansible.builtin.debug:
     msg: "Setting {% if is_correct %}correct{% else %}wrong{% endif %}\
-      {% if not is_correct %}, current value: {{ current_value }}, ACTION: {{ item.set_command }} {% endif %}"
+      {% if not is_correct %}, current value: {{ current_value }}{% endif %}, ACTION: {{ item.set_command }}"
   when: ansible_diff_mode or ansible_check_mode
 
 - name: "Set the correct {{ item.name }}"

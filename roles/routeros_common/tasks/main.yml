@@ -1,18 +1,6 @@
 ---
 # tasks for common settings
 
-- name: load override if present
-  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
-  vars:
-    params:
-      files:
-        - "{{ inventory_hostname }}_settings.yml"
-        - settings.yml
-      paths:
-        - '../vars'
-      skip: true
-
-
 - name: call common task template
   block:
     - name: collect facts
@@ -23,16 +11,16 @@
     - name: common settings
       ansible.builtin.include_tasks:
         file: check_and_set_value.yml
-      loop: "{{ simple_settings }}"
+      loop: "{{ settings.simple_settings }}"
 
     - name: v6 common settings
       ansible.builtin.include_tasks:
         file: check_and_set_value.yml
-      loop: "{{ v6_simple_settings }}"
+      loop: "{{ settings.v6_simple_settings }}"
       when: routeros_version is match("^6.")
 
     - name: v7 common settings
       ansible.builtin.include_tasks:
         file: check_and_set_value.yml
-      loop: "{{ v7_simple_settings }}"
+      loop: "{{ settings.v7_simple_settings }}"
       when: routeros_version is match("^7.")

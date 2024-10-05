@@ -1,0 +1,51 @@
+---
+# routeros_common settings overrides for Lookout.Triangle
+# Set alternate snmp addresses and dns servers, and remove tasks to manage dhcp servers.
+#
+# addresses that will be permitted to make SNMP readonly queries
+snmp_community_addresses: '44.25.0.0/16,44.24.0.0/16,44.135.219.0/24,44.135.193.0/24,158.51.112.0/24'
+# what DNS servers should the routeros device use
+dns_servers: '44.31.125.225,44.31.125.226'
+
+# Need to override simple_settings to remove DHCP server related entries
+# Based on roles/routeros_common/vars/settings.yml
+settings:
+  # Settings for both RouterOS 6 and 7
+  simple_settings:
+    - name: logging_destination
+      query_command: '/system logging action print detail where name=remote'
+      desired_value: 'remote={{ logging_destination }}'
+      pattern: '.*remote=(\S*).*'
+      set_command: '/system logging action set [find name=remote] remote={{ logging_destination }}'
+      missing_ok: false
+
+    - name: snmp_community_addresses
+      query_command: '/snmp community print detail where name=hamwan'
+      desired_value: 'addresses={{ snmp_community_addresses }}'
+      pattern: '.*addresses=(\S*).*'
+      set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses={{ snmp_community_addresses }}'
+      missing_ok: false
+
+    - name: dns_servers
+      query_command: '/ip dns export'
+      desired_value: 'servers={{ dns_servers }}'
+      pattern: '.*servers=(\S*).*'
+      set_command: '/ip dns set servers={{ dns_servers }}'
+      missing_ok: false
+
+    - name: dns_allow_remote_requests
+      query_command: '/ip dns export verbose'
+      desired_value: 'allow-remote-requests{{ dns_allow_remote_requests }}'
+      pattern: '.*allow-remote-requests(=\S*).*'
+      set_command: '/ip dns set allow-remote-requests{{ dns_allow_remote_requests }}'
+      missing_ok: false
+
+    - name: time_zone_name
+      query_command: '/system clock print'
+      desired_value: 'time-zone-name: {{ time_zone_name }}'
+      pattern: '.*time-zone-name: (\S*).*'
+      set_command: '/system clock set time-zone-autodetect=no time-zone-name={{ time_zone_name }}'
+      missing_ok: false
+
+  v6_simple_settings: '{{ default_v6_simple_settings }}'
+  v7_simple_settings: '{{ default_v7_simple_settings }}'
