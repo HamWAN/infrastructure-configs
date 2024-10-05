@@ -1,7 +1,8 @@
 ---
-# name: Check and correct RouterOS setting
+# Check and correct RouterOS setting
 
 - name: get_facts
+  # sets current_value
   ansible.builtin.include_tasks:
     file: get_facts.yml
 

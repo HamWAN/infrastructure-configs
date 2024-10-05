@@ -1,5 +1,6 @@
 ---
-# name: Check and correct RouterOS setting
+# Collect a RouterOS setting and optionally set a fact.
+# Sets current_value for use by later tasks.
 
 - name: "Collect the parameter {{ item.name }}"
   community.routeros.command:
