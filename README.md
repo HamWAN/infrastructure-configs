@@ -67,3 +67,23 @@ sudo systemctl enable --now libvirtd
 sudo usermod --append --groups libvirt `whoami`
 vagrant up --no-parallel
 ```
+
+## Developer Workstation Setup (Debian)
+
+```
+sudo apt install virtualenv
+sudo apt install python3-pip libssl-dev
+sudo apt install vagrant-libvirt
+sudo apt install qemu-system libvirt-daemon-system
+
+pip3 install ansible-dev-tools
+pip3 install molecule ansible-core
+pip3 install --upgrade setuptools
+pip3 install "molecule-plugins[vagrant]"
+
+ansible-galaxy collection install ansible.posix
+sudo systemctl enable --now libvirtd
+sudo adduser libvirt
+
+vagrant up --no-parallel
+```
