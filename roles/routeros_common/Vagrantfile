@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+
+  VMs = [
+    {
+      "name" => 'ROS7.test',
+      "ip" => '192.168.56.20',
+      "box" => 'cheretbe/routeros7',
+    },
+    {
+      "name" => 'ROS6.test',
+      "ip" => '192.168.56.21',
+      "box" => 'cheretbe/routeros',
+    },
+  ]
+ 
+  VMs.each do |vm|
+    config.vm.define vm["name"] do |node|
+      # Change guest name
+      node.vm.hostname = vm["name"]
+      node.vm.box = vm["box"]
+      node.vm.network "private_network", virtualbox__intnet: "vagrant-intnet-1", auto_config: false
+      # Disable automatic box update checking. If you disable this, then
+      # boxes will only be checked for updates when the user runs
+      # `vagrant box outdated`. This is not recommended.
+      # node.vm.box_check_update = false
+
+      #node.vm.provider :virtualbox do |vbox|
+      #  vbox.qemu_use_session = false
+
+      # Execute command
+      node.vm.provision "routeros_command", name: "Command test", command: "/system resource print"
+      node.vm.provision "routeros_command", name: "Set name", command: "/system identity set name=#{vm['name']}"
+      # Disable DHCP client and force address to known address (inventories/test/routeros_common.py)
+      node.vm.provision "routeros_command", name: "Disable DHCP client on host_only", command: "/ip dhcp-client disable [find interface=host_only]"
+      node.vm.provision "routeros_command", name: "Add IP address", command: "/ip address add interface=host_only address=#{vm['ip']}/24"
+      # Upload and execute a setup script file
+      node.vm.provision "routeros_file", name: "Upload initial common configuration", source: "provision/common_setup.rsc", destination: "common_setup.rsc"
+      node.vm.provision "routeros_command", name: "Exec custom script", command: "/import common_setup.rsc", check_script_error: true
+      node.vm.provision "routeros_file", name: "Upload initial host configuration", source: "provision/#{vm['name']}.rsc", destination: "host_setup.rsc"
+      node.vm.provision "routeros_command", name: "Set host IP", command: "/import host_setup.rsc", check_script_error: true
+    end
+  end
+end
