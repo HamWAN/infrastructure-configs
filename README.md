@@ -83,6 +83,8 @@ sudo apt install python3-pip libssl-dev
 sudo apt install vagrant-libvirt
 sudo apt install qemu-system libvirt-daemon-system
 
+cd infrastructure_configs
+. venv/bin/activate
 pip3 install ansible-dev-tools
 pip3 install molecule ansible-core
 pip3 install --upgrade setuptools
