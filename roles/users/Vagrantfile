@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   VMs = [
     {
       "name" => 'test.missing.users',
-      "ip" => '192.168.56.10',
+      "ip" => '192.168.58.10',
       "custom" => '
         groupadd hamadmin
         groupadd ham
@@ -31,7 +31,7 @@ Vagrant.configure("2") do |config|
     },
     {
       "name" => 'test.extra.users',
-      "ip" => '192.168.56.11',
+      "ip" => '192.168.58.11',
       "custom" => '
         groupadd hamadmin
         groupadd ham
@@ -48,7 +48,7 @@ Vagrant.configure("2") do |config|
     },
     {
       "name" => 'test.group.change',
-      "ip" => '192.168.56.12',
+      "ip" => '192.168.58.12',
       "custom" => '
         groupadd hamwan
         echo -e "hamwan\nhamadmin\nham" > /etc/group_managed_scope
