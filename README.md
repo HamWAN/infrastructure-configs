@@ -57,6 +57,13 @@ ansible-playbook --limit <server> psdr.yml
 ansible-playbook psdr.yml
 ```
 
+## Testing Strategy
+
+We use [Ansible Molecule](https://github.com/ansible/molecule) for testing.
+This user role includes the necessary vagrant and molecule configuration to test various user management
+tasks using virtual machines under vagrant/libvirt. It also tests for behavior in the face of flakey connections.
+The routeros_common role tests for setting or changing settings that are both present or missing beforehand on both RouterOS 6 and 7.
+
 ## Developer Workstation Setup (Fedora)
 
 First, run the Operator Workstation Setup, then:
