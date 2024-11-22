@@ -1,0 +1,34 @@
+---
+# routeros_common settings for PSDR
+#
+logging_destination: 44.25.0.8
+# addresses that will be permitted to make SNMP readonly queries
+snmp_community_addresses: '44.24.240.0/20,44.25.0.0/16'
+# what DNS servers should the routeros device use
+dns_servers: '44.25.0.1,44.25.1.1'
+# dns_allow_remote_requests should almost always be 'no' to prevent being used for DDOS
+# Note special hack here to avoid set_fact coercing 'no' to false.
+# We are going to make the desired value '=no' or '=yes' to avoid coercion.
+# The definitions in role file vars/main.yml expect this for this setting.
+dns_allow_remote_requests: '=no'
+# dns servers to be used by DHCP clients, normally the same as dns_servers above
+dhcp_dns_server_target_prefix: '44.24.24'
+dhcp_dns_server: "{{ dns_servers }}"
+# ntp servers to be used by DHCP clients, normally the same as ntp servers set above
+dhcp_ntp_server_target_prefix: '44.24.24'
+dhcp_ntp_server: '44.25.0.4,44.25.1.4'
+time_zone_name: 'America/Los_Angeles'
+# NTP client setting syntax changed between V6 and V7 of routeros
+# This necessitates specifying the servers differently on the two versions
+# Normally v7_ will be the concatenation of v6_ primary and secondary
+v6_ntp_client_primary_server: 44.25.0.4
+v6_ntp_client_secondary_server: 44.25.1.4
+v7_ntp_client_servers: '44.25.0.4,44.25.1.4'
+
+# We initialize settings here rather than in roles/routeros_common/vars/main.yml because
+# we want to be able to override it on a host by host basis and the role variables have
+# higher precedence.  By setting it here in a group var file, the host var file can override.
+settings:
+  simple_settings: '{{ default_simple_settings }}'
+  v6_simple_settings: '{{ default_v6_simple_settings }}'
+  v7_simple_settings: '{{ default_v7_simple_settings }}'

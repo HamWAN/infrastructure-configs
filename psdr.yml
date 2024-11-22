@@ -1,8 +1,19 @@
 ---
+
+- name: RouterOS Management
+  # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
+  hosts: os_routeros:&owner_HamWAN
+  gather_facts: false
+  roles:
+    - routeros_common
+  tags:
+    - routeros
+
 - name: Linux User Management
   # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
   hosts: os_linux:&owner_HamWAN:!type_container
   gather_facts: false
-  tasks:
-    - ansible.builtin.import_role:
-        name: users
+  roles:
+    - users
+  tags:
+    - linux

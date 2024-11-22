@@ -1,0 +1,100 @@
+---
+# vars file for routeros settings that are common across an implemented network
+# routeros_facts establishes the version of routeros on a particular device as some
+#   commands vary between versions.  routeros_version is used later in this file.
+# simple_settings has a list setting to manage and provides:
+#   a query command - the routeros command that will return the setting information
+#   the desired setting (for comparison with existing)
+#   a regexp pattern to extract the existing value from the results of the query command
+#   a set command that will apply the desired value to the device
+#   missing_ok: whether the setting is OK if missing.  If not, it will be set if missing.
+#
+# v6_simple_setting and v7_simple_settings follow the same format but are relevant to
+# routeros v6 and v7 respectively.
+
+"ansible_connection": "ansible.netcommon.network_cli"
+"ansible_network_cli_ssh_type": "libssh"
+"ansible_network_os": "routeros"
+"ansible_port": "222"
+"ansible_ssh_host_key_auto_add": "true"
+"ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+
+routeros_facts:
+  - name: routeros_version
+    fact: routeros_version
+    query_command: '/system resource print'
+    pattern: '.*version: (\S*).*'
+
+# Settings for both RouterOS 6 and 7
+default_simple_settings:
+  - name: logging_destination
+    query_command: '/system logging action print detail where name=remote'
+    desired_value: 'remote={{ logging_destination }}'
+    pattern: '.*remote=(\S*).*'
+    set_command: '/system logging action set [find name=remote] remote={{ logging_destination }}'
+    missing_ok: false
+
+  - name: snmp_community_addresses
+    query_command: '/snmp community print detail where name=hamwan'
+    desired_value: 'addresses={{ snmp_community_addresses }}'
+    pattern: '.*addresses=(\S*).*'
+    set_command: '/snmp community set [ find name=hamwan ] name=hamwan addresses={{ snmp_community_addresses }}'
+    missing_ok: false
+
+  - name: dns_servers
+    query_command: '/ip dns export verbose'
+    desired_value: 'servers={{ dns_servers }}'
+    pattern: '.*servers=(\S*).*'
+    set_command: '/ip dns set servers={{ dns_servers }}'
+    missing_ok: false
+
+  # Note special hack here to avoid set_fact coercing 'no' to false.
+  # We are going to make the desired value '=no' or '=yes' to avoid coercion.
+  - name: dns_allow_remote_requests
+    query_command: '/ip dns export verbose'
+    desired_value: 'allow-remote-requests{{ dns_allow_remote_requests }}'
+    pattern: '.* allow-remote-requests(=\S*).*'
+    set_command: '/ip dns set allow-remote-requests{{ dns_allow_remote_requests }}'
+    missing_ok: false
+
+  - name: dhcp_dns_server
+    query_command: '/ip dhcp-server network print detail'
+    desired_value: 'dns-server={{ dhcp_dns_server }}'
+    pattern: '.*dns-server=(\S*).*'
+    # Using find here in so we deal gracefully with multiple or no DHCP servers
+    set_command: '/ip dhcp-server network set [ find dns-server~"{{dhcp_dns_server_target_prefix}}" ] dns-server={{ dhcp_dns_server }}'
+    missing_ok: true
+
+  - name: dhcp_ntp_server
+    query_command: '/ip dhcp-server network print detail'
+    desired_value: 'ntp-server={{ dhcp_ntp_server }}'
+    pattern: '.*ntp-server=(\S*).*'
+    # Using find here in so we deal gracefully with multiple or no DHCP servers
+    set_command: '/ip dhcp-server network set [ find ntp-server~"{{dhcp_ntp_server_target_prefix}}" ] ntp-server={{ dhcp_ntp_server }}'
+    missing_ok: true
+
+  - name: time_zone_name
+    query_command: '/system clock print'
+    desired_value: 'time-zone-name: {{ time_zone_name }}'
+    pattern: '.*time-zone-name: (\S*).*'
+    set_command: '/system clock set time-zone-autodetect=no time-zone-name={{ time_zone_name }}'
+    missing_ok: false
+
+# Settings only for RouterOS 6
+default_v6_simple_settings:
+  # HACK: We look up primary but set both primary and secondary rather than having a second task
+  - name: ntp_client
+    query_command: /system ntp client print
+    desired_value: 'primary-ntp: {{ v6_ntp_client_primary_server }}'
+    pattern: '.*primary-ntp: (\S*).*'
+    set_command: '/system ntp client set primary-ntp={{ v6_ntp_client_primary_server }} secondary-ntp={{ v6_ntp_client_secondary_server }} enabled=yes'
+    missing_ok: false
+
+# Settings only for RouterOS 7.x
+default_v7_simple_settings:
+  - name: ntp_client
+    query_command: /system ntp client print
+    desired_value: 'servers: {{ v7_ntp_client_servers }}'
+    pattern: '.*servers: (\S*).*'
+    set_command: '/system ntp client set servers={{ v7_ntp_client_servers }} enabled=yes'
+    missing_ok: false

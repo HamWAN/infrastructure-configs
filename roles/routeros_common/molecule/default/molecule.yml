@@ -1,0 +1,17 @@
+---
+dependency:
+  name: galaxy
+#driver:
+#  name: vagrant
+platforms:
+  - name: test.ros6.missing
+  - name: test.ros6.incorrect
+  - name: test.ros6.updated
+  - name: test.ros7.missing
+  - name: test.ros7.incorrect
+  - name: test.ros7.updated
+provisioner:
+  name: ansible
+  log: True
+verifier:
+  name: ansible

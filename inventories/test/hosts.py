@@ -56,9 +56,9 @@ def make_hostvars(hosts, identities, common_vars):
 if __name__ == "__main__":
     identities = LocalIdentityFile("test_rsa")
     hosts = {
-        "test.missing.users": "192.168.222.10",
-        "test.extra.users": "192.168.222.11",
-        "test.group.change": "192.168.222.12",
+        "test.missing.users": "192.168.58.10",
+        "test.extra.users": "192.168.58.11",
+        "test.group.change": "192.168.58.12",
     }
     common_vars = {
         "ansible_user": "eo",

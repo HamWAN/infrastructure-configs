@@ -2,12 +2,13 @@
 dependency:
   name: galaxy
 driver:
-  name: delegated
+  name: default
 platforms:
   - name: test.missing.users
   - name: test.extra.users
   - name: test.group.change
 provisioner:
   name: ansible
+  log: True
 verifier:
   name: ansible

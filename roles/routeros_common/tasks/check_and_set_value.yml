@@ -1,0 +1,26 @@
+---
+# Check and correct RouterOS setting
+
+- name: get_facts
+  # sets current_value
+  ansible.builtin.include_tasks:
+    file: get_facts.yml
+
+- name: "Check correctness of {{ item.name }}"
+  ansible.builtin.set_fact:
+    is_correct: "{{ item.desired_value in query_result.stdout[0] or (item.missing_ok and current_value == '') }}"
+
+- name: "Show diff and corrective action for {{ item.name }}"
+  ansible.builtin.debug:
+    msg: "Setting {% if is_correct %}correct{% else %}wrong{% endif %}\
+      {% if not is_correct %}, current value: {{ current_value }}{% endif %}, ACTION: {{ item.set_command }}"
+  when: ansible_diff_mode or ansible_check_mode
+
+- name: "Set the correct {{ item.name }}"
+  community.routeros.command:
+    commands:
+      - "{{ item.set_command }}"
+  register: result
+  changed_when: result.stdout[0] == ""
+  failed_when: result.stdout[0] != ""
+  when: not is_correct and not ansible_check_mode
