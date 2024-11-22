@@ -84,6 +84,7 @@ sudo apt install vagrant-libvirt
 sudo apt install qemu-system libvirt-daemon-system
 
 cd infrastructure_configs
+virtualenv venv
 . venv/bin/activate
 pip3 install ansible-dev-tools
 pip3 install molecule ansible-core
@@ -95,4 +96,6 @@ sudo systemctl enable --now libvirtd
 sudo adduser libvirt
 
 vagrant up --no-parallel
+...
+deactivate
 ```
