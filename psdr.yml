@@ -11,7 +11,7 @@
 
 - name: Linux User Management
   # https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#pattern-processing-order
-  hosts: os_linux:&owner_HamWAN:!type_container
+  hosts: os_linux:&owner_HamWAN:!type_container:!type_anycast
   gather_facts: false
   roles:
     - users
