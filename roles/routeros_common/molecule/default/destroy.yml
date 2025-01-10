@@ -3,11 +3,17 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  # no_log: "{{ molecule_no_log }}"
+  no_log: "{{ molecule_no_log }}"
   tasks:
     # Developer must implement.
 
     # Mandatory configuration for Molecule to function.
+
+    - name: Destroy Vagrant instances
+      ansible.builtin.command:
+        cmd: "vagrant destroy -f {{ item.name }}"
+      throttle: 1
+      loop: "{{ molecule_yml.platforms }}"
 
     - name: Populate instance config
       ansible.builtin.set_fact:

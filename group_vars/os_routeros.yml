@@ -1,6 +1,9 @@
 ---
 # routeros_common settings for PSDR
 #
+"ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+"ansible_ssh_host_key_auto_add": "true"
+
 logging_destination: 44.25.0.8
 # addresses that will be permitted to make SNMP readonly queries
 snmp_community_addresses: '44.24.240.0/20,44.25.0.0/16'

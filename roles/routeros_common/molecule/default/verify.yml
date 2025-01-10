@@ -1,0 +1,33 @@
+---
+- name: Verify installation or correction of settings
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: "Include group vars for os_routeros"
+      ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
+
+    - name: "Include default settings"
+      ansible.builtin.include_vars: ../../vars/main.yml
+
+    - name: collect facts
+      ansible.builtin.include_tasks:
+        file: ../../tasks/get_facts.yml
+      loop: "{{ routeros_facts }}"
+
+    - name: common settings
+      ansible.builtin.include_tasks:
+        file: check_value.yml
+      loop: "{{ settings.simple_settings }}"
+
+    - name: v6 common settings
+      ansible.builtin.include_tasks:
+        file: check_value.yml
+      loop: "{{ settings.v6_simple_settings }}"
+      when: routeros_version is match("^6.")
+
+    - name: v7 common settings
+      ansible.builtin.include_tasks:
+        file: check_value.yml
+      loop: "{{ settings.v7_simple_settings }}"
+      when: routeros_version is match("^7.")

@@ -48,11 +48,6 @@ if ([:len [/interface list member find list="ALLOW_DISCOVERY" and interface="hos
   /interface list member add list=ALLOW_DISCOVERY interface=host_only comment="defconf"
 }
 
-if (![/ip dns get allow-remote-requests]) do={
-  :put "Enabling DNS server"
-  /ip dns set allow-remote-requests=yes
-}
-
 if ([:len [/ip firewall filter find]] = 0) do={
   :put "Adding firewall rules"
   /ip firewall {
