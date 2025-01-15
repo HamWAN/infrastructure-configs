@@ -12,31 +12,37 @@ Vagrant.configure("2") do |config|
       "name" => 'ros6.correct',
       "ip" => '192.168.56.20',
       "box" => 'cheretbe/routeros',
+      "host_config" => 'correct.rsc',
     },
     {
       "name" => 'ros6.incorrect',
       "ip" => '192.168.56.21',
       "box" => 'cheretbe/routeros',
+      "host_config" => 'incorrect.rsc',
     },
     {
       "name" => 'ros6.missing',
       "ip" => '192.168.56.22',
       "box" => 'cheretbe/routeros',
+      "host_config" => 'missing.rsc',
     },
     {
       "name" => 'ros7.correct',
       "ip" => '192.168.56.23',
       "box" => 'cheretbe/routeros7',
+      "host_config" => 'correct.rsc',
     },
     {
       "name" => 'ros7.incorrect',
       "ip" => '192.168.56.24',
       "box" => 'cheretbe/routeros7',
+      "host_config" => 'incorrect.rsc',
     },
     {
       "name" => 'ros7.missing',
       "ip" => '192.168.56.25',
       "box" => 'cheretbe/routeros7',
+      "host_config" => 'missing.rsc',
     },
   ]
  
@@ -66,7 +72,7 @@ Vagrant.configure("2") do |config|
       node.vm.provision "routeros_file", name: "Upload initial common configuration", source: "provision/common.rsc", destination: "common.rsc"
       node.vm.provision "routeros_command", name: "Exec custom script", command: "/import common.rsc", check_script_error: true
       # Upload and execute a test specific script file
-      node.vm.provision "routeros_file", name: "Upload initial host configuration", source: "provision/#{vm["name"].sub(/ros.\./, '')}.rsc", destination: "host.rsc"
+      node.vm.provision "routeros_file", name: "Upload initial host configuration", source: "provision/#{vm["host_config"]}", destination: "host.rsc"
       node.vm.provision "routeros_command", name: "Exec test configuration", command: "/import host.rsc", check_script_error: true
     end
   end
