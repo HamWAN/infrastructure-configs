@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+'''Produces a json formated invemntory of Vagrant hosts that will be used
+   for testing routeros_common role.  The inventory contains information that
+   will be needed for connecting to the test instances.
+
+   See roles/routeros_common/README.md for some more description of testing strategy.
+'''
 import json
 import subprocess
 import locale
@@ -63,7 +69,7 @@ def make_hostvars(hosts, identities, common_vars):
 
 
 if __name__ == "__main__":
-    identities = LocalIdentityFile("/home/dpk/.vagrant.d/insecure_private_key")
+    identities = LocalIdentityFile(f"{os.environ['HOME']}/.vagrant.d/insecure_private_key")
 #    identities = VagrantIdentityFiles()
     hosts = {
         "ros6.correct": "192.168.56.20",
