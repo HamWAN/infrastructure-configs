@@ -71,6 +71,7 @@ def make_hostvars(hosts, identities, common_vars):
 if __name__ == "__main__":
     identities = LocalIdentityFile(f"{os.environ['HOME']}/.vagrant.d/insecure_private_key")
 #    identities = VagrantIdentityFiles()
+    # These need to match the Vagrant configuration in roles/routeros_common/molecule/default
     hosts = {
         "ros6.correct": "192.168.56.20",
         "ros6.incorrect": "192.168.56.21",
