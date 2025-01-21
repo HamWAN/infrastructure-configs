@@ -1,14 +1,57 @@
 ---
 # Check and correct RouterOS setting
 
+  # There may be an existing Persistent SSH from other commands.
+  # Setting this task to failed_when: false, since it's speculative.
+  # ... and this is broken for Vagrant (ControlPath naming is wrong)
+  # TODO(dpk): investigate and fix this if possible (vagrant, molecule, ansible.community.routeros issue I believe)
+  #            should also move to a task file that is included rather than repeating the code over and over.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
+  run_once: true
+  loop: "{{ play_hosts }}"
+  loop_control:
+    loop_var: host
+  when: test_flaky_network
+  changed_when: false
+  failed_when: false
+
 - name: get_facts
   # sets current_value
   ansible.builtin.include_tasks:
     file: get_facts.yml
 
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
+  run_once: true
+  loop: "{{ play_hosts }}"
+  loop_control:
+    loop_var: host
+  when: test_flaky_network
+  changed_when: false
+  failed_when: false
+
 - name: "Check correctness of {{ item.name }}"
   ansible.builtin.set_fact:
-    is_correct: "{{ item.desired_value in query_result.stdout[0] or (item.missing_ok and current_value == '') }}"
+    is_correct: "{{ item.desired_value in query_result.stdout[0] or (item.missing_ok and current_value == '') or item.prefix|default('') not in current_value }}"
+
+  # Setting this task to failed_when: false, since it's speculative.
+- name: Kill Persistent SSH Connection
+  local_action: >
+    ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
+    -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
+  run_once: true
+  loop: "{{ play_hosts }}"
+  loop_control:
+    loop_var: host
+  when: test_flaky_network and not is_correct
+  changed_when: false
+  failed_when: false
 
 - name: "Show diff and corrective action for {{ item.name }}"
   ansible.builtin.debug:

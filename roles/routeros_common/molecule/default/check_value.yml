@@ -1,0 +1,19 @@
+---
+# Check RouterOS setting
+# Derived from ../../tasks/check_and_set_value.yml, omitting unneeded tasks
+
+- name: get_facts
+  # sets current_value
+  ansible.builtin.include_tasks:
+    file: ../../tasks/get_facts.yml
+
+- name: "Show filtered variable {{ item.name }}"
+  ansible.builtin.debug:
+    msg: "query_result.stdout[0] filtered: {{ query_result.stdout[0] | regex_replace('=.\n +', '=') }}"
+    verbosity: 1
+
+- name: "Check correctness of {{ item.name }}"
+  ansible.builtin.set_fact:
+    # The regex here is just joining the split lines back together
+    is_correct: "{{ item.desired_value in (query_result.stdout[0] | regex_replace('=.\n +', '=')) or (item.missing_ok and current_value == '') or item.prefix|default('') not in current_value }}"
+  failed_when: not is_correct

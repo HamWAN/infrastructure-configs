@@ -66,6 +66,9 @@ The routeros_common role tests for setting or changing settings that are both pr
 
 ## Developer Workstation Setup (Fedora)
 
+(This is likely to need updates, to match what is being installed below for Debian.
+ A Fedora user will need to do that.)
+
 First, run the Operator Workstation Setup, then:
 
 ```
@@ -87,11 +90,11 @@ cd infrastructure_configs
 virtualenv venv
 . venv/bin/activate
 pip3 install ansible-dev-tools
-pip3 install molecule ansible-core
+pip3 install molecule ansible-core ansible-pylibssh
 pip3 install --upgrade setuptools
 pip3 install "molecule-plugins[vagrant]"
 
-ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install ansible.posix community.routeros
 sudo systemctl enable --now libvirtd
 sudo adduser libvirt
 
@@ -99,3 +102,7 @@ vagrant up --no-parallel
 ...
 deactivate
 ```
+
+## See Also
+
+roles/routeros_common/README.md

@@ -3,21 +3,40 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  # no_log: "{{ molecule_no_log }}"
+  no_log: "{{ molecule_no_log }}"
   tasks:
     # TODO: Developer must implement and populate 'server' variable
+
+    - name: Ensure Vagrant instances are up
+      ansible.builtin.command:
+        cmd: "vagrant up {{ item.name }}"
+      throttle: 1
+      loop: "{{ molecule_yml.platforms }}"
+
+    - name: Get Ansible test inventory
+      ansible.builtin.command:
+        cmd: "../../../../inventories/test/routeros_hosts.py"
+      register: inventory
+      changed_when: false
+
+    - name: Transform inventory into Molecule compatible format
+      ansible.builtin.set_fact:
+        server: {
+          'changed': true,
+          'results': "{{ (inventory.stdout | from_json)._meta.hostvars }}",
+        }
 
     - name: Create instance config
       when: server.changed | default(false) | bool  # noqa no-handler
       block:
         - name: Populate instance config dict  # noqa jinja
           ansible.builtin.set_fact:
-            instance_conf_dict: {}
-            # instance': "{{ }}",
-            # address': "{{ }}",
-            # user': "{{ }}",
-            # port': "{{ }}",
-            # 'identity_file': "{{ }}", }
+            instance_conf_dict: {
+              'instance': "{{ server.results[item].instance }}",
+              'address': "{{ server.results[item].ansible_host }}",
+              'user': "{{ server.results[item].ansible_user }}",
+              'port': "{{ server.results[item].ansible_port  }}",
+              'identity_file': "{{ server.results[item].ansible_ssh_private_key_file }}", }
           with_items: "{{ server.results }}"
           register: instance_config_dict
 

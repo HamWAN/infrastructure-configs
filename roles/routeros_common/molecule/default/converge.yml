@@ -3,6 +3,15 @@
   hosts: all
   gather_facts: false
   tasks:
-    - name: Replace this task with one that validates your content
-      ansible.builtin.debug:
-        msg: "This is the effective test"
+    - name: "Include group vars for os_routeros"
+      ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
+
+    - name: "Include hamwan.routeros_common"
+      ansible.builtin.include_role:
+        name: routeros_common
+      vars:
+        test_flaky_network: true
+        # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
+        ansible_port: 22
+        ansible_user: vagrant+ct132w
+        ansible_ssh_private_key_file: "/home/dpk/.vagrant.d/insecure_private_key"
