@@ -22,7 +22,7 @@
     - name: Extract usernames
       set_fact:
         mikrotik_users: >-
-          {{ user_output.stdout_lines[0] | 
+          {{ user_output.stdout_lines[0] |
              reject('search', ';;;') |
              reject('search', ' # ') |
              select('search', '^\s*\d*\s+E*\s*\S+') |
