@@ -1,0 +1,101 @@
+---
+# Manage Mikrotik Users
+# Missing users are added with random password and ssh public key loaded.
+# Users present and in the delete_users list are delete.
+# For now, we leave extra users as is.
+
+    - name: setup expected users
+      set_fact:
+        expected_users: ['admin', 'nigel']
+        delete_users: ['DeleteMe1', 'DeleteMe2']
+
+    - name: Run /user print command on Mikrotik
+      community.routeros.command:
+        commands: "/user print"
+      register: user_output
+      changed_when: false
+
+    - name: Debug raw command output
+      debug:
+        var: user_output.stdout_lines[0]
+
+    - name: Extract usernames
+      set_fact:
+        mikrotik_users: >-
+          {{ user_output.stdout_lines[0] | 
+             reject('search', ';;;') |
+             reject('search', ' # ') |
+             select('search', '^\s*\d*\s+E*\s*\S+') |
+             map('regex_replace', '^\s*\d*\s+E*\s*(\S+).*', '\1') |
+             list }}
+
+    - name: Display extracted usernames
+      debug:
+        var: mikrotik_users
+
+    - name: Find missing users
+      set_fact:
+        missing_users: >-
+          {{ expected_users | difference(mikrotik_users) }}
+
+    - name: Display missing users
+      debug:
+        var: missing_users
+
+    - name: Find extra users
+      set_fact:
+        extra_users: >-
+          {{ mikrotik_users | difference(expected_users) }}
+
+    - name: Display extra users
+      debug:
+        var: extra_users
+
+    - name: Find extra users to be deleted
+      set_fact:
+        to_be_deleted: >-
+          {{ mikrotik_users | intersect(delete_users) }}
+
+    - name: Display extra users to be deleted
+      debug:
+        var: to_be_deleted
+
+    - name: Generate random password for new users
+      set_fact:
+        random_password: "{{ lookup('password', '/dev/null', length=12, chars=['ascii_letters', 'digits']) }}"
+      when: missing_users | length > 0
+
+    - name: Display generated password
+      debug:
+        var: random_password
+      when: missing_users | length > 0
+      #no_log: true
+
+    - name: Add missing users with role 'full'
+      community.routeros.command:
+        commands: '/user add name={{ item }} group={{ "read" if item == "monitoring" else "full" }} password="{{ random_password }}"'
+      loop: "{{ missing_users }}"
+      when: missing_users | length > 0 and not ansible_check_mode
+
+    - name: Clear console history (only really needed on ROS6)
+      community.routeros.command:
+        commands: /console clear-history
+      when: missing_users | length > 0 and not ansible_check_mode
+
+    - name: Fetch their public keys
+      community.routeros.command:
+        commands: '/tool fetch url="https://monitoring.hamwan.net/keys/{{ item }}.key"'
+      loop: "{{ missing_users }}"
+      when: missing_users | length > 0 and not ansible_check_mode
+
+    - name: Load public keys
+      community.routeros.command:
+        commands: '/user ssh-keys import public-key-file={{ item }}.key user={{ item }}'
+      loop: "{{ missing_users }}"
+      when: missing_users | length > 0 and not ansible_check_mode
+
+    - name: Remove to_be_deteted users
+      community.routeros.command:
+        commands: '/user remove [find name={{ item }}]'
+      loop: "{{ to_be_deleted }}"
+      when: to_be_deleted | length > 0 and not ansible_check_mode

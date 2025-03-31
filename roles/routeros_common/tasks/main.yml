@@ -24,3 +24,9 @@
         file: check_and_set_value.yml
       loop: "{{ settings.v7_simple_settings }}"
       when: routeros_version is match("^7.")
+
+- name: setup users
+  block:
+    - name: manage mikrotik users
+      ansible.builtin.include_tasks:
+        file: manage_users.yml

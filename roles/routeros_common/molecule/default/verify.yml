@@ -31,3 +31,7 @@
         file: check_value.yml
       loop: "{{ settings.v7_simple_settings }}"
       when: routeros_version is match("^7.")
+
+    - name: verify users
+      ansible.builtin.include_tasks:
+        file: verify_users.yml

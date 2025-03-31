@@ -1,0 +1,45 @@
+---
+# Verify Mikrotik Users
+# When this is invoked, there should be nothing to add or delete
+# For now, we ignore extra users.
+
+    - name: setup expected users
+      set_fact:
+        expected_users: ['admin', 'nigel']
+        delete_users: ['DeleteMe1', 'DeleteMe2']
+
+    - name: Run /user print command on Mikrotik
+      community.routeros.command:
+        commands: "/user print"
+      register: user_output
+      changed_when: false
+
+    - name: Debug raw command output
+      debug:
+        var: user_output.stdout_lines[0]
+
+    - name: Extract usernames
+      set_fact:
+        mikrotik_users: >-
+          {{ user_output.stdout_lines[0] | 
+             reject('search', ';;;') |
+             reject('search', ' # ') |
+             select('search', '^\s*\d*\s+E*\s*\S+') |
+             map('regex_replace', '^\s*\d*\s+E*\s*(\S+).*', '\1') |
+             list }}
+
+    - name: Display extracted usernames
+      debug:
+        var: mikrotik_users
+
+    - name: Find missing users
+      set_fact:
+        missing_users: >-
+          {{ expected_users | difference(mikrotik_users) }}
+      failed_when: missing_users | length > 0
+
+    - name: Find extra users to be deleted
+      set_fact:
+        to_be_deleted: >-
+          {{ mikrotik_users | intersect(delete_users) }}
+      failed_when: to_be_deleted | length > 0

@@ -84,3 +84,12 @@ if ([/tool mac-server mac-winbox get allowed-interface-list] != "LAN") do={
   :put "Allowing MAC WinBox Server on 'LAN' interface list"
   /tool mac-server mac-winbox set allowed-interface-list=LAN
 }
+
+if ([:len [/user pr where name="DeleteMe1"]] = 0) do={
+  :put "Creating user DeleteMe1"
+  /user add name=DeleteMe1 group=full password=123456
+}
+if ([:len [/user pr where name="DeleteMe2"]] < 2) do={
+  :put "Creating user DeleteMe2"
+  /user add name=DeleteMe2 group=full password=123456 comment="User to be deleted"
+}
