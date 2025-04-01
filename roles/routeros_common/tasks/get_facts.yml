@@ -8,6 +8,7 @@
       - "{{ item.query_command }}"
   register: query_result
   changed_when: false
+  check_mode: false
 
 - name: "Show variable {{ item.name }}"
   ansible.builtin.debug:

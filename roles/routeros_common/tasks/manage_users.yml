@@ -6,7 +6,7 @@
 
     - name: setup expected users
       set_fact:
-        expected_users: ['admin', 'nigel']
+        expected_users: "{{ users_admin + users_user + ['admin'] }}"
         delete_users: ['DeleteMe1', 'DeleteMe2']
 
     - name: Run /user print command on Mikrotik
@@ -14,6 +14,7 @@
         commands: "/user print"
       register: user_output
       changed_when: false
+      check_mode: false
 
     - name: Debug raw command output
       debug:

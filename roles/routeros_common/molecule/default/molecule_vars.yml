@@ -1,0 +1,7 @@
+---
+# vars file for users
+users_admin:
+  - admin1
+  - admin2
+users_user:
+  - user1

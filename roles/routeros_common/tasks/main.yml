@@ -27,6 +27,6 @@
 
 - name: setup users
   block:
-    - name: manage mikrotik users
+    - name: Manage Mikrotik users
       ansible.builtin.include_tasks:
         file: manage_users.yml

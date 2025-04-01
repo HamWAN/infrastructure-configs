@@ -3,6 +3,9 @@
   hosts: all
   gather_facts: false
   tasks:
+    - name: "Include molecule organization vars (users)"
+      ansible.builtin.include_vars: molecule_vars.yml
+
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
