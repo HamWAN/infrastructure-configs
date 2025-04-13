@@ -5,3 +5,6 @@ users_admin:
   - admin2
 users_user:
   - user1
+users_delete:
+  - DeleteMe1
+  - DeleteMe2
