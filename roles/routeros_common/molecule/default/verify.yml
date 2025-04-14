@@ -4,6 +4,9 @@
   gather_facts: false
 
   tasks:
+    - name: "Include molecule organization vars (users)"
+      ansible.builtin.include_vars: molecule_vars.yml
+
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
@@ -31,3 +34,7 @@
         file: check_value.yml
       loop: "{{ settings.v7_simple_settings }}"
       when: routeros_version is match("^7.")
+
+    - name: verify users
+      ansible.builtin.include_tasks:
+        file: verify_users.yml

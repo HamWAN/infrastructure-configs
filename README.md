@@ -1,5 +1,47 @@
 # HamWAN Infrastructure Configs
 
+## Organization (Site) Specific Information
+
+Information on accessing organization hosts is stored in inventories/<site>/group_vars/<group>.yml.
+In the HamWAN case, all the hosts we manage are in the group owner_HamWAN, so we have a group_vars file
+owner_HamWAN.yml.
+
+```
+---
+# vars file for users
+users_admin:
+  - dylan
+  - eo
+  - kc7aad
+  - KD7DK
+  - kennyr
+  - KK7LZM
+  - nigel
+  - N7JMV
+  - NQ1E
+  - nr3o
+  - osburn
+  - tom
+  - va7dbi
+  - ve7alb
+users_user:
+  - monitoring
+group_admin: hamadmin
+group_user: ham
+group_managed_scope: /etc/group_managed_scope
+authorized_key_scheme: ansible.builtin.url
+authorized_key_location: https://monitoring.hamwan.net/keys/
+test_flaky_network: false
+```
+
+users_admim are users who should be given admin access.
+users_user are users who should be given an unprivileged account.
+For RouterOS, admin_users are group=full and users_user are group=read.
+
+Information specific to specific families of system (e.g. os_routeros and os_linux)
+are in respective inventories/<site>/group_vars files, and group_vars/<group>.yml
+(e.g. groups_vars/os_routeros.yml that has all the desired RouterOS settings).
+
 ## Operator Workstation Setup (Fedora)
 
 ```

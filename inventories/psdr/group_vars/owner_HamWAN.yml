@@ -17,6 +17,8 @@ users_admin:
   - ve7alb
 users_user:
   - monitoring
+users_delete:
+  - W3RWN
 group_admin: hamadmin
 group_user: ham
 group_managed_scope: /etc/group_managed_scope
