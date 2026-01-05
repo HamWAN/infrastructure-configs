@@ -2,7 +2,7 @@
 
 ## Organization (Site) Specific Information
 
-Information on accessing organization hosts is stored in inventories/<site>/group_vars/<group>.yml.
+Information on accessing organization hosts is stored in inventories/_site_/group_vars/<group>.yml.
 In the HamWAN case, all the hosts we manage are in the group owner_HamWAN, so we have a group_vars file
 owner_HamWAN.yml.
 
@@ -39,7 +39,7 @@ users_user are users who should be given an unprivileged account.
 For RouterOS, admin_users are group=full and users_user are group=read.
 
 Information specific to specific families of system (e.g. os_routeros and os_linux)
-are in respective inventories/<site>/group_vars files, and group_vars/<group>.yml
+are in respective inventories/_site_/group_vars files, and group_vars/_group_.yml
 (e.g. groups_vars/os_routeros.yml that has all the desired RouterOS settings).
 
 ## Operator Workstation Setup (Fedora)
