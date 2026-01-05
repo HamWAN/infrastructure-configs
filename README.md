@@ -2,7 +2,7 @@
 
 ## Organization (Site) Specific Information
 
-Information on accessing organization hosts is stored in inventories/_site_/group_vars/<group>.yml.
+Information on accessing organization hosts is stored in inventories/_site_/group_vars/_group_.yml.
 In the HamWAN case, all the hosts we manage are in the group owner_HamWAN, so we have a group_vars file
 owner_HamWAN.yml.
 
