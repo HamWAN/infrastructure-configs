@@ -11,7 +11,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
   run_once: true
-  loop: "{{ play_hosts }}"
+  loop: "{{ ansible_play_batch }}"
   loop_control:
     loop_var: host
   when: test_flaky_network
@@ -29,7 +29,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
   run_once: true
-  loop: "{{ play_hosts }}"
+  loop: "{{ ansible_play_batch }}"
   loop_control:
     loop_var: host
   when: test_flaky_network
@@ -46,7 +46,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[host].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[host].ansible_host }}-{{ hostvars[host].ansible_port }}-{{ hostvars[host].ansible_user }}
   run_once: true
-  loop: "{{ play_hosts }}"
+  loop: "{{ ansible_play_batch }}"
   loop_control:
     loop_var: host
   when: test_flaky_network and not is_correct
