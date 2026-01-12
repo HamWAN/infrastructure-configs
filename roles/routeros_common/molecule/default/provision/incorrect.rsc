@@ -4,7 +4,7 @@
 /system logging action set [find name=remote] bsd-syslog=no name=remote remote=1.2.3.4 remote-port=514 src-address=0.0.0.0 syslog-facility=daemon syslog-severity=auto target=remote
 
 :put "Setting SNMP address range"
-/snmp community set name=hamwan addresses=44.24.240.0/20 read-access=yes write-access=no numbers=0
+/snmp community set name=hamwan addresses=44.24.240.0/20,44.25.0.0/16 read-access=yes write-access=no numbers=0
 
 :put "Setting HamWAN DNS servers"
 /ip dns set servers=44.24.245.1,44.24.244.1
