@@ -14,8 +14,9 @@ NOTE: Due to the way RouterOS echos characters back on the SSH session, you will
 the ansible remote username when using this role against RouterOS devices. If your username is
 "myname", then you will need to set the ansible remote user to "myname+cet512w". The "+cet512w"
 sets some terminal options for the ssh session to ensure anssible can parse the output successfully.
-
-   [https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_routeros.html]
+This is explained in some more detail here:
+https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_routeros.html
+and here: https://help.mikrotik.com/docs/spaces/ROS/pages/328134/Command+Line+Interface
 
 ## Testing
 
