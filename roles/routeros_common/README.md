@@ -10,6 +10,13 @@ It is currently tested against routeros versions up to 6.1-6.49.x and 7.1-7.16.
 
 The user is expected to have SSH access to the devices.
 
+NOTE: Due to the way RouterOS echos characters back on the SSH session, you will need to change
+the ansible remote username when using this role against RouterOS devices. If your username is
+"myname", then you will need to set the ansible remote user to "myname+cet512w". The "+cet512w"
+sets some terminal options for the ssh session to ensure anssible can parse the output successfully.
+
+   [https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_routeros.html]
+
 ## Testing
 
 We use molecule to drive automated testing using Vagrant and VirtualBox based routeros images.
