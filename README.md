@@ -14,6 +14,20 @@ host_key_checking = False
 or set the environment variable ```ANSIBLE_HOST_KEY_CHECKING=False```
 on the ansible command line or for your shell session.
 
+In addtion, recent changes to libssh restrict the default available algorithm choices
+to more secure options. This will prevent connections to older RouterOS versions.
+You will probably want to update your ```~/.ssh/config``` file with a stanza similar to this:
+
+```
+Host *.hamwan.net
+    MACs +hmac-sha1
+    KexAlgorithms +diffie-hellman-group14-sha1
+    HostKeyAlgorithms +ssh-rsa
+    PubkeyAcceptedAlgorithms +ssh-rsa
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+```
+
 # HamWAN Infrastructure Configs
 
 ## Organization (Site) Specific Information
