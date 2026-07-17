@@ -3,7 +3,7 @@
 # Set alternate snmp addresses and dns servers, and remove tasks to manage dhcp servers.
 #
 # addresses that will be permitted to make SNMP readonly queries
-snmp_community_addresses: '44.24.240.0/20,44.25.0.0/16,44.135.193.0/24,44.135.219.0/24'
+snmp_community_addresses: '44.25.0.0/16,44.135.193.0/24,44.135.219.0/24'
 # what DNS servers should the routeros device use
 dns_servers: '44.31.125.225,44.31.125.226'
 

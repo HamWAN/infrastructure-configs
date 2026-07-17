@@ -18,7 +18,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
   failed_when: false
@@ -36,7 +36,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -55,7 +55,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -72,7 +72,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -89,7 +89,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -106,7 +106,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -115,14 +115,14 @@
     database: group
     key: "{{ group_admin }}"
 - ansible.builtin.set_fact:
-    users_to_purge: "{{ getent_group[group_admin][2].split(',') | difference(users_admin) }}"
+    users_to_purge: "{{ ansible_facts['getent_group'][group_admin][2].split(',') | difference(users_admin) }}"
 
 - name: Kill Persistent SSH Connection
   local_action: >
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -131,14 +131,14 @@
     database: group
     key: "{{ group_user }}"
 - ansible.builtin.set_fact:
-    users_to_purge: "{{ getent_group[group_user][2].split(',') | difference(users_user) + users_to_purge }}"
+    users_to_purge: "{{ ansible_facts['getent_group'][group_user][2].split(',') | difference(users_user) + users_to_purge }}"
 
 - name: Kill Persistent SSH Connection
   local_action: >
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -157,7 +157,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
   failed_when: false
@@ -172,7 +172,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
 
@@ -189,7 +189,7 @@
         ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
         -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
       run_once: true
-      with_items: "{{ play_hosts }}"
+      with_items: "{{ ansible_play_batch }}"
       when: test_flaky_network
       changed_when: false
     - ansible.builtin.set_fact:
@@ -210,7 +210,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
   failed_when: false
@@ -229,7 +229,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
   failed_when: false
@@ -251,7 +251,7 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false
   failed_when: false
@@ -267,6 +267,6 @@
     ansible.builtin.shell ssh -O exit {{ hostvars[item].ansible_host }}
     -o ControlPath=~/.ansible/cp/{{ hostvars[item].ansible_host }}-{{ hostvars[item].ansible_port }}-{{ hostvars[item].ansible_user }}
   run_once: true
-  with_items: "{{ play_hosts }}"
+  with_items: "{{ ansible_play_batch }}"
   when: test_flaky_network
   changed_when: false

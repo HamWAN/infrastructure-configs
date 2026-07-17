@@ -1,12 +1,11 @@
 ---
 # routeros_common settings for PSDR
 #
-"ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
-"ansible_ssh_host_key_auto_add": "true"
+ansible_ssh_host_key_auto_add: "true"
 
 logging_destination: 44.25.0.8
 # addresses that will be permitted to make SNMP readonly queries
-snmp_community_addresses: '44.24.240.0/20,44.25.0.0/16'
+snmp_community_addresses: '44.25.0.0/16'
 # what DNS servers should the routeros device use
 dns_servers: '44.25.0.1,44.25.1.1'
 # dns_allow_remote_requests should almost always be 'no' to prevent being used for DDOS
