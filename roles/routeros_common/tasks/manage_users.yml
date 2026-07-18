@@ -8,6 +8,7 @@
   set_fact:
     expected_users: "{{ users_admin + users_user + ['admin'] }}"
     delete_users: "{{ users_delete }}"
+    expected_keys: "{{ users_admin + users_user }}"
 
 - name: Run /user print command on Mikrotik
   community.routeros.command:
@@ -34,6 +35,31 @@
   debug:
     var: mikrotik_users
 
+- name: Run /user/ssh-keys print command on Mikrotik
+  community.routeros.command:
+    commands: "/user/ssh-keys print"
+  register: key_output
+  changed_when: false
+  check_mode: false
+
+- name: Debug raw command output
+  debug:
+    var: key_output.stdout_lines[0]
+
+- name: Extract usernames
+  set_fact:
+    users_with_keys: >-
+      {{ key_output.stdout_lines[0] |
+         reject('search', ';;;') |
+         reject('search', ' # ') |
+         select('search', '^\s*\d*\s+E*\s*\S+') |
+         map('regex_replace', '^\s*\d*\s+E*\s*(\S+).*', '\1') |
+         list }}
+
+- name: Display extracted usernames
+  debug:
+    var: users_with_keys
+
 - name: Find missing users
   set_fact:
     missing_users: >-
@@ -43,10 +69,19 @@
   debug:
     var: missing_users
 
+- name: Find missing keys
+  set_fact:
+    missing_keys: >-
+      {{ expected_keys | difference(users_with_keys) }}
+
+- name: Display missing users
+  debug:
+    var: missing_keys
+
 - name: Find extra users
   set_fact:
     extra_users: >-
-      {{ mikrotik_users | difference(expected_users) }}
+      {{ mikrotik_users | difference(mikrotik_users) }}
 
 - name: Display extra users
   debug:
@@ -87,14 +122,14 @@
 - name: Fetch their public keys
   community.routeros.command:
     commands: '/tool fetch url="https://monitoring.hamwan.net/keys/{{ item }}.key"'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+  loop: "{{ missing_keys }}"
+  when: missing_keys | length > 0 and not ansible_check_mode
 
 - name: Load public keys
   community.routeros.command:
     commands: '/user ssh-keys import public-key-file={{ item }}.key user={{ item }}'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+  loop: "{{ missing_keys }}"
+  when: missing_keys | length > 0 and not ansible_check_mode
 
 - name: Remove to_be_deteted users
   community.routeros.command:
