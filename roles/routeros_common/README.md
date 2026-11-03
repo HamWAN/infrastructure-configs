@@ -18,6 +18,36 @@ This is explained in some more detail here:
 https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_routeros.html
 and here: https://help.mikrotik.com/docs/spaces/ROS/pages/328134/Command+Line+Interface
 
+## SSH public keys for users
+
+`manage_users.yml` keeps each user's SSH public key on the device in step with the master copy
+(`<authorized_key_location><user>.key`, default https://monitoring.hamwan.net/keys/).  For every
+user in `users_admin` + `users_user` it compares the fingerprint of the master key with the
+fingerprint(s) the device reports in `/user ssh-keys print detail`:
+
+| Device state | Action |
+|---|---|
+| user has no key | key fetched and imported |
+| key present, fingerprint matches master (SHA256 or MD5) | nothing |
+| key present, fingerprint differs | master key imported, then the old key(s) removed |
+| key present, device shows no fingerprint (older RouterOS) | per `routeros_ssh_key_unverifiable_action` |
+| master key missing, unreadable, or more than one key in the file | nothing; reported |
+
+The new key is imported *before* the old one is removed, and the old one is only removed once the
+key count has gone up and (where the device shows fingerprints) the master fingerprint is present.
+
+Use `--check --diff` to see the plan without changing anything.
+
+### Protecting the account Ansible connects as
+
+The account Ansible logs in as (`ansible_user` without the `+cet512w` style suffix) is **not**
+changed - its key is not replaced and it is not deleted via `users_delete` - unless you pass:
+
+    ansible-playbook psdr.yml -e routeros_allow_update_connecting_user=true
+
+If the account name cannot be determined the play stops rather than guess; set
+`routeros_connecting_user` in that case.  All variables are documented in `defaults/main.yml`.
+
 ## Testing
 
 We use molecule to drive automated testing using Vagrant and VirtualBox based routeros images.

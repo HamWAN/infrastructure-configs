@@ -1,13 +1,49 @@
 ---
 # Manage Mikrotik Users
 # Missing users are added with random password and ssh public key loaded.
+# Users whose ssh public key is missing, or differs from the master copy (compared by
+#   fingerprint), have the key (re)loaded.
 # Users present and in the delete_users list are delete.
 # For now, we leave extra users as is.
+#
+# The account Ansible is logged in as is protected: it is not deleted and its ssh key is not
+# replaced unless routeros_allow_update_connecting_user is true (see defaults/main.yml).
 
 - name: setup expected users
   set_fact:
     expected_users: "{{ users_admin + users_user + ['admin'] }}"
     delete_users: "{{ users_delete }}"
+
+# ansible_user may carry RouterOS login options after a '+', e.g. 'myname+cet512w'; the
+# account name is what comes before the '+'.
+- name: Work out which account Ansible is connected as
+  ansible.builtin.set_fact:
+    connecting_user: >-
+      {{ (routeros_connecting_user
+          | default(ansible_user, true)
+          | default(lookup('ansible.builtin.config', 'DEFAULT_REMOTE_USER'), true)
+          | default(lookup('ansible.builtin.env', 'USER'), true))
+         | string | regex_replace('[+].*$', '') }}
+
+- name: Refuse to continue if the protection cannot work
+  ansible.builtin.assert:
+    that:
+      - connecting_user | length > 0
+    fail_msg: >-
+      Cannot tell which account Ansible connects as, so it cannot be protected.  Set
+      routeros_connecting_user, or set routeros_allow_update_connecting_user=true to proceed anyway.
+  when: not routeros_allow_update_connecting_user | bool
+
+- name: Decide which users are protected from change
+  ansible.builtin.set_fact:
+    protected_users: "{{ [] if routeros_allow_update_connecting_user | bool else [connecting_user] }}"
+
+- name: Show protected users
+  ansible.builtin.debug:
+    msg: >-
+      Protected from change (account Ansible is connected as): {{ protected_users }}.
+      Override with -e routeros_allow_update_connecting_user=true
+  when: protected_users | length > 0
 
 - name: Run /user print command on Mikrotik
   community.routeros.command:
@@ -55,11 +91,19 @@
 - name: Find extra users to be deleted
   set_fact:
     to_be_deleted: >-
-      {{ mikrotik_users | intersect(delete_users) }}
+      {{ mikrotik_users | intersect(delete_users) | difference(protected_users) }}
 
 - name: Display extra users to be deleted
   debug:
     var: to_be_deleted
+
+- name: Warn if a protected user is in the delete list
+  ansible.builtin.debug:
+    msg: >-
+      NOT deleting {{ mikrotik_users | intersect(delete_users) | intersect(protected_users) }}:
+      it is the account Ansible is connected as.  Override with
+      -e routeros_allow_update_connecting_user=true
+  when: mikrotik_users | intersect(delete_users) | intersect(protected_users) | length > 0
 
 - name: Generate random password for new users
   set_fact:
@@ -84,17 +128,57 @@
     commands: /console clear-history
   when: missing_users | length > 0 and not ansible_check_mode
 
-- name: Fetch their public keys
-  community.routeros.command:
-    commands: '/tool fetch url="https://monitoring.hamwan.net/keys/{{ item }}.key"'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+# ---- SSH public keys -------------------------------------------------------------------
+# Keys are managed for users_admin + users_user (the users that have a master key); the
+# built-in 'admin' account is left alone.  This replaces the old "fetch/load keys for newly
+# added users" tasks: a newly added user simply has no key yet, so it falls out of the
+# same comparison as an existing user whose key changed.
 
-- name: Load public keys
+- name: Users whose ssh keys are managed (all hosts)
+  ansible.builtin.set_fact:
+    ssh_key_managed_users: "{{ (users_admin + users_user) | unique }}"
+
+# Runs once, on the controller (lookups always do), not once per router.  An unreadable or
+# missing master key is recorded as invalid rather than failing the play.
+- name: Look up master ssh public keys
+  ansible.builtin.set_fact:
+    master_keys: >-
+      {{ master_keys | default({}) | combine({item:
+           (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
+                   split_lines=False, errors='ignore') | default('', true) | routeros_ssh_pubkey_info)}) }}
+  loop: "{{ ssh_key_managed_users }}"
+  run_once: true
+
+- name: Read ssh keys currently on the device
   community.routeros.command:
-    commands: '/user ssh-keys import public-key-file={{ item }}.key user={{ item }}'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+    commands: "/user ssh-keys print detail"
+  register: ssh_keys_output
+  changed_when: false
+  check_mode: false
+
+- name: Index ssh keys on the device
+  ansible.builtin.set_fact:
+    device_keys: "{{ ssh_keys_output.stdout[0] | routeros_ssh_keys_parse }}"
+    ssh_key_candidates: "{{ ssh_key_managed_users | difference(protected_users) }}"
+
+- name: Show ssh keys that will not be touched because they belong to a protected user
+  ansible.builtin.debug:
+    msg: >-
+      NOT checking ssh key for {{ ssh_key_managed_users | intersect(protected_users) }}: it is the
+      account Ansible is connected as.  Override with -e routeros_allow_update_connecting_user=true
+  when: ssh_key_managed_users | intersect(protected_users) | length > 0
+
+- name: Plan ssh key changes
+  ansible.builtin.include_tasks:
+    file: ssh_key_plan.yml
+
+- name: Install or replace ssh public keys
+  ansible.builtin.include_tasks:
+    file: install_ssh_key.yml
+  loop: "{{ keys_to_install }}"
+  loop_control:
+    loop_var: key_user
+  when: keys_to_install | length > 0 and not ansible_check_mode
 
 - name: Remove to_be_deteted users
   community.routeros.command:

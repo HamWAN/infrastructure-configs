@@ -1,0 +1,24 @@
+---
+# Defaults for routeros_common.  These have the lowest precedence, so they can be overridden
+# from group_vars, host_vars or the command line (-e).  (Values in vars/main.yml cannot.)
+
+# Where the master copy of each user's SSH public key lives.  The file for a user is
+# <base url><username>.key.  Defaults to the same location the Linux 'users' role uses.
+routeros_ssh_key_base_url: "{{ authorized_key_location | default('https://monitoring.hamwan.net/keys/') }}"
+
+# SAFETY FLAG: the account Ansible logs in as (ansible_user, minus any RouterOS login options
+# such as the '+cet512w' suffix) is never modified or deleted unless this is true.  That covers
+# replacing its SSH public key and removing it via users_delete.  Replacing the key you are
+# connected with is the easiest way to lock yourself out of a router.
+# Override deliberately with:  ansible-playbook ... -e routeros_allow_update_connecting_user=true
+routeros_allow_update_connecting_user: false
+
+# Name of the account Ansible connects as.  Normally derived automatically (see manage_users.yml);
+# set this only if the derivation is wrong for your inventory.
+# routeros_connecting_user: myname
+
+# What to do for a user who already has SSH key(s) on the device when the device does not
+# report a fingerprint we can compare (older RouterOS, e.g. v6):
+#   skip    - leave the key alone and say so (default; idempotent)
+#   replace - re-import the master key every run (converges, but always reports 'changed')
+routeros_ssh_key_unverifiable_action: skip
