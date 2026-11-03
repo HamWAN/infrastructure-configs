@@ -2,9 +2,8 @@
 
 Run from anywhere:   python3 -I roles/routeros_common/tests/test_routeros_ssh_keys.py
 
-NOTE: V7_OUTPUT, V6_OUTPUT and MD5_OUTPUT below are synthetic; REAL_OUTPUT is a real RouterOS 7 capture.
-have NOT been captured from real devices.  Replace them with real captures from one RouterOS 6
-and one RouterOS 7 box (/user ssh-keys print detail) when you have them.
+NOTE: V7_OUTPUT, V6_OUTPUT and MD5_OUTPUT below are synthetic.  REAL_OUTPUT and REAL_725_OUTPUT are
+real RouterOS 7 captures.  A real RouterOS 6 capture is still wanted.
 """
 import importlib.util
 import os
@@ -46,6 +45,21 @@ REAL_OUTPUT = """ 0  user=NQ1E key-type=(unknown) bits=1024 info="NQ1E-dsa" fing
 10  user=kennyr key-type=rsa bits=2048 info="kennyr@kgrMBP.local" fingerprint="SHA256:xPcgrE9ndGJnc8cuOTN0cuw6KVHa/jZzU5WcSqu8VYk="
 """
 
+
+# Real RouterOS 7.25 capture (CRS328, via network_cli with +cet512w, 2026-11-03).  Note the key="..."
+# value wrapped onto a continuation line, and the blank ' ' separator lines.
+REAL_725_OUTPUT = (
+    '0  user=KD7DK key-type=ed25519 bits=256 info="dpk-20261003@randomnotes.org"\n'
+    '   fingerprint="SHA256:ohxfKLN/+snqXS9/vwstXssOmsxAbq5tveTMcpx6mOc"\n'
+    '   key="ssh-ed25519 \n'
+    '      AAAAC3NzaC1lZDI1NTE5AAAAIMiczZBeXw1bqKREjxMnE/vp+BGuCcZIvt22uick66Ne"\n'
+    ' \n'
+    '1  user=claudetest key-type=ed25519 bits=256 info="claudetest@cowork"\n'
+    '   fingerprint="SHA256:OZDCzCBc7uPuFcw6bKl2tvLxtfrGVPiglX9B24JM2wg"\n'
+    '   key="ssh-ed25519 \n'
+    '      AAAAC3NzaC1lZDI1NTE5AAAAIEQzwgfW5i0UZEhYMSEhlbdA6+4BWw0OWt1BGAtOJMxz"\n'
+)
+CLAUDETEST_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEQzwgfW5i0UZEhYMSEhlbdA6+4BWw0OWt1BGAtOJMxz claudetest@cowork"
 
 class PubkeyInfo(unittest.TestCase):
     def test_known_sha256_vector(self):
@@ -111,6 +125,14 @@ class DeviceParse(unittest.TestCase):
         have = mod.routeros_ssh_keys_parse(V7_OUTPUT)["tom"][0]["fingerprints"]
         self.assertIn(want["sha256"], have)
 
+
+    def test_real_v7_25_capture_with_wrapped_key(self):
+        got = mod.routeros_ssh_keys_parse(REAL_725_OUTPUT)
+        self.assertEqual(sorted(got), ["KD7DK", "claudetest"])
+        self.assertEqual(got["KD7DK"][0]["fingerprints"], ["SHA256:ohxfKLN/+snqXS9/vwstXssOmsxAbq5tveTMcpx6mOc"])
+        self.assertEqual(got["claudetest"][0]["type"], "ed25519")
+        want = mod.routeros_ssh_pubkey_info(CLAUDETEST_KEY)
+        self.assertIn(want["sha256"], got["claudetest"][0]["fingerprints"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

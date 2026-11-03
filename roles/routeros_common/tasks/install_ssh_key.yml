@@ -48,7 +48,7 @@
 
 - name: "Read back SSH keys - {{ key_user }}"
   community.routeros.command:
-    commands: '/user ssh-keys print detail where user="{{ key_user }}"'
+    commands: '/user ssh-keys print detail without-paging where user="{{ key_user }}"'
   register: ssh_after
   changed_when: false
 

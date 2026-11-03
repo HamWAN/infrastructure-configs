@@ -49,9 +49,11 @@
       Override with -e routeros_allow_update_connecting_user=true
   when: protected_users | length > 0
 
+# 'without-paging' on every print we parse: RouterOS otherwise stops at a
+# '-- [Q quit|D dump|down]' prompt once output passes the terminal height, and the task times out.
 - name: Run /user print command on Mikrotik
   community.routeros.command:
-    commands: "/user print"
+    commands: "/user print without-paging"
   register: user_output
   changed_when: false
   check_mode: false
@@ -158,7 +160,7 @@
 
 - name: Read ssh keys currently on the device
   community.routeros.command:
-    commands: "/user ssh-keys print detail"
+    commands: "/user ssh-keys print detail without-paging"
   register: ssh_keys_output
   changed_when: false
   check_mode: false

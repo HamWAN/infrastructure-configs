@@ -39,6 +39,11 @@ key count has gone up and (where the device shows fingerprints) the master finge
 
 Use `--check --diff` to see the plan without changing anything.
 
+Tested live on RouterOS 7.25 (CRS328): install, replace after a master key change, exclusive
+clean-up, idempotent re-runs, and connecting-user protection with `-u name+cet512w`.  Every print
+the role parses uses `without-paging`; without it RouterOS stops at its pager prompt once output
+passes the terminal height and the task times out.
+
 Exclusive mode (`-e routeros_ssh_keys_exclusive=true`) makes the master key the only key each
 managed user holds.  It re-imports the master key, checks it, then removes every older entry - the
 same safe order as a replacement.  Users whose keys cannot be verified are never cleaned up.
