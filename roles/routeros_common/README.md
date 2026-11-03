@@ -32,20 +32,31 @@ fingerprint(s) the device reports in `/user ssh-keys print detail`:
 | key present, fingerprint differs | master key imported, then the old key(s) removed |
 | key present, device shows no fingerprint (older RouterOS) | per `routeros_ssh_key_unverifiable_action` |
 | master key missing, unreadable, or more than one key in the file | nothing; reported |
+| master key present, plus other keys | nothing (reported); with `routeros_ssh_keys_exclusive=true` the others are removed |
 
 The new key is imported *before* the old one is removed, and the old one is only removed once the
 key count has gone up and (where the device shows fingerprints) the master fingerprint is present.
 
 Use `--check --diff` to see the plan without changing anything.
 
+Exclusive mode (`-e routeros_ssh_keys_exclusive=true`) makes the master key the only key each
+managed user holds.  It re-imports the master key, checks it, then removes every older entry - the
+same safe order as a replacement.  Users whose keys cannot be verified are never cleaned up.
+
+New users are created with a random password that is not displayed (`no_log`); they log in with
+their SSH key.
+
 ### Protecting the account Ansible connects as
 
-The account Ansible logs in as (`ansible_user` without the `+cet512w` style suffix) is **not**
-changed - its key is not replaced and it is not deleted via `users_delete` - unless you pass:
+The account Ansible logs in as is **not**
+changed - its key is not replaced, it is not cleaned up by exclusive mode, and it is not deleted
+via `users_delete` - unless you pass:
 
     ansible-playbook psdr.yml -e routeros_allow_update_connecting_user=true
 
-If the account name cannot be determined the play stops rather than guess; set
+The name is the one Ansible really logs in with, wherever it came from (`-u myname+cet512w` on
+the command line, `ansible_user` in inventory, `remote_user` in ansible.cfg), minus the `+...`
+suffix.  If it cannot be determined the play stops rather than guess; set
 `routeros_connecting_user` in that case.  All variables are documented in `defaults/main.yml`.
 
 ## Testing

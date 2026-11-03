@@ -14,15 +14,19 @@
     expected_users: "{{ users_admin + users_user + ['admin'] }}"
     delete_users: "{{ users_delete }}"
 
-# ansible_user may carry RouterOS login options after a '+', e.g. 'myname+cet512w'; the
-# account name is what comes before the '+'.
+# Ask Ansible which login name it is really using (inventory ansible_user, -u on the command
+# line, ansible.cfg remote_user ... all resolve to the same place).  Runs on the controller only.
+- name: Find the login name Ansible is using for this host
+  routeros_connection_user:
+  register: routeros_login
+  check_mode: false
+
+# The login name may carry RouterOS login options after a '+', e.g. 'myname+cet512w'; the
+# account name is what comes before the '+'.  routeros_connecting_user, if set, wins.
 - name: Work out which account Ansible is connected as
   ansible.builtin.set_fact:
     connecting_user: >-
-      {{ (routeros_connecting_user
-          | default(ansible_user, true)
-          | default(lookup('ansible.builtin.config', 'DEFAULT_REMOTE_USER'), true)
-          | default(lookup('ansible.builtin.env', 'USER'), true))
+      {{ (routeros_connecting_user | default(routeros_login.user, true) | default('', true))
          | string | regex_replace('[+].*$', '') }}
 
 - name: Refuse to continue if the protection cannot work
@@ -106,17 +110,20 @@
   when: mikrotik_users | intersect(delete_users) | intersect(protected_users) | length > 0
 
 - name: Generate random password for new users
+  no_log: true
   set_fact:
     random_password: "{{ lookup('password', '/dev/null', length=12, chars=['ascii_letters', 'digits']) }}"
   when: missing_users | length > 0
 
+# New users get a random password that is never shown; they log in with their SSH key.
 - name: Display generated password
   debug:
     var: random_password
   when: missing_users | length > 0
-  #no_log: true
+  no_log: true
 
 - name: Add missing users with appropriate role
+  no_log: true
   community.routeros.command:
     commands: '/user add name={{ item }} group={{ "read" if item in users_user else "full" }} password="{{ random_password }}"'
     #commands: '/user add name={{ item }} group={{ "read" if item == "monitoring" else "full" }} password="{{ random_password }}"'
