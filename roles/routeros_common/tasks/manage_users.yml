@@ -4,6 +4,8 @@
 # Users whose ssh public key is missing, or differs from the master copy (compared by
 #   fingerprint), have the key (re)loaded.
 # Users present and in the delete_users list are delete.
+# Every users_admin entry must have a usable master key (<base url><user>.key); if one does not,
+# the play stops for the host before anything is changed.
 # For now, we leave extra users as is.
 #
 # The account Ansible is logged in as is protected: it is not deleted and its ssh key is not
@@ -48,6 +50,43 @@
       Protected from change (account Ansible is connected as): {{ protected_users }}.
       Override with -e routeros_allow_update_connecting_user=true
   when: protected_users | length > 0
+
+- name: Users whose ssh keys are managed (all hosts)
+  ansible.builtin.set_fact:
+    ssh_key_managed_users: "{{ (users_admin + users_user) | unique }}"
+
+# Runs once, on the controller (lookups always do), not once per router.  An unreadable or
+# missing master key is recorded as invalid here; what happens next depends on the user's role
+# (see the check below).  Done before anything on the device is changed.
+- name: Look up master ssh public keys
+  ansible.builtin.set_fact:
+    master_keys: >-
+      {{ master_keys | default({}) | combine({item:
+           (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
+                   split_lines=False, errors='ignore') | default('', true) | routeros_ssh_pubkey_info)}) }}
+  loop: "{{ ssh_key_managed_users }}"
+  run_once: true
+
+# An admin (users_admin, created with group=full) with no usable master key is a configuration
+# error: the account would exist with full rights and no way to log in with a key.  Stop before
+# touching the device.  Read-only users (users_user) without a key are only reported.
+- name: Admins whose master ssh public key is missing or unusable
+  ansible.builtin.set_fact:
+    admins_without_master_key: >-
+      {{ users_admin | unique
+         | reject('in', master_keys | dict2items | selectattr('value.valid') | map(attribute='key') | list)
+         | list }}
+
+- name: Stop if an admin has no usable master ssh public key
+  ansible.builtin.assert:
+    that:
+      - admins_without_master_key | length == 0
+    fail_msg: >-
+      No usable SSH public key for admin user(s):
+      {% for u in admins_without_master_key %}{{ u }} ({{ master_keys[u].error | default('no key')
+      }} at {{ routeros_ssh_key_base_url ~ u ~ '.key' }}){{ '; ' if not loop.last }}{% endfor %}.
+      Publish the key or remove the user from users_admin.  Nothing was changed on the device.
+    quiet: true
 
 # 'without-paging' on every print we parse: RouterOS otherwise stops at a
 # '-- [Q quit|D dump|down]' prompt once output passes the terminal height, and the task times out.
@@ -142,21 +181,6 @@
 # built-in 'admin' account is left alone.  This replaces the old "fetch/load keys for newly
 # added users" tasks: a newly added user simply has no key yet, so it falls out of the
 # same comparison as an existing user whose key changed.
-
-- name: Users whose ssh keys are managed (all hosts)
-  ansible.builtin.set_fact:
-    ssh_key_managed_users: "{{ (users_admin + users_user) | unique }}"
-
-# Runs once, on the controller (lookups always do), not once per router.  An unreadable or
-# missing master key is recorded as invalid rather than failing the play.
-- name: Look up master ssh public keys
-  ansible.builtin.set_fact:
-    master_keys: >-
-      {{ master_keys | default({}) | combine({item:
-           (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
-                   split_lines=False, errors='ignore') | default('', true) | routeros_ssh_pubkey_info)}) }}
-  loop: "{{ ssh_key_managed_users }}"
-  run_once: true
 
 - name: Read ssh keys currently on the device
   community.routeros.command:
