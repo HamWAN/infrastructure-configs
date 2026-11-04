@@ -85,6 +85,10 @@ if ([/tool mac-server mac-winbox get allowed-interface-list] != "LAN") do={
   /tool mac-server mac-winbox set allowed-interface-list=LAN
 }
 
+if ([:len [/user pr where name="admin3nokey"]] = 0) do={
+  :put "Creating user admin3nokey"
+  /user add name=admin3nokey group=full password=123456 comment="User missing SSH public key"
+}
 if ([:len [/user pr where name="DeleteMe1"]] = 0) do={
   :put "Creating user DeleteMe1"
   /user add name=DeleteMe1 group=full password=123456

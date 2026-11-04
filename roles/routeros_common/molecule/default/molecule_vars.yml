@@ -3,6 +3,7 @@
 users_admin:
   - admin1
   - admin2
+  - admin3nokey
 users_user:
   - user1
 users_delete:
