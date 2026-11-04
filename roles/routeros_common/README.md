@@ -31,7 +31,7 @@ fingerprint(s) the device reports in `/user ssh-keys print detail`:
 | key present, fingerprint matches master (SHA256 or MD5) | nothing |
 | key present, fingerprint differs | master key imported, then the old key(s) removed |
 | key present, device shows no fingerprint (older RouterOS) | per `routeros_ssh_key_unverifiable_action` |
-| master key missing, unreadable, or more than one key in the file | nothing; reported |
+| master key missing, unreadable, or more than one key in the file (whether or not the user has a key) | nothing; reported (a new user is still created, without a key) |
 | master key present, plus other keys | nothing (reported); with `routeros_ssh_keys_exclusive=true` the others are removed |
 
 The new key is imported *before* the old one is removed, and the old one is only removed once the

@@ -23,10 +23,11 @@
       {%- set have = keys | map(attribute='fingerprints') | flatten | list -%}
       {%- set m = master_keys.get(u, {}) -%}
       {%- set want = [m.sha256, m.md5] if m.valid | default(false) else [] -%}
-      {%- if keys | length == 0 -%}
-      {%- set _ = ns.missing.append(u) -%}
-      {%- elif want | length == 0 -%}
+      {#- No usable master key: nothing to install or compare, whatever the device holds. -#}
+      {%- if want | length == 0 -%}
       {%- set _ = ns.no_master.append(u) -%}
+      {%- elif keys | length == 0 -%}
+      {%- set _ = ns.missing.append(u) -%}
       {%- elif have | length == 0 -%}
       {%- set _ = ns.unverifiable.append(u) -%}
       {%- elif have | intersect(want) | length > 0 -%}
