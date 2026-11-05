@@ -19,7 +19,7 @@
         cmd: "../../../../inventories/test/hosts.py"
       register: inventory
       changed_when: false
-    
+
     - name: Transform inventory into Molecule compatible format
       ansible.builtin.set_fact:
         server: {
@@ -37,7 +37,9 @@
               'user': "{{ server.results[item].ansible_user }}",
               'port': "{{ server.results[item].ansible_port  }}",
               'identity_file': "{{ server.results[item].ansible_ssh_private_key_file }}", }
-          with_items: "{{ server.results }}"
+          # server.results is a dict keyed by host name; loop over the names.  (with_items on the
+          # dict itself handed over the whole dict as one item on ansible-core 2.19+.)
+          loop: "{{ server.results | list }}"
           register: instance_config_dict
 
         - name: Convert instance config dict to a list
