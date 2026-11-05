@@ -8,8 +8,9 @@
 # the play stops for the host before anything is changed.
 # For now, we leave extra users as is.
 #
-# The account Ansible is logged in as is protected: it is not deleted and its ssh key is not
-# replaced unless routeros_allow_update_connecting_user is true (see defaults/main.yml).
+# The account Ansible is logged in as is protected:
+#   - it is NEVER deleted (no override - delete it by running as a different admin);
+#   - its ssh keys are not changed unless routeros_allow_update_connecting_user is true.
 
 # Normally already done by main.yml; runs here too when manage_users.yml is used on its own.
 - name: Check the RouterOS session is usable (login options / wide terminal)
@@ -42,20 +43,23 @@
     that:
       - connecting_user | length > 0
     fail_msg: >-
-      Cannot tell which account Ansible connects as, so it cannot be protected.  Set
-      routeros_connecting_user, or set routeros_allow_update_connecting_user=true to proceed anyway.
-  when: not routeros_allow_update_connecting_user | bool
+      Cannot tell which account Ansible connects as, so it cannot be protected from deletion.
+      Set routeros_connecting_user.
 
+# protected_users: ssh keys left alone (unless the flag allows updating them).
+# undeletable_users: never deleted, whatever the flags say.
 - name: Decide which users are protected from change
   ansible.builtin.set_fact:
     protected_users: "{{ [] if routeros_allow_update_connecting_user | bool else [connecting_user] }}"
+    undeletable_users: "{{ [connecting_user] }}"
 
 - name: Show protected users
   ansible.builtin.debug:
     msg: >-
-      Protected from change (account Ansible is connected as): {{ protected_users }}.
-      Override with -e routeros_allow_update_connecting_user=true
-  when: protected_users | length > 0
+      Account Ansible is connected as: {{ connecting_user }}.  It is never deleted.
+      {{ 'Its ssh keys MAY be updated (routeros_allow_update_connecting_user=true).'
+         if routeros_allow_update_connecting_user | bool else
+         'Its ssh keys are not changed; allow that with -e routeros_allow_update_connecting_user=true.' }}
 
 - name: Users whose ssh keys are managed (all hosts)
   ansible.builtin.set_fact:
@@ -146,7 +150,7 @@
 - name: Find extra users to be deleted
   set_fact:
     to_be_deleted: >-
-      {{ mikrotik_users | intersect(delete_users) | difference(protected_users) }}
+      {{ mikrotik_users | intersect(delete_users) | difference(undeletable_users) }}
 
 - name: Display extra users to be deleted
   debug:
@@ -155,10 +159,9 @@
 - name: Warn if a protected user is in the delete list
   ansible.builtin.debug:
     msg: >-
-      NOT deleting {{ mikrotik_users | intersect(delete_users) | intersect(protected_users) }}:
-      it is the account Ansible is connected as.  Override with
-      -e routeros_allow_update_connecting_user=true
-  when: mikrotik_users | intersect(delete_users) | intersect(protected_users) | length > 0
+      NOT deleting {{ mikrotik_users | intersect(delete_users) | intersect(undeletable_users) }}:
+      it is the account Ansible is connected as.  Run as a different admin to delete it.
+  when: mikrotik_users | intersect(delete_users) | intersect(undeletable_users) | length > 0
 
 - name: Generate random password for new users
   no_log: true

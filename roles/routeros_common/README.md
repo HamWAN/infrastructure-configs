@@ -110,11 +110,14 @@ their SSH key.
 
 ### Protecting the account Ansible connects as
 
-The account Ansible logs in as is **not**
-changed - its key is not replaced, it is not cleaned up by exclusive mode, and it is not deleted
-via `users_delete` - unless you pass:
+The account Ansible logs in as is **never deleted** via `users_delete`, and there is no override:
+to delete it, run the playbook logged in as a *different* admin.
+
+Its SSH key is also left alone (not replaced, not cleaned up by exclusive mode) unless you pass:
 
     ansible-playbook psdr.yml -e routeros_allow_update_connecting_user=true
+
+Make sure the new master key is one you hold before doing that.
 
 The name is the one Ansible really logs in with, wherever it came from (`-u myname+cet512w` on
 the command line, `ansible_user` in inventory, `remote_user` in ansible.cfg), minus the `+...`
