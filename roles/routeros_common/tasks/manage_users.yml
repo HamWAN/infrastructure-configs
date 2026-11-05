@@ -58,10 +58,14 @@
 # Runs once, on the controller (lookups always do), not once per router.  An unreadable or
 # missing master key is recorded as invalid here; what happens next depends on the user's role
 # (see the check below).  Done before anything on the device is changed.
+- name: Start with no master keys (so an empty user list still works)
+  ansible.builtin.set_fact:
+    master_keys: {}
+
 - name: Look up master ssh public keys
   ansible.builtin.set_fact:
     master_keys: >-
-      {{ master_keys | default({}) | combine({item:
+      {{ master_keys | combine({item:
            (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
                    split_lines=False, errors='ignore') | default('', true) | routeros_ssh_pubkey_info)}) }}
   loop: "{{ ssh_key_managed_users }}"
