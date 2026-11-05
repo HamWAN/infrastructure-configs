@@ -1,5 +1,7 @@
 """Report the user name Ansible is actually using to log in to the current host.
 
+Shared by routeros_common and users (roles/hamwan_ssh_common).
+
 This runs on the controller only; it sends nothing to the device.  It exists because the user
 name can come from several places - ansible_user in inventory, -u on the command line,
 remote_user in ansible.cfg, $ANSIBLE_REMOTE_USER - and only some of those are visible as

@@ -26,7 +26,7 @@
 # Ask Ansible which login name it is really using (inventory ansible_user, -u on the command
 # line, ansible.cfg remote_user ... all resolve to the same place).  Runs on the controller only.
 - name: Find the login name Ansible is using for this host
-  routeros_connection_user:
+  hamwan_connection_user:
   register: routeros_login
   check_mode: false
 
@@ -77,7 +77,7 @@
     master_keys: >-
       {{ master_keys | combine({item:
            (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
-                   split_lines=False, errors='ignore') | default('', true) | routeros_ssh_pubkey_info)}) }}
+                   split_lines=False, errors='ignore') | default('', true) | ssh_pubkeys_info(max_keys=1))}) }}
   loop: "{{ ssh_key_managed_users }}"
   run_once: true
 

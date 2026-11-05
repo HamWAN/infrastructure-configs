@@ -4,7 +4,7 @@
 #
 # Inputs (facts):
 #   ssh_key_candidates  users to consider: users_admin + users_user, minus the protected user
-#   master_keys         {user: routeros_ssh_pubkey_info(...)} from the master site
+#   master_keys         {user: ssh_pubkeys_info(..., max_keys=1)} from the master site
 #   device_keys         {user: [ {fingerprints: [...]}, ... ]} from routeros_ssh_keys_parse
 #   routeros_ssh_key_unverifiable_action   skip | replace
 #   routeros_ssh_keys_exclusive           true: also clean up users holding extra keys

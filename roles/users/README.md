@@ -53,7 +53,8 @@ If the name cannot be determined the play stops; set `users_connecting_user` in 
 
 ## Testing
 
-- `python3 -I roles/users/tests/test_users_ssh_keys.py` - unit tests for the key-file checks.
+- `python3 -I roles/hamwan_ssh_common/tests/test_ssh_keys.py` - unit tests for the key-file checks
+  (shared with routeros_common; see `roles/hamwan_ssh_common`).
 - `molecule test` (from `roles/users`) - three Vagrant VMs (see `Vagrantfile`), logged in as `eo`.
   Besides creating/removing users and groups, it checks that:
   - `tom` (multi-key `test_keys/tom.key`) ends up with exactly those keys, and a stray key is removed;

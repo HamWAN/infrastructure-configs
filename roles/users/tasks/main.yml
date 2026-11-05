@@ -28,7 +28,7 @@
 # host), so a configuration error stops the play with the host untouched.
 
 - name: Find the login name Ansible is using for this host
-  users_connection_user:
+  hamwan_connection_user:
   register: users_login
   check_mode: false
 
@@ -65,7 +65,7 @@
     users_master_keys: >-
       {{ users_master_keys | combine({item:
            (query(authorized_key_scheme, authorized_key_location ~ item ~ '.key', errors='ignore')
-            | join('\n') | users_pubkeys_info)}) }}
+            | join('\n') | ssh_pubkeys_info)}) }}
   loop: "{{ users_key_managed }}"
   run_once: true
 
@@ -209,8 +209,8 @@
       or run as a different admin.
   when:
     - users_connecting_keys.content is defined
-    - (users_connecting_keys.content | b64decode | users_key_ids)
-      != (users_master_keys[connecting_user].key_lines | join('\n') | users_key_ids)
+    - (users_connecting_keys.content | b64decode | ssh_key_ids)
+      != (users_master_keys[connecting_user].key_lines | join('\n') | ssh_key_ids)
 
 - name: Kill Persistent SSH Connection
   local_action: >

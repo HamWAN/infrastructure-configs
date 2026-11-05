@@ -14,6 +14,11 @@ PLUGIN = os.path.join(HERE, "..", "filter_plugins", "routeros_ssh_keys.py")
 spec = importlib.util.spec_from_file_location("routeros_ssh_keys", PLUGIN)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
+# Master key checks live in the shared role (ssh_pubkeys_info, called with max_keys=1 for RouterOS).
+SHARED = os.path.join(HERE, "..", "..", "hamwan_ssh_common", "filter_plugins", "ssh_keys.py")
+sspec = importlib.util.spec_from_file_location("ssh_keys", SHARED)
+shared = importlib.util.module_from_spec(sspec)
+sspec.loader.exec_module(shared)
 
 # GitHub's published ed25519 host key and its published SHA256 fingerprint
 GH_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
@@ -61,32 +66,6 @@ REAL_725_OUTPUT = (
 )
 CLAUDETEST_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEQzwgfW5i0UZEhYMSEhlbdA6+4BWw0OWt1BGAtOJMxz claudetest@cowork"
 
-class PubkeyInfo(unittest.TestCase):
-    def test_known_sha256_vector(self):
-        info = mod.routeros_ssh_pubkey_info(GH_KEY + "\n")
-        self.assertTrue(info["valid"])
-        self.assertEqual(info["type"], "ssh-ed25519")
-        self.assertEqual(info["sha256"], GH_SHA256)
-        self.assertRegex(info["md5"], r"^([0-9a-f]{2}:){15}[0-9a-f]{2}$")
-
-    def test_comment_and_blank_lines_ignored(self):
-        info = mod.routeros_ssh_pubkey_info("# note\n\n" + GH_KEY + " me@host\n")
-        self.assertTrue(info["valid"])
-        self.assertEqual(info["count"], 1)
-
-    def test_two_keys_is_not_valid_but_reports_count(self):
-        info = mod.routeros_ssh_pubkey_info(GH_KEY + "\n" + GH_KEY + " other\n")
-        self.assertFalse(info["valid"])
-        self.assertEqual(info["count"], 2)
-
-    def test_garbage(self):
-        for text in ("", None, "hello", "ssh-ed25519 !!!notbase64!!!", "<html>404</html>"):
-            self.assertFalse(mod.routeros_ssh_pubkey_info(text)["valid"], text)
-
-    def test_list_input(self):
-        self.assertTrue(mod.routeros_ssh_pubkey_info([GH_KEY])["valid"])
-
-
 class DeviceParse(unittest.TestCase):
     def test_v7_wrapped_items_and_multiple_keys(self):
         keys = mod.routeros_ssh_keys_parse(V7_OUTPUT)
@@ -121,7 +100,7 @@ class DeviceParse(unittest.TestCase):
         self.assertEqual(list(mod.routeros_ssh_keys_parse(out)), ["tom"])
 
     def test_master_fingerprint_matches_device_value(self):
-        want = mod.routeros_ssh_pubkey_info(GH_KEY)
+        want = shared.ssh_pubkeys_info(GH_KEY)
         have = mod.routeros_ssh_keys_parse(V7_OUTPUT)["tom"][0]["fingerprints"]
         self.assertIn(want["sha256"], have)
 
@@ -131,7 +110,7 @@ class DeviceParse(unittest.TestCase):
         self.assertEqual(sorted(got), ["KD7DK", "claudetest"])
         self.assertEqual(got["KD7DK"][0]["fingerprints"], ["SHA256:ohxfKLN/+snqXS9/vwstXssOmsxAbq5tveTMcpx6mOc"])
         self.assertEqual(got["claudetest"][0]["type"], "ed25519")
-        want = mod.routeros_ssh_pubkey_info(CLAUDETEST_KEY)
+        want = shared.ssh_pubkeys_info(CLAUDETEST_KEY)
         self.assertIn(want["sha256"], got["claudetest"][0]["fingerprints"])
 
 if __name__ == "__main__":

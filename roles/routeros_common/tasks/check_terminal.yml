@@ -22,7 +22,7 @@
   check_mode: false
 
 - name: Find the login name Ansible asked for
-  routeros_connection_user:
+  hamwan_connection_user:
   register: routeros_login_for_probe
   check_mode: false
   when: routeros_wide_probe.stdout[0] | trim | length > 0
