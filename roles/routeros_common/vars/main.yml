@@ -21,7 +21,9 @@ routeros_facts:
   - name: routeros_version
     fact: routeros_version
     query_command: '/system resource print'
-    pattern: '.*version: (\S*).*'
+    # 'version:' must follow whitespace (or the start), so 'minimum-version: 6.47.4' on RouterOS 7
+    # is not picked up instead.  (A plain '.*version:' is greedy and matched the last one.)
+    pattern: '(?:^|.*\s)version: (\S*).*'
 
 # Settings for both RouterOS 6 and 7
 default_simple_settings:
