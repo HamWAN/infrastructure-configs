@@ -77,3 +77,26 @@
       content: "hamadmin\nham\n"
     register: ret
     failed_when: ret.changed
+
+  - name: Read authorized_keys of tom and eo
+    become: true
+    ansible.builtin.slurp:
+      src: "/home/{{ item }}/.ssh/authorized_keys"
+    register: ak
+    loop: [tom, eo]
+
+  - name: Verify tom has exactly the keys in test_keys/tom.key (multi-key file, stray key removed)
+    ansible.builtin.assert:
+      that:
+        - (ak.results[0].content | b64decode).splitlines() | select | sort
+          == lookup('ansible.builtin.file', 'test_keys/tom.key').splitlines() | select | sort
+      fail_msg: "tom authorized_keys: {{ (ak.results[0].content | b64decode).splitlines() }}"
+
+  - name: Verify the connecting account (eo) kept its extra key
+    ansible.builtin.assert:
+      that:
+        - "'eo-extra@molecule-test' in (ak.results[1].content | b64decode)"
+    when: inventory_hostname == 'test.extra.users'
+
+- name: Verify protections (these run the role again with altered user lists)
+  ansible.builtin.import_playbook: verify_protection.yml
