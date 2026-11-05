@@ -170,12 +170,60 @@ pip3 install "molecule-plugins[vagrant]"
 
 ansible-galaxy collection install ansible.posix community.routeros
 sudo systemctl enable --now libvirtd
-sudo adduser libvirt
+sudo adduser $USER libvirt      # log out and back in for the group to take effect
 
 vagrant up --no-parallel
 ...
 deactivate
 ```
+
+## Vagrant for the molecule tests
+
+The two roles test against different virtual machines and need different Vagrant providers:
+
+| Role | Boxes | Provider | Extra plugin |
+|---|---|---|---|
+| `users` | `generic/fedora37` | libvirt (`vagrant-libvirt`) | none |
+| `routeros_common` | `cheretbe/routeros` (v6), `cheretbe/routeros7` (v7) | **VirtualBox only** | `vagrant-routeros` (cheretbe), installed automatically |
+
+The cheretbe RouterOS boxes are built by https://github.com/cheretbe/packer-routeros and are only
+published for VirtualBox, so the `routeros_common` scenario needs VirtualBox installed (from
+Oracle; it is not in Debian's main archive).  The `users` scenario runs on libvirt as above.
+
+### The `vagrant-routeros` plugin: do not install it by name
+
+- **You never need to install it yourself.**  Each cheretbe RouterOS box contains
+  `vagrant-routeros-<version>.gem` and its own Vagrantfile installs it the first time you
+  `vagrant up` a RouterOS VM (if no `vagrant-routeros` of at least that version is installed).
+  The copy is kept under `~/.vagrant.d/boxes/cheretbe-VAGRANTSLASH-routeros*/<box version>/virtualbox/`.
+- **The `vagrant-routeros` gem on rubygems.org is a different plugin** (ktogias, versions 0.0.x).
+  Never run `vagrant plugin install vagrant-routeros`, and avoid `vagrant plugin expunge --reinstall`
+  (it re-fetches plugins by name from rubygems.org).  That plugin replaces Vagrant's `shell`
+  provisioner with one that does nothing on non-RouterOS guests, so the `users` VMs boot
+  unprovisioned: `eth1` gets a DHCP address, nothing listens on port 222, and molecule fails with
+  "No route to host".  Check with `vagrant plugin list`: the right one is
+  `vagrant-routeros (0.5.0 or later, global)`.
+- **After a Vagrant or Ruby upgrade** Vagrant may refuse to start with
+  `Unable to resolve dependency: user requested 'vagrant-routeros (= 0.5.0)'` (plugins are
+  stored per Ruby version).  Fix it as the packer-routeros README says:
+
+      vagrant plugin uninstall vagrant-routeros
+
+  The next `vagrant up` of a RouterOS box reinstalls it.  If you need it before then (for
+  example only `users` tests are run and Vagrant still complains), install the copy from a
+  downloaded box:
+
+      vagrant plugin install ~/.vagrant.d/boxes/cheretbe-VAGRANTSLASH-routeros7/*/virtualbox/vagrant-routeros-*.gem
+
+### Quick checks
+
+    vagrant plugin list                      # vagrant-libvirt; vagrant-routeros 0.5.0+ (if installed)
+    cd roles/users && molecule test          # libvirt, 3 Fedora VMs
+    cd roles/routeros_common && molecule test  # VirtualBox, 6 RouterOS VMs
+
+If a `users` VM comes up without its 192.168.58.x address on `eth1`, run
+`vagrant provision <name>`: a working shell provisioner prints `Running: inline script` and two
+`success` lines.  If it prints nothing, check `vagrant plugin list` as above.
 
 ## See Also
 
