@@ -1,0 +1,49 @@
+---
+# Make sure the RouterOS session is in "wide" mode before any other command is sent.
+#
+# The login options after '+' in the user name (e.g. 'myname+cet512w') set the terminal width.
+# Without them RouterOS wraps any input line longer than ~80 characters (prompt included) and
+# echoes it back in fragments ('<ent set servers=...').  The fragments are not stripped from the
+# output, so set commands look as if they failed and settings never compare as correct.
+#
+# The usual cause is libssh (ansible_network_cli_ssh_type: libssh) taking the user name from a
+# 'User' line in ~/.ssh/config instead of -u / ansible_user, silently dropping '+cet512w'.
+# See the README ("Logging in: the +cet512w suffix").
+#
+# The probe is a long command that does nothing and prints nothing: ':local' only sets a
+# variable for this one command.  In wide mode its output is empty.
+
+- name: Check that the RouterOS terminal is in wide mode
+  community.routeros.command:
+    commands:
+      - ':local routerosCommonWideModeCheck "{{ "0123456789" * 10 }}"'
+  register: routeros_wide_probe
+  changed_when: false
+  check_mode: false
+
+- name: Find the login name Ansible asked for
+  routeros_connection_user:
+  register: routeros_login_for_probe
+  check_mode: false
+  when: routeros_wide_probe.stdout[0] | trim | length > 0
+
+- name: Stop if the terminal is not in wide mode
+  ansible.builtin.assert:
+    that:
+      - routeros_wide_probe.stdout[0] | trim | length == 0
+    fail_msg: >-
+      The RouterOS session is not in wide mode: a long command was echoed back wrapped, so this
+      role would misread the output.  Ansible asked to log in as
+      '{{ routeros_login_for_probe.user | default('?') }}'.  Check the router log
+      (/log print where message~"publickey accepted") for the name it actually received.  It
+      must include the '+cet512w' options.  If it does not, a 'User' line in ~/.ssh/config is
+      probably overriding -u / ansible_user (libssh gives it priority): remove it for the
+      routers, or set it to 'User yourname+cet512w'.  If the name is right and this still fails,
+      the RouterOS version may ignore the width option; set
+      routeros_require_wide_terminal=false to skip this check at your own risk.
+    quiet: true
+  when: routeros_require_wide_terminal | bool
+
+- name: Note that the terminal check has run for this host
+  ansible.builtin.set_fact:
+    routeros_terminal_checked: true

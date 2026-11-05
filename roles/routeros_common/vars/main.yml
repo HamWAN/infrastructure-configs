@@ -15,7 +15,9 @@
 "ansible_connection": "ansible.netcommon.network_cli"
 "ansible_network_cli_ssh_type": "libssh"
 "ansible_network_os": "routeros"
-"ansible_ssh_host_key_auto_add": "true"
+# Host key auto-add cannot be set here: the libssh connection only reads it from ansible.cfg
+# ([libssh_connection] host_key_auto_add) or ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD.  See .ansible.cfg
+# at the top of the repo and the README.
 
 routeros_facts:
   - name: routeros_version

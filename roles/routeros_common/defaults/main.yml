@@ -30,3 +30,9 @@ routeros_ssh_key_unverifiable_action: skip
 # and the account Ansible is connected as are never cleaned up.
 # Default false: extra keys are reported but left alone.
 routeros_ssh_keys_exclusive: false
+
+# Before doing anything else the role checks that the session is in wide mode (see
+# tasks/check_terminal.yml and the README).  Only set this to false for a device that is known
+# to wrap long input even with the right login options; set commands longer than about
+# 50 characters may then be reported as failed and re-applied every run.
+routeros_require_wide_terminal: true

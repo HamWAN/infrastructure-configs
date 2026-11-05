@@ -11,6 +11,12 @@
 # The account Ansible is logged in as is protected: it is not deleted and its ssh key is not
 # replaced unless routeros_allow_update_connecting_user is true (see defaults/main.yml).
 
+# Normally already done by main.yml; runs here too when manage_users.yml is used on its own.
+- name: Check the RouterOS session is usable (login options / wide terminal)
+  ansible.builtin.include_tasks:
+    file: check_terminal.yml
+  when: routeros_terminal_checked is not defined
+
 - name: setup expected users
   set_fact:
     expected_users: "{{ users_admin + users_user + ['admin'] }}"
