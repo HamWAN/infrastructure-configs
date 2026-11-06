@@ -26,7 +26,7 @@
 
 - name: "Fetch master public key - {{ key_user }}"
   community.routeros.command:
-    commands: '/tool fetch url="{{ routeros_ssh_key_base_url }}{{ key_user }}.key"'
+    commands: '/tool fetch url="{{ routeros_ssh_key_fetch_base_url }}{{ key_user }}.key"'
 
 - name: "Import public key - {{ key_user }}"
   community.routeros.command:

@@ -10,13 +10,15 @@
 # 'User' line in ~/.ssh/config instead of -u / ansible_user, silently dropping '+cet512w'.
 # See the README ("Logging in: the +cet512w suffix").
 #
-# The probe is a long command that does nothing and prints nothing: ':local' only sets a
-# variable for this one command.  In wide mode its output is empty.
+# The probe is a command that does nothing and prints nothing (':local' only sets a variable for
+# this one command).  It is 85 characters: longer than RouterOS's default 80-column line, so it
+# wraps whenever the login options are missing, but short enough to fit the 132 columns of
+# '+ct132w' (used by the molecule tests) as well as '+cet512w'.  In wide mode its output is empty.
 
 - name: Check that the RouterOS terminal is in wide mode
   community.routeros.command:
     commands:
-      - ':local routerosCommonWideModeCheck "{{ "0123456789" * 10 }}"'
+      - ':local routerosCommonWideModeCheck "{{ ("0123456789" * 5)[:48] }}"'
   register: routeros_wide_probe
   changed_when: false
   check_mode: false

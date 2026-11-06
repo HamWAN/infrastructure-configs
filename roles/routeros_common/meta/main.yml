@@ -1,6 +1,8 @@
 ---
 galaxy_info:
   author: HamWAN
+  namespace: hamwan
+  role_name: routeros_common
   description: Common RouterOS settings, users and SSH keys
   license: MIT
   min_ansible_version: "2.14"

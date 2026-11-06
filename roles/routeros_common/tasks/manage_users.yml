@@ -68,6 +68,15 @@
 # Runs once, on the controller (lookups always do), not once per router.  An unreadable or
 # missing master key is recorded as invalid here; what happens next depends on the user's role
 # (see the check below).  Done before anything on the device is changed.
+- name: Stop if no key source is configured
+  ansible.builtin.assert:
+    that:
+      - routeros_ssh_key_base_url | default('', true) | length > 0
+    fail_msg: >-
+      No SSH key source configured.  Set authorized_key_location (shared with the users role) or
+      routeros_ssh_key_base_url to the URL prefix of your <user>.key files.  Nothing was changed.
+    quiet: true
+
 - name: Start with no master keys (so an empty user list still works)
   ansible.builtin.set_fact:
     master_keys: {}

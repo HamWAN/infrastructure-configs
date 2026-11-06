@@ -3,6 +3,8 @@
 # action and filter plugins are available to them.
 galaxy_info:
   author: HamWAN
+  namespace: hamwan
+  role_name: hamwan_ssh_common
   description: Shared SSH key helpers (plugins only) for the routeros_common and users roles
   license: MIT
   min_ansible_version: "2.14"

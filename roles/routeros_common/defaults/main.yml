@@ -2,9 +2,16 @@
 # Defaults for routeros_common.  These have the lowest precedence, so they can be overridden
 # from group_vars, host_vars or the command line (-e).  (Values in vars/main.yml cannot.)
 
-# Where the master copy of each user's SSH public key lives.  The file for a user is
-# <base url><username>.key.  Defaults to the same location the Linux 'users' role uses.
-routeros_ssh_key_base_url: "{{ authorized_key_location | default('https://monitoring.hamwan.net/keys/') }}"
+# Where the master copy of each user's SSH public key lives: <base url><username>.key.
+# There is no built-in default: set authorized_key_location for your organisation in group_vars
+# (it is shared with the Linux 'users' role; HamWAN sets it in inventories/psdr/group_vars/
+# owner_HamWAN.yml), or set routeros_ssh_key_base_url directly.  Ansible reads the keys from here.
+routeros_ssh_key_base_url: "{{ authorized_key_location }}"
+
+# The URL prefix the ROUTERS download the keys from (/tool fetch).  The same as above unless the
+# routers reach the key server by a different address than the Ansible host does (NAT, a
+# management network, or the molecule tests, where the routers use VirtualBox's 10.0.2.2).
+routeros_ssh_key_fetch_base_url: "{{ routeros_ssh_key_base_url }}"
 
 # The account Ansible logs in as (from -u, ansible_user or remote_user, minus any RouterOS login
 # options such as the '+cet512w' suffix):
