@@ -85,6 +85,9 @@ cp .ansible.cfg ~
 ansible-galaxy install -r roles/requirements.yml
 ```
 
+`roles/requirements.yml` lists the collections the roles need, with the minimum versions
+they have been tested with.  Molecule installs the same list itself before each test.
+
 ### Listing all hosts in PSDR inventory
 
 ```
