@@ -15,5 +15,6 @@ RouterOS-specific parsing of `/user ssh-keys print` output stays in
 
 Tests: `python3 -I roles/hamwan_ssh_common/tests/test_ssh_keys.py`
 
-It must be on the roles path wherever the other two run.  For `psdr.yml` it is (`roles/` next to
-the playbook); molecule normally adds the role's parent directory (`roles/`) to the roles path.
+It must be found wherever the other two run.  For `psdr.yml` it is (`roles/` next to the
+playbook).  Under molecule, Ansible finds it next to the role being tested (molecule links that
+role into `~/.ansible/roles/` as `hamwan.<role>`); both molecule scenarios pass with it.

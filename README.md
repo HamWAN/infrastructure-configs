@@ -190,6 +190,54 @@ The cheretbe RouterOS boxes are built by https://github.com/cheretbe/packer-rout
 published for VirtualBox, so the `routeros_common` scenario needs VirtualBox installed (from
 Oracle; it is not in Debian's main archive).  The `users` scenario runs on libvirt as above.
 
+### Which Vagrant, which VirtualBox
+
+Distributions ship Vagrant 2.3.x: Debian's `vagrant` is a snapshot taken just before HashiCorp
+moved Vagrant to a non-open-source licence (August 2023), and later versions only come from
+HashiCorp's own repository.  **Vagrant 2.3.x supports VirtualBox up to 7.0**, so with the
+distribution Vagrant install Oracle's `virtualbox-7.0` package.  Oracle builds 7.0 for Debian 12
+("bookworm"); that package also installs cleanly on Debian 13 (tested with 7.0.26):
+
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox-2016.gpg] https://download.virtualbox.org/virtualbox/debian bookworm contrib" \
+      | sudo tee /etc/apt/sources.list.d/oracle-virtualbox.list
+    # (key: https://www.virtualbox.org/download/oracle_vbox_2016.asc, dearmored to the path above)
+    sudo apt update
+    sudo apt install linux-headers-amd64 virtualbox-7.0
+    sudo usermod -aG vboxusers $USER
+
+VirtualBox builds its kernel modules against the **running** kernel's headers.  If the machine
+has a newer kernel installed than it is running, reboot first.  Watch `/boot` space: kernels with
+~120 MB initramfs images fill a small `/boot` quickly, and a failed `update-initramfs` must be
+fixed (remove an old kernel, rerun it) before rebooting.
+
+### Running VirtualBox only when needed, alongside libvirt/KVM
+
+KVM (libvirt) and VirtualBox cannot run VMs at the same time; they both need VT-x.  To let them
+take turns without unloading modules, have KVM claim VT-x only while a KVM VM is running:
+
+    echo "options kvm enable_virt_at_load=0" | sudo tee /etc/modprobe.d/kvm-virt-on-demand.conf
+    # takes effect after a reboot (or reloading the kvm modules)
+
+To keep VirtualBox from loading at boot:
+
+    for s in vboxdrv vboxautostart-service vboxballoonctrl-service vboxweb-service; do sudo systemctl disable $s; done
+
+and start it only for the RouterOS tests:
+
+    sudo systemctl start vboxdrv        # loads the VirtualBox kernel modules
+    cd roles/routeros_common && molecule test
+    sudo systemctl stop vboxdrv
+
+Rebuilding the modules (`sudo /sbin/vboxconfig`, e.g. after a kernel update) re-enables the
+services at boot; disable them again afterwards.
+
+### Test SSH keys
+
+Neither scenario uses the real key site.  The `users` scenario reads `test_keys/` as files; the
+`routeros_common` scenario serves its `test_keys/` from a small web server bound to 127.0.0.1
+(`molecule/default/key_server.yml`, started by converge, stopped by cleanup), which the RouterOS
+VMs reach through VirtualBox NAT at 10.0.2.2.  Port 18080 must be free on the test host.
+
 ### The `vagrant-routeros` plugin: do not install it by name
 
 - **You never need to install it yourself.**  Each cheretbe RouterOS box contains

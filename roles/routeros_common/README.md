@@ -77,9 +77,9 @@ have never connected to fails with "The authenticity of host ... can't be establ
 ## SSH public keys for users
 
 `manage_users.yml` keeps each user's SSH public key on the device in step with the master copy
-(`<authorized_key_location><user>.key`, default https://monitoring.hamwan.net/keys/).  For every
-user in `users_admin` + `users_user` it compares the fingerprint of the master key with the
-fingerprint(s) the device reports in `/user ssh-keys print detail`:
+`<base url><user>.key`.  For every user in `users_admin` + `users_user` it compares the
+fingerprint of the master key with the fingerprint(s) the device reports in
+`/user ssh-keys print detail`:
 
 | Device state | Action |
 |---|---|
@@ -108,6 +108,21 @@ same safe order as a replacement.  Users whose keys cannot be verified are never
 New users are created with a random password that is not displayed (`no_log`); they log in with
 their SSH key.
 
+### Where the master keys come from
+
+There is no built-in key site: each organisation sets its own.
+
+| Variable | Default | Used by |
+|---|---|---|
+| `authorized_key_location` | none - set it in group_vars (HamWAN: `inventories/psdr/group_vars/owner_HamWAN.yml`) | both this role and the Linux `users` role |
+| `routeros_ssh_key_base_url` | `authorized_key_location` | Ansible, to read and check the keys |
+| `routeros_ssh_key_fetch_base_url` | `routeros_ssh_key_base_url` | the routers, to download the key (`/tool fetch`) |
+
+Set `routeros_ssh_key_fetch_base_url` only if the routers reach the key server by a different
+address than the Ansible host does (NAT, a management network).  The molecule tests do exactly
+that: Ansible reads the keys at `http://127.0.0.1:<port>/` and the RouterOS VMs fetch them at
+`http://10.0.2.2:<port>/`.  If no key source is configured the play stops before changing anything.
+
 ### Protecting the account Ansible connects as
 
 The account Ansible logs in as is **never deleted** via `users_delete`, and there is no override:
@@ -123,6 +138,20 @@ The name is the one Ansible really logs in with, wherever it came from (`-u myna
 the command line, `ansible_user` in inventory, `remote_user` in ansible.cfg), minus the `+...`
 suffix.  If it cannot be determined the play stops rather than guess; set
 `routeros_connecting_user` in that case.  All variables are documented in `defaults/main.yml`.
+
+## RouterOS 6
+
+RouterOS 6 only offers old SSH algorithms that current libssh (this role's default connection)
+refuses: the connection fails with `kex error : no match for method mac algo ... server
+[hmac-sha1,hmac-md5]`.  For any remaining v6 device, use paramiko and allow SHA-1 RSA signatures,
+e.g. in its host_vars:
+
+    ansible_network_cli_ssh_type: paramiko
+    ansible_paramiko_use_rsa_sha2_algorithms: false
+
+(Without the second line paramiko 4 signs with SHA-2, RouterOS 6 rejects it, and paramiko then
+tries the keys in `~/.ssh` - which can surface as the misleading "Private key file is encrypted".)
+The molecule tests set both for the `ros6.*` VMs.
 
 ## Testing
 

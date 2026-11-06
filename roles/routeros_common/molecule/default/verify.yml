@@ -13,6 +13,14 @@
     - name: "Include default settings"
       ansible.builtin.include_vars: ../../vars/main.yml
 
+    # vars/main.yml selects libssh, which cannot talk to RouterOS 6 (hmac-sha1 only).  Use
+    # paramiko for the v6 test routers, as converge.yml does.  set_fact outranks include_vars.
+    - name: "Use paramiko for RouterOS 6"
+      ansible.builtin.set_fact:
+        ansible_network_cli_ssh_type: paramiko
+        ansible_paramiko_use_rsa_sha2_algorithms: false
+      when: inventory_hostname is match('ros6')
+
     - name: collect facts
       ansible.builtin.include_tasks:
         file: ../../tasks/get_facts.yml

@@ -9,12 +9,26 @@
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
+    - name: "Start the test SSH key server"
+      ansible.builtin.include_tasks: key_server.yml
+
     - name: "Include hamwan.routeros_common"
       ansible.builtin.include_role:
-        name: routeros_common
+        name: hamwan.routeros_common
       vars:
         test_flaky_network: true
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
         ansible_user: vagrant+ct132w
-        ansible_ssh_private_key_file: "/home/dpk/.vagrant.d/insecure_private_key"
+        ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"
+        # Master keys come from the local test key server (key_server.yml), not a real site.
+        # Ansible reads them on the host; the routers fetch them via VirtualBox NAT (10.0.2.2).
+        routeros_ssh_key_base_url: "http://127.0.0.1:{{ molecule_key_server_port }}/"
+        routeros_ssh_key_fetch_base_url: "http://10.0.2.2:{{ molecule_key_server_port }}/"
+        # RouterOS 6 only offers hmac-sha1/hmac-md5, which current libssh no longer accepts
+        # ("kex error : no match for method mac algo").  paramiko still does, so use it for the
+        # v6 test routers.  (Role vars/main.yml sets libssh; include_role vars take precedence.)
+        ansible_network_cli_ssh_type: "{{ 'paramiko' if inventory_hostname is match('ros6') else 'libssh' }}"
+        # RouterOS 6 also only accepts SHA-1 'ssh-rsa' signatures; paramiko 4 uses SHA-2 by
+        # default, fails, then tries the keys in ~/.ssh ("Private key file is encrypted").
+        ansible_paramiko_use_rsa_sha2_algorithms: false
