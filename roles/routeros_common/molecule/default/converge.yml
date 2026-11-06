@@ -10,8 +10,9 @@
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
     # RouterOS 6 only offers hmac-sha1/hmac-md5, which libssh does not offer by default; it reads
-    # its MAC list from the SSH config files.  Probe with libssh itself (not 'ssh -G': OpenSSH still
-    # allows hmac-sha1 by default) so a missing drop-in fails here with instructions.
+    # its MAC list from the SSH config files (~/.ssh/config or /etc/ssh/ssh_config).  Probe with
+    # libssh itself (not 'ssh -G': OpenSSH still allows hmac-sha1 by default) so a missing config
+    # block fails here with instructions.
     - name: "Check libssh can negotiate a MAC with the RouterOS 6 test VMs"
       ansible.builtin.command:
         argv:
@@ -25,8 +26,9 @@
                                   password="x", host_key_checking=False, look_for_keys=False, timeout=15)
             except Exception as e:
                 if "mac algo" in str(e):
-                    sys.exit("libssh cannot use hmac-sha1 for %s (%s).  Install the SSH config drop-in "
-                             "described under 'RouterOS 6' in roles/routeros_common/README.md." % (sys.argv[1], e))
+                    sys.exit("libssh cannot use hmac-sha1 for %s (%s).  Add the SSH config block (e.g. to "
+                             "~/.ssh/config) described under 'RouterOS 6' in roles/routeros_common/README.md."
+                             % (sys.argv[1], e))
           - "{{ ansible_host }}"
           - "{{ ansible_port | default(22) }}"
       changed_when: false
@@ -34,7 +36,7 @@
       when: inventory_hostname is match('ros6')
 
     # RouterOS 6 only accepts SHA-1 'ssh-rsa' public-key signatures; let libssh send them.
-    # (Its hmac-sha1-only MACs are allowed by the SSH config drop-in checked above.)
+    # (Its hmac-sha1-only MACs are allowed by the SSH config block checked above.)
     - name: "Allow ssh-rsa signatures for RouterOS 6"
       ansible.builtin.set_fact:
         ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"

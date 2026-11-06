@@ -252,9 +252,9 @@ services at boot; disable them again afterwards.
 ### RouterOS 6 test VMs and libssh
 
 The `routeros_common` scenario connects to its RouterOS 6 VMs with libssh, which needs an SSH
-client config drop-in on the test host allowing `hmac-sha1` for 192.168.56.20-22 (converge checks
-for it and stops with instructions if it is missing).  See "RouterOS 6" in
-`roles/routeros_common/README.md`.
+config block allowing `hmac-sha1` for 192.168.56.20-22 - in your own `~/.ssh/config` (no root
+needed) or a system-wide `/etc/ssh/ssh_config.d/` file.  Converge checks for it and stops with
+instructions if it is missing.  See "RouterOS 6" in `roles/routeros_common/README.md`.
 
 ### Test SSH keys
 

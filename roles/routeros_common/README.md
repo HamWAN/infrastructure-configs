@@ -151,17 +151,24 @@ offer by default:
 
 Both can be allowed for the RouterOS 6 devices only:
 
-1. **MACs - an SSH client config drop-in** on the machine that runs Ansible.  libssh has no Ansible
-   option for MACs, but it reads `~/.ssh/config` and `/etc/ssh/ssh_config` (which on Debian
-   includes `/etc/ssh/ssh_config.d/*.conf`).  For example
-   `/etc/ssh/ssh_config.d/routeros6-macs.conf`:
+1. **MACs - an SSH client config block** for the user who runs Ansible.  libssh has no Ansible
+   option for MACs, but it reads the standard SSH config files.  Put this in your own
+   `~/.ssh/config` (no root needed; it only affects you):
 
        # RouterOS 6 only offers hmac-sha1/hmac-md5; allow it for these hosts only.
        Host r6-a.example.net r6-b.example.net 192.0.2.17
            MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
 
-   The `Host` names must match what Ansible connects to (`ansible_host`, or the inventory name).
-   Don't put `User` lines in such a block: libssh lets them override `-u` (see "Logging in").
+   - The `Host` names must match what Ansible connects to (`ansible_host`, or the inventory name).
+   - SSH config uses the *first* value it finds: put the block above any `Host *` section that
+     sets `MACs`.
+   - Don't put `User` lines in it: libssh lets them override `-u` (see "Logging in").
+   - libssh finds `~/.ssh` from the account's home directory in the system user database, not
+     from `$HOME`.
+
+   On a machine shared by several Ansible users, the same block can instead go in a system-wide
+   file such as `/etc/ssh/ssh_config.d/routeros6-macs.conf` (Debian's `/etc/ssh/ssh_config`
+   includes `ssh_config.d/*.conf`; libssh reads it too).
 2. **Signatures - a host variable** (host_vars, or a group for your v6 devices):
 
        ansible_libssh_publickey_algorithms: ssh-rsa,rsa-sha2-256,rsa-sha2-512
@@ -170,8 +177,9 @@ Until you have done that, paramiko also works for v6 (`ansible_network_cli_ssh_t
 plus `ansible_paramiko_use_rsa_sha2_algorithms: false`), but ansible-core deprecates its paramiko
 connection plugin and will remove it in 2.21.
 
-The molecule tests use the libssh settings for the `ros6.*` VMs (192.168.56.20-22) and check the
-drop-in is present before converging; on the test host install:
+The molecule tests use the libssh settings for the `ros6.*` VMs (192.168.56.20-22) and check,
+with libssh itself, that the MAC block is in place before converging.  On the test host add to
+`~/.ssh/config` (or a system-wide file as above):
 
     Host 192.168.56.20 192.168.56.21 192.168.56.22
         MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
