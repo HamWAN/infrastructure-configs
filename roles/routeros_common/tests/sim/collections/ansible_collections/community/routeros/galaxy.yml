@@ -1,0 +1,5 @@
+namespace: community
+name: routeros
+version: 0.0.1
+readme: README.md
+authors: [sim]
