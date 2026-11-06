@@ -7,41 +7,53 @@
 # you're doing.
 Vagrant.configure("2") do |config|
 
+  # Pin the RouterOS box versions so every test machine runs the same RouterOS.  To move to newer
+  # boxes: `vagrant box outdated --global`, change these, then `vagrant box add cheretbe/<box>
+  # --box-version <version> --provider virtualbox` (or just `molecule test`; vagrant downloads it).
+  ROS6_BOX_VERSION = "6.49.19.0"
+  ROS7_BOX_VERSION = "7.22.0.0"
+
   VMs = [
     {
       "name" => 'ros6.correct',
       "ip" => '192.168.56.20',
       "box" => 'cheretbe/routeros',
+      "box_version" => ROS6_BOX_VERSION,
       "host_config" => 'correct.rsc',
     },
     {
       "name" => 'ros6.incorrect',
       "ip" => '192.168.56.21',
       "box" => 'cheretbe/routeros',
+      "box_version" => ROS6_BOX_VERSION,
       "host_config" => 'incorrect.rsc',
     },
     {
       "name" => 'ros6.missing',
       "ip" => '192.168.56.22',
       "box" => 'cheretbe/routeros',
+      "box_version" => ROS6_BOX_VERSION,
       "host_config" => 'missing.rsc',
     },
     {
       "name" => 'ros7.correct',
       "ip" => '192.168.56.23',
       "box" => 'cheretbe/routeros7',
+      "box_version" => ROS7_BOX_VERSION,
       "host_config" => 'correct.rsc',
     },
     {
       "name" => 'ros7.incorrect',
       "ip" => '192.168.56.24',
       "box" => 'cheretbe/routeros7',
+      "box_version" => ROS7_BOX_VERSION,
       "host_config" => 'incorrect.rsc',
     },
     {
       "name" => 'ros7.missing',
       "ip" => '192.168.56.25',
       "box" => 'cheretbe/routeros7',
+      "box_version" => ROS7_BOX_VERSION,
       "host_config" => 'missing.rsc',
     },
   ]
@@ -51,6 +63,7 @@ Vagrant.configure("2") do |config|
       # Change guest name
       node.vm.hostname = vm["name"]
       node.vm.box = vm["box"]
+      node.vm.box_version = vm["box_version"]
       node.vm.network "private_network", virtualbox__intnet: "vagrant-intnet-1", auto_config: false
 
       # Disable automatic box update checking. If you disable this, then

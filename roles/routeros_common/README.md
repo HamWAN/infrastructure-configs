@@ -162,10 +162,12 @@ Three layers, fastest first:
   and master key files.  Under a second.
 - `python3 roles/routeros_common/tests/sim/run_sim.py`: runs the real `manage_users.yml` against a
   fake RouterOS device, about two minutes, no VMs.  It is the only automated test of SSH key
-  *replacement*, which molecule cannot exercise (its RouterOS boxes print no key fingerprints).
+  *replacement*, which molecule does not exercise (its master keys never change during a run).
   See `tests/sim/README.md`.
-- `molecule test` (from `roles/routeros_common`): real RouterOS 6 and 7 VMs under VirtualBox,
-  described below.  See the top-level README for setting up Vagrant and VirtualBox.
+- `molecule test` (from `roles/routeros_common`): real RouterOS 6 and 7 VMs under VirtualBox
+  (box versions pinned in `molecule/default/Vagrantfile`: 6.49.19 and 7.22), described below.
+  RouterOS 7.22 prints key fingerprints, so there molecule also checks keys match the master;
+  RouterOS 6 does not, so its keys are reported as unverifiable.  See the top-level README for setting up Vagrant and VirtualBox.
 
 
 We use molecule to drive automated testing using Vagrant and VirtualBox based routeros images.

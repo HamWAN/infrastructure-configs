@@ -7,17 +7,18 @@ It is *not* required by the unit tests or by molecule; it complements them.
 
 ## Why it exists
 
-The molecule scenario boots real RouterOS VMs, but the available boxes (6.49 and 7.12) do not print
-SSH key fingerprints.  The role therefore treats their keys as unverifiable, so molecule can never
-exercise **key replacement** (a master key changed: import the new key, verify it, then remove the
-old one).  Without this simulator that path, and several failure cases, would only be covered by
-testing by hand against a modern router (7.24 / 7.25 print fingerprints).
+The molecule scenario boots real RouterOS VMs (6.49.19 and 7.22).  It checks that users get their
+keys and, on RouterOS 7, that the keys match the master by fingerprint (RouterOS 6 prints no key
+fingerprints, so there the role treats keys as unverifiable).  But the master keys never change
+during a molecule run, so molecule never exercises **key replacement** (a master key changed:
+import the new key, verify it, then remove the old one), nor the failure paths around it.  Without
+this simulator those would only be covered by testing by hand against a real router.
 
 | Covered here | Unit tests | Simulator | Molecule (real VMs) |
 |---|---|---|---|
-| Key-file parsing, fingerprints | yes | via the role | via the role |
+| Key-file parsing, fingerprints | yes | via the role | via the role (fingerprints on RouterOS 7 only) |
 | New users get keys | | yes | yes |
-| Changed master key replaced, old key removed only after the new one verifies | | **yes** | no (boxes show no fingerprints) |
+| Changed master key replaced, old key removed only after the new one verifies | | **yes** | no (keys never change during a run) |
 | Import that silently adds nothing: old key kept, play fails | | **yes** | no |
 | Devices without fingerprints (`routeros_ssh_key_unverifiable_action` skip / replace) | | yes | skip only |
 | Exclusive mode, check mode changes nothing, idempotence | | yes | idempotence |
