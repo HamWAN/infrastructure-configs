@@ -141,17 +141,40 @@ suffix.  If it cannot be determined the play stops rather than guess; set
 
 ## RouterOS 6
 
-RouterOS 6 only offers old SSH algorithms that current libssh (this role's default connection)
-refuses: the connection fails with `kex error : no match for method mac algo ... server
-[hmac-sha1,hmac-md5]`.  For any remaining v6 device, use paramiko and allow SHA-1 RSA signatures,
-e.g. in its host_vars:
+RouterOS 6 only offers old SSH algorithms that current libssh (this role's connection) does not
+offer by default:
 
-    ansible_network_cli_ssh_type: paramiko
-    ansible_paramiko_use_rsa_sha2_algorithms: false
+- **MAC:** RouterOS 6 has only `hmac-sha1`/`hmac-md5`.  Without help the connection fails with
+  `kex error : no match for method mac algo ... server [hmac-sha1,hmac-md5]`.
+- **Public-key signatures:** RouterOS 6 only accepts SHA-1 `ssh-rsa` signatures, so login with an
+  RSA key fails (libssh then tries other keys, which can surface as an unrelated-looking error).
 
-(Without the second line paramiko 4 signs with SHA-2, RouterOS 6 rejects it, and paramiko then
-tries the keys in `~/.ssh` - which can surface as the misleading "Private key file is encrypted".)
-The molecule tests set both for the `ros6.*` VMs.
+Both can be allowed for the RouterOS 6 devices only:
+
+1. **MACs - an SSH client config drop-in** on the machine that runs Ansible.  libssh has no Ansible
+   option for MACs, but it reads `~/.ssh/config` and `/etc/ssh/ssh_config` (which on Debian
+   includes `/etc/ssh/ssh_config.d/*.conf`).  For example
+   `/etc/ssh/ssh_config.d/routeros6-macs.conf`:
+
+       # RouterOS 6 only offers hmac-sha1/hmac-md5; allow it for these hosts only.
+       Host r6-a.example.net r6-b.example.net 192.0.2.17
+           MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
+
+   The `Host` names must match what Ansible connects to (`ansible_host`, or the inventory name).
+   Don't put `User` lines in such a block: libssh lets them override `-u` (see "Logging in").
+2. **Signatures - a host variable** (host_vars, or a group for your v6 devices):
+
+       ansible_libssh_publickey_algorithms: ssh-rsa,rsa-sha2-256,rsa-sha2-512
+
+Until you have done that, paramiko also works for v6 (`ansible_network_cli_ssh_type: paramiko`
+plus `ansible_paramiko_use_rsa_sha2_algorithms: false`), but ansible-core deprecates its paramiko
+connection plugin and will remove it in 2.21.
+
+The molecule tests use the libssh settings for the `ros6.*` VMs (192.168.56.20-22) and check the
+drop-in is present before converging; on the test host install:
+
+    Host 192.168.56.20 192.168.56.21 192.168.56.22
+        MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
 
 ## Testing
 

@@ -157,8 +157,9 @@ vagrant up --no-parallel
 ```
 sudo apt install virtualenv
 sudo apt install python3-pip libssl-dev
-sudo apt install vagrant-libvirt
 sudo apt install qemu-system libvirt-daemon-system
+# Vagrant + vagrant-libvirt: see "Which Vagrant, which VirtualBox" below (HashiCorp's Vagrant 2.4
+# with the vagrant-libvirt plugin, or Debian's vagrant-libvirt package with its Vagrant 2.3).
 
 cd infrastructure_configs
 virtualenv venv
@@ -192,11 +193,28 @@ Oracle; it is not in Debian's main archive).  The `users` scenario runs on libvi
 
 ### Which Vagrant, which VirtualBox
 
-Distributions ship Vagrant 2.3.x: Debian's `vagrant` is a snapshot taken just before HashiCorp
-moved Vagrant to a non-open-source licence (August 2023), and later versions only come from
-HashiCorp's own repository.  **Vagrant 2.3.x supports VirtualBox up to 7.0**, so with the
-distribution Vagrant install Oracle's `virtualbox-7.0` package.  Oracle builds 7.0 for Debian 12
-("bookworm"); that package also installs cleanly on Debian 13 (tested with 7.0.26):
+There are two working combinations; both pass both molecule scenarios (tested on Debian 13).
+
+**A. HashiCorp Vagrant 2.4 (what dpk-server runs; tested with 2.4.9).**  Distributions only ship
+Vagrant 2.3.x (Debian's is a snapshot taken just before HashiCorp moved Vagrant to a
+non-open-source licence in August 2023); 2.4 comes from HashiCorp's repository.  It cannot use
+Debian's `vagrant-libvirt` package, so vagrant-libvirt is installed as a Vagrant plugin (it
+compiles native code, about two minutes):
+
+    wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+      | sudo tee /etc/apt/sources.list.d/hashicorp.list
+    sudo apt update && sudo apt install vagrant
+    sudo apt install libvirt-dev build-essential pkg-config
+    vagrant plugin install vagrant-libvirt
+
+Vagrant 2.4 supports VirtualBox 7.0, 7.1 and 7.2; only 7.0.26 has been tested here.
+
+**B. Distribution Vagrant 2.3.x:** `sudo apt install vagrant-libvirt` (pulls in Debian's
+`vagrant`).  **Vagrant 2.3.x supports VirtualBox only up to 7.0.**
+
+Either way, for VirtualBox 7.0 use Oracle's `virtualbox-7.0` package.  Oracle builds 7.0 for
+Debian 12 ("bookworm"); that package also installs cleanly on Debian 13 (tested with 7.0.26):
 
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox-2016.gpg] https://download.virtualbox.org/virtualbox/debian bookworm contrib" \
       | sudo tee /etc/apt/sources.list.d/oracle-virtualbox.list
@@ -230,6 +248,13 @@ and start it only for the RouterOS tests:
 
 Rebuilding the modules (`sudo /sbin/vboxconfig`, e.g. after a kernel update) re-enables the
 services at boot; disable them again afterwards.
+
+### RouterOS 6 test VMs and libssh
+
+The `routeros_common` scenario connects to its RouterOS 6 VMs with libssh, which needs an SSH
+client config drop-in on the test host allowing `hmac-sha1` for 192.168.56.20-22 (converge checks
+for it and stops with instructions if it is missing).  See "RouterOS 6" in
+`roles/routeros_common/README.md`.
 
 ### Test SSH keys
 
