@@ -39,12 +39,6 @@ routeros_ssh_key_unverifiable_action: skip
 # Default false: extra keys are reported but left alone.
 routeros_ssh_keys_exclusive: false
 
-# Do not check router host keys.  Upgrading to RouterOS 7.25 replaces a router's host key (the
-# default type became Ed25519), and a known router whose key changed would otherwise stop the
-# run until someone edits ~/.ssh/known_hosts.  Applies to this role's connections only, not to
-# the Linux hosts.  A default, so host_vars / group_vars / -e can set it back to true.
-ansible_host_key_checking: false
-
 # RouterOS login options added to the user name when it has none ('myname' -> 'myname+cet512w').
 # They set a wide terminal, which this role needs (see the README, "Logging in").  A name that
 # already has a '+...' part is left as it is.  Set to '' to turn this off.

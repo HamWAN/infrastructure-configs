@@ -15,7 +15,7 @@
 "ansible_connection": "ansible.netcommon.network_cli"
 "ansible_network_cli_ssh_type": "libssh"
 "ansible_network_os": "routeros"
-# Host key checking: see ansible_host_key_checking in defaults/main.yml.
+# Host keys are checked as usual (libssh, ~/.ssh/known_hosts); see the README, "Host keys".
 
 routeros_facts:
   - name: routeros_version

@@ -79,13 +79,15 @@ instead of stopping.
 
 ### Host keys
 
-**The role does not check router host keys** (`ansible_host_key_checking: false` in
-`defaults/main.yml`).  Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519
-the default type), and libssh refuses a known router whose key has changed, which stopped the run
-until someone edited `~/.ssh/known_hosts`.  The trade-off: no protection against a swapped key.
-It applies to router connections made by this role only; the Linux hosts keep normal checking.
-To check keys again for some routers, set `ansible_host_key_checking: true` in their host_vars
-or group_vars, or pass `-e ansible_host_key_checking=true`.
+The role checks router host keys as usual (`~/.ssh/known_hosts`).
+
+**PSDR inventory, temporarily:** `inventories/psdr/group_vars/os_routeros.yml` sets
+`ansible_host_key_checking: false` while the fleet moves to RouterOS 7.25.  Upgrading a router to
+7.25 replaces its host key (7.25 made Ed25519 the default type), and libssh refuses a known
+router whose key has changed ("Host key for server has changed") until someone edits
+`~/.ssh/known_hosts`.  The trade-off is no protection against a swapped key while it is set.
+Remove that line once every router is on 7.25 or later.  To check keys meanwhile, pass
+`-e ansible_host_key_checking=true`.
 
 libssh reads `~/.ssh/known_hosts` and ignores `ansible_ssh_args`, so the
 `StrictHostKeyChecking=no` in `group_vars/os_routeros.yml` has no effect on routers.
@@ -94,7 +96,8 @@ With checking turned back on, `host_key_auto_add = True` in `.ansible.cfg` (`[li
 records a router's key on first contact and also accepts (and records) a key that has changed,
 but only if your ansible.cfg actually has it: a `~/.ansible.cfg` copied before that section was
 added does not.  It can only be set in ansible.cfg or `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`.
-With checking off (the default above) `~/.ssh/known_hosts` is neither read nor updated.
+With checking off (as the PSDR inventory has it for now) `~/.ssh/known_hosts` is neither read
+nor updated.
 
 ## SSH public keys for users
 
