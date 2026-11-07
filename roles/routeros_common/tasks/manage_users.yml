@@ -227,6 +227,10 @@
   ansible.builtin.include_tasks:
     file: ssh_key_plan.yml
 
+- name: Start the list of keys RouterOS refuses
+  ansible.builtin.set_fact:
+    routeros_refused_keys: []
+
 - name: Install or replace ssh public keys
   ansible.builtin.include_tasks:
     file: install_ssh_key.yml
@@ -234,6 +238,19 @@
   loop_control:
     loop_var: key_user
   when: keys_to_install | length > 0 and not ansible_check_mode
+
+# Refused keys do not stop the run (see install_ssh_key.yml); report them here.  RouterOS 7.25+
+# refuses RSA keys with a small public exponent (35 or 37, from old PuTTY versions).
+- name: Report ssh keys RouterOS refused
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: RouterOS refused the master key for
+      {{ routeros_refused_keys | map(attribute='user') | sort | join(', ') }}; those accounts were left
+      as they were.  {{ routeros_refused_keys | map(attribute='reason') | unique | join(' / ') }}
+      {{ 'These users need a new key, preferably ed25519 (ssh-keygen -t ed25519).'
+         if routeros_refused_keys | map(attribute='reason') | select('search', 'insecure') | list | length > 0
+         else '' }}
+  when: routeros_refused_keys | length > 0
 
 - name: Remove to_be_deteted users
   community.routeros.command:

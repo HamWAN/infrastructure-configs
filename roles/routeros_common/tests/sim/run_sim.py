@@ -339,6 +339,25 @@ check("check mode fails too", p.returncode != 0)
 p, st15b = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_NARROW": "1"},
                extra={"routeros_require_wide_terminal": False})
 check("override: play runs", p.returncode == 0, p.stdout[-1500:])
+check("override: warns instead", "not in wide mode and routeros_require_wide_terminal is" in p.stdout,
+      p.stdout[-1500:])
+p, st15d = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_NARROW": "1", "FAKE_ROS_VERSION": "7.25"})
+check("on RouterOS 7.25 the error names the 7.25 bug", "fixed in 7.25.1" in p.stdout, p.stdout[-1500:])
+check("on 7.24.2 it does not", "fixed in 7.25.1" not in run(copy.deepcopy(initial_state()),
+      env={"FAKE_ROS_NARROW": "1"})[0].stdout)
+
+print("== 16. RouterOS refuses some keys (insecure RSA exponent): run carries on ==")
+p, st16 = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_REFUSE_KEYS": "alice,bob"})
+check("play succeeds", p.returncode == 0, p.stdout[-2500:])
+check("alice left alone (old key kept)", keyfor(st16, "alice") == [OLD["alice"]])
+check("bob created, no key", "bob" in names(st16) and keyfor(st16, "bob") == [])
+check("other work still done (olduser deleted)", "olduser" not in names(st16))
+check("warning names both users and the fix",
+      "refused the master key for alice, bob" in p.stdout and "ed25519" in p.stdout,
+      "\n".join(l for l in p.stdout.splitlines() if "refused" in l.lower() or "Note whether" in l or "WARNING" in l))
+check("no stray key file left", st16["files"] == {}, str(st16["files"]))
+p, st16b = run(copy.deepcopy(st16), env={"FAKE_ROS_REFUSE_KEYS": "alice,bob"})
+check("rerun: succeeds and changes nothing", p.returncode == 0 and st16b == st16)
 
 print()
 bad = [n for n, ok in results if not ok]

@@ -36,6 +36,9 @@ def save(path, st):
         json.dump(st, fh, indent=1)
 
 
+REFUSED = "failure: key uses insecure RSA public exponent!"
+
+
 def run(cmd, st):
     c = cmd.strip()
     nofp = os.environ.get("FAKE_ROS_NO_FINGERPRINT") == "1"
@@ -60,6 +63,9 @@ def run(cmd, st):
 
     if c == "/console clear-history":
         return ""
+
+    if c == ":put [/system resource get version]":
+        return os.environ.get("FAKE_ROS_VERSION", "7.24.2")
 
     m = re.match(r"/user remove \[find name=(\S+)\]$", c)
     if m:
@@ -107,6 +113,10 @@ def run(cmd, st):
     if m:
         if os.environ.get("FAKE_ROS_IMPORT_NOOP") == "1":
             return ""
+        # RouterOS 7.25+ refuses RSA keys with a small exponent; like the real device, this is
+        # reported as text and the command does not fail.
+        if m.group(2) in os.environ.get("FAKE_ROS_REFUSE_KEYS", "").split(","):
+            return REFUSED
         body = st["files"].get(m.group(1))
         if body is None:
             return "failure: no such file"
@@ -130,7 +140,7 @@ def main():
     out = []
     for cmd in module.params["commands"]:
         res = run(str(cmd), st)
-        if res.startswith(("failure:", "bad command name")):
+        if res.startswith(("failure:", "bad command name")) and res != REFUSED:
             module.fail_json(msg=res, stdout=out)
         out.append(res)
         # a real device would never be changed by a command in check mode; fail loudly if the role tries

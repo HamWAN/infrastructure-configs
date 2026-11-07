@@ -109,9 +109,18 @@ fingerprint of the master key with the fingerprint(s) the device reports in
 | **admin** (`users_admin`): master key missing, unreadable, or more than one key in the file | **play stops for the host before anything is changed**; the error names each user and the reason |
 | read-only user (`users_user`): master key missing, unreadable, or more than one key | nothing; reported (a new user is still created, without a key) |
 | master key present, plus other keys | nothing (reported); with `routeros_ssh_keys_exclusive=true` the others are removed |
+| RouterOS refuses the master key on import (any user, admins included) | account left as it is (old keys kept); reported at the end; the run carries on |
 
 The new key is imported *before* the old one is removed, and the old one is only removed once the
 key count has gone up and (where the device shows fingerprints) the master fingerprint is present.
+
+**RouterOS 7.25 and later refuse RSA keys with a small public exponent** (35 or 37, typical of
+keys made by old PuTTY versions): `failure: key uses insecure RSA public exponent!`.  Older
+RouterOS versions accept them.  The role does not stop for this: it leaves that user's account
+and keys as they are, carries on with the other users, and ends with a warning naming each user
+whose key was refused.  The fix is for those users to make a new key, preferably ed25519
+(`ssh-keygen -t ed25519`), and publish it as their master key.  A refused import is retried on
+every run (the device still lacks the master key) but is not reported as a change.
 
 Use `--check --diff` to see the plan without changing anything.
 

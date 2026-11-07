@@ -23,10 +23,12 @@
 - name: "Remove any leftover key file - {{ key_user }}"
   community.routeros.command:
     commands: '/file remove [find name="{{ key_user }}.key"]'
+  changed_when: false  # temporary file only
 
 - name: "Fetch master public key - {{ key_user }}"
   community.routeros.command:
     commands: '/tool fetch url="{{ routeros_ssh_key_fetch_base_url }}{{ key_user }}.key"'
+  changed_when: false  # downloads a temporary file, removed below
 
 - name: "Import public key - {{ key_user }}"
   community.routeros.command:
@@ -35,6 +37,7 @@
   # the check below.  RouterOS 7.25+ refuses RSA keys with a small public exponent (e.g. 35 or
   # 37, made by old PuTTY versions): 'failure: key uses insecure RSA public exponent!'.
   register: ssh_import
+  changed_when: "'failure:' not in (ssh_import.stdout[0] | default(''))"
 
 - name: "Count SSH keys after import - {{ key_user }}"
   community.routeros.command:
@@ -42,6 +45,23 @@
   register: ssh_new_count
   changed_when: false
 
+# A key RouterOS refuses ('failure: ...' and no new key) does not stop the run: the account is
+# left as it is (old keys kept), the user is recorded in routeros_refused_keys and reported at
+# the end of manage_users.yml, and the remaining users carry on.
+- name: "Note whether RouterOS refused the key - {{ key_user }}"
+  ansible.builtin.set_fact:
+    ssh_import_refused: >-
+      {{ (ssh_new_count.stdout[0] | trim | int <= old_key_ids | length)
+         and ('failure:' in (ssh_import.stdout[0] | default(''))) }}
+
+- name: "Record the refused key - {{ key_user }}"
+  ansible.builtin.set_fact:
+    routeros_refused_keys: >-
+      {{ routeros_refused_keys | default([]) + [{'user': key_user,
+         'reason': ssh_import.stdout[0] | default('') | trim}] }}
+  when: ssh_import_refused | bool
+
+# Any other import that adds no key is unexplained, so it still stops the run for this host.
 - name: "Confirm a key was added - {{ key_user }}"
   ansible.builtin.assert:
     that:
@@ -50,38 +70,40 @@
       Import for {{ key_user }} did not add a key (had {{ old_key_ids | length }},
       now {{ ssh_new_count.stdout[0] | trim }}).  The old key(s) were left in place.
       RouterOS said: '{{ ssh_import.stdout[0] | default('') | trim }}'.
-      {{ 'The master key is an RSA key RouterOS considers insecure: the user needs a new key,
-      preferably ed25519 (ssh-keygen -t ed25519).'
-         if 'insecure' in (ssh_import.stdout[0] | default('')) else '' }}
+  when: not ssh_import_refused | bool
 
-- name: "Read back SSH keys - {{ key_user }}"
-  community.routeros.command:
-    commands: '/user ssh-keys print detail without-paging where user="{{ key_user }}"'
-  register: ssh_after
-  changed_when: false
+- name: "Verify the new key and remove the old ones - {{ key_user }}"
+  when: not ssh_import_refused | bool
+  block:
+    - name: "Read back SSH keys - {{ key_user }}"
+      community.routeros.command:
+        commands: '/user ssh-keys print detail without-paging where user="{{ key_user }}"'
+      register: ssh_after
+      changed_when: false
 
-- name: "Compare fingerprints with the master key - {{ key_user }}"
-  ansible.builtin.set_fact:
-    ssh_after_fps: >-
-      {{ (ssh_after.stdout[0] | routeros_ssh_keys_parse).get(key_user, [])
-         | map(attribute='fingerprints') | flatten | list }}
-    ssh_expected_fps: >-
-      {{ [master_keys[key_user].sha256, master_keys[key_user].md5]
-         if (master_keys[key_user] | default({})).valid | default(false) else [] }}
+    - name: "Compare fingerprints with the master key - {{ key_user }}"
+      ansible.builtin.set_fact:
+        ssh_after_fps: >-
+          {{ (ssh_after.stdout[0] | routeros_ssh_keys_parse).get(key_user, [])
+             | map(attribute='fingerprints') | flatten | list }}
+        ssh_expected_fps: >-
+          {{ [master_keys[key_user].sha256, master_keys[key_user].md5]
+             if (master_keys[key_user] | default({})).valid | default(false) else [] }}
 
-- name: "Confirm the imported key is the master key - {{ key_user }}"
-  ansible.builtin.assert:
-    that:
-      - ssh_after_fps | length == 0 or ssh_expected_fps | length == 0 or (ssh_after_fps | intersect(ssh_expected_fps) | length > 0)
-    fail_msg: >-
-      After import, {{ key_user }}'s keys on the device ({{ ssh_after_fps }}) do not include the
-      master key ({{ ssh_expected_fps }}).  The old key(s) were left in place.
+    - name: "Confirm the imported key is the master key - {{ key_user }}"
+      ansible.builtin.assert:
+        that:
+          - ssh_after_fps | length == 0 or ssh_expected_fps | length == 0 or (ssh_after_fps | intersect(ssh_expected_fps) | length > 0)
+        fail_msg: >-
+          After import, {{ key_user }}'s keys on the device ({{ ssh_after_fps }}) do not include the
+          master key ({{ ssh_expected_fps }}).  The old key(s) were left in place.
 
-- name: "Remove old SSH keys - {{ key_user }}"
-  community.routeros.command:
-    commands: '/user ssh-keys remove {{ item }}'
-  loop: "{{ old_key_ids }}"
+    - name: "Remove old SSH keys - {{ key_user }}"
+      community.routeros.command:
+        commands: '/user ssh-keys remove {{ item }}'
+      loop: "{{ old_key_ids }}"
 
 - name: "Remove downloaded key file - {{ key_user }}"
   community.routeros.command:
     commands: '/file remove [find name="{{ key_user }}.key"]'
+  changed_when: false  # temporary file only
