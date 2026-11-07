@@ -1,4 +1,12 @@
 ---
+# Collections the roles need.  Install with:
+#   ansible-galaxy install -r roles/requirements.yml
+# Molecule installs them automatically (see dependency: in each molecule/*/molecule.yml).
+# Minimum versions are the ones the molecule scenarios have been tested with.
 collections:
-  - ansible.posix
-  - community.routeros
+  - name: ansible.netcommon      # network_cli connection, libssh options (RouterOS)
+    version: ">=8.2.0"
+  - name: ansible.posix          # authorized_key (users role)
+    version: ">=2.1.0"
+  - name: community.routeros     # RouterOS command module and cliconf
+    version: ">=3.15.0"

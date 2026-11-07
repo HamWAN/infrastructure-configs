@@ -1,0 +1,21 @@
+---
+# Make sure the test SSH key server is running.  Included by converge.yml (so it also works for a
+# plain 'molecule converge') and stopped by cleanup.yml.
+#
+# It serves test_keys/ over HTTP on 127.0.0.1 only.  Ansible reads the keys at
+# http://127.0.0.1:<port>/ and the RouterOS VMs download them at http://10.0.2.2:<port>/,
+# VirtualBox NAT's address for the host's loopback - so the server is never exposed to the network.
+- name: Ensure the test SSH key server is running on 127.0.0.1:{{ molecule_key_server_port }}
+  ansible.builtin.shell: |
+    port={{ molecule_key_server_port }}
+    state="${MOLECULE_EPHEMERAL_DIRECTORY:-/tmp}"
+    if ! python3 -c "import socket,sys; s=socket.socket(); s.settimeout(1); sys.exit(s.connect_ex(('127.0.0.1', $port)))"; then
+      setsid nohup python3 -m http.server "$port" --bind 127.0.0.1 --directory "{{ playbook_dir }}/test_keys" \
+        > "$state/key_server.log" 2>&1 < /dev/null &
+      echo $! > "$state/key_server.pid"
+      sleep 1
+      echo started
+    fi
+  delegate_to: localhost
+  run_once: true
+  changed_when: false

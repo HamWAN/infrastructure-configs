@@ -13,6 +13,12 @@
     - name: "Include default settings"
       ansible.builtin.include_vars: ../../vars/main.yml
 
+    # RouterOS 6 only accepts SHA-1 'ssh-rsa' signatures; let libssh send them (as converge.yml).
+    - name: "Allow ssh-rsa signatures for RouterOS 6"
+      ansible.builtin.set_fact:
+        ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"
+      when: inventory_hostname is match('ros6')
+
     - name: collect facts
       ansible.builtin.include_tasks:
         file: ../../tasks/get_facts.yml

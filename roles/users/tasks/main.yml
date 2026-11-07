@@ -23,6 +23,75 @@
   changed_when: false
   failed_when: false
 
+# ---- Before changing anything: who are we logged in as, and is every admin's key usable? ----
+# These tasks run on the controller only (the lookups and the action plugin send nothing to the
+# host), so a configuration error stops the play with the host untouched.
+
+- name: Find the login name Ansible is using for this host
+  hamwan_connection_user:
+  register: users_login
+  check_mode: false
+
+- name: Work out which account Ansible is connected as
+  ansible.builtin.set_fact:
+    connecting_user: "{{ users_connecting_user | default(users_login.user, true) | default('', true) }}"
+
+- name: Refuse to continue if the account cannot be protected
+  ansible.builtin.assert:
+    that:
+      - connecting_user | length > 0
+    fail_msg: >-
+      Cannot tell which account Ansible connects as, so it cannot be protected from removal.
+      Set users_connecting_user.
+
+- name: Show the protected account
+  ansible.builtin.debug:
+    msg: >-
+      Account Ansible is connected as: {{ connecting_user }}.  It is never removed.
+      {{ 'Its authorized_keys MAY be updated (users_allow_update_connecting_user=true).'
+         if users_allow_update_connecting_user | bool else
+         'Its authorized_keys is not changed; allow that with -e users_allow_update_connecting_user=true.' }}
+
+- name: Users whose ssh keys are managed
+  ansible.builtin.set_fact:
+    users_key_managed: "{{ (users_admin + users_user) | flatten(1) | unique }}"
+    users_key_protected: "{{ [] if users_allow_update_connecting_user | bool else [connecting_user] }}"
+    users_master_keys: {}
+
+# Once, on the controller.  query() always returns a list: lines for a URL, the whole file for a
+# file, nothing if the key cannot be read (errors are recorded, not fatal, here).
+- name: Look up master ssh public keys
+  ansible.builtin.set_fact:
+    users_master_keys: >-
+      {{ users_master_keys | combine({item:
+           (query(authorized_key_scheme, authorized_key_location ~ item ~ '.key', errors='ignore')
+            | join('\n') | ssh_pubkeys_info)}) }}
+  loop: "{{ users_key_managed }}"
+  run_once: true
+
+- name: Users with a usable master key
+  ansible.builtin.set_fact:
+    users_with_master_key: "{{ users_master_keys | dict2items | selectattr('value.valid') | map(attribute='key') | list }}"
+
+# An admin (in group_admin, with sudo) with no usable key is a configuration error.  Stop now.
+- name: Stop if an admin has no usable master ssh public key
+  ansible.builtin.assert:
+    that:
+      - users_admin | flatten(1) | reject('in', users_with_master_key) | list | length == 0
+    fail_msg: >-
+      No usable SSH public key for admin user(s):
+      {% for u in users_admin | flatten(1) | reject('in', users_with_master_key) %}{{ u }}
+      ({{ users_master_keys[u].error | default('no key') }} at {{ authorized_key_location ~ u ~ '.key' }}){{ '; ' if not loop.last }}{% endfor %}.
+      Publish the key or remove the user from users_admin.  Nothing was changed on the host.
+    quiet: true
+
+- name: Report read-only users without a usable master key (their keys are left alone)
+  ansible.builtin.debug:
+    msg: >-
+      No usable SSH public key for: {{ users_user | flatten(1) | reject('in', users_with_master_key) | list }}.
+      Their accounts are still managed; their authorized_keys is not touched.
+  when: users_user | flatten(1) | reject('in', users_with_master_key) | list | length > 0
+
 - name: Ensure groups exists
   become: true
   ansible.builtin.group:
@@ -93,13 +162,55 @@
   when: test_flaky_network
   changed_when: false
 
+# authorized_keys is set to exactly the master key(s) (exclusive): changed keys are replaced and
+# any other key is removed.  The connecting account is skipped unless the flag allows it.
 - name: Ensure ssh keys are present
   become: true
   ansible.posix.authorized_key:
     user: "{{ item }}"
-    key: "{{ lookup(authorized_key_scheme, authorized_key_location + item + '.key') }}"
+    key: "{{ users_master_keys[item].key_lines | join('\n') }}"
     exclusive: true
-  loop: "{{ users_admin + users_user | flatten(1) }}"
+  loop: "{{ users_key_managed | select('in', users_with_master_key) | difference(users_key_protected) | list }}"
+  register: users_key_results
+
+- name: Summarise ssh key changes
+  ansible.builtin.debug:
+    msg: >-
+      authorized_keys {{ 'to be ' if ansible_check_mode else '' }}changed for:
+      {{ users_key_results.results | default([]) | selectattr('changed') | map(attribute='item') | list }}
+
+# Report only, and without touching the host: read the connecting account's authorized_keys and
+# compare it with the master on the controller (an authorized_key check would count as 'changed').
+- name: Find the connecting account's home directory
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ connecting_user }}"
+    fail_key: false
+  when:
+    - connecting_user in users_key_protected
+    - connecting_user in users_with_master_key
+
+- name: Read the connecting account's authorized_keys (report only)
+  become: true
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts.getent_passwd[connecting_user][4] }}/.ssh/authorized_keys"
+  register: users_connecting_keys
+  failed_when: false
+  when:
+    - connecting_user in users_key_protected
+    - connecting_user in users_with_master_key
+    - ansible_facts.getent_passwd[connecting_user] is not none
+
+- name: Say if the connecting account's keys differ from the master
+  ansible.builtin.debug:
+    msg: >-
+      authorized_keys for {{ connecting_user }} (the account Ansible is connected as) differs from
+      the master copy and was NOT changed.  Allow it with -e users_allow_update_connecting_user=true,
+      or run as a different admin.
+  when:
+    - users_connecting_keys.content is defined
+    - (users_connecting_keys.content | b64decode | ssh_key_ids)
+      != (users_master_keys[connecting_user].key_lines | join('\n') | ssh_key_ids)
 
 - name: Kill Persistent SSH Connection
   local_action: >
@@ -142,13 +253,20 @@
   when: test_flaky_network
   changed_when: false
 
+- name: Warn if the connecting account would have been purged
+  ansible.builtin.debug:
+    msg: >-
+      NOT removing {{ connecting_user }}: it is the account Ansible is connected as.  It is not in
+      the user lists for its group; run as a different admin to remove it.
+  when: connecting_user in users_to_purge
+
 - name: Purge extraneous users
   become: true
   ansible.builtin.user:
     name: "{{ item }}"
     remove: true
     state: absent
-  loop: "{{ users_to_purge }}"
+  loop: "{{ users_to_purge | reject('equalto', '') | difference([connecting_user]) | list }}"
 
   # The previous task may not run, so there may be nothing to kill.
   # Setting this task to failed_when: false, since it's speculative.

@@ -1,3 +1,9 @@
 ---
 ansible_ssh_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
 ansible_port: 222
+
+# TEMPORARY, while the fleet moves to RouterOS 7.25: upgrading replaces a router's host key
+# (Ed25519 became the default), and libssh then refuses the router ("Host key for server has
+# changed") until ~/.ssh/known_hosts is edited.  Remove this line once every router is on 7.25 or
+# later, to go back to checking host keys.  (The ansible_ssh_args above do not reach libssh.)
+ansible_host_key_checking: false

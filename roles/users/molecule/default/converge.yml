@@ -2,20 +2,9 @@
 - name: Converge
   hosts: all
   gather_facts: false
+  vars_files:
+    - vars.yml
   tasks:
     - name: "Include hamwan.users"
       ansible.builtin.include_role:
         name: "hamwan.users"
-      vars:
-        users_admin:
-          - eo
-          - nigel
-          - tom
-        users_user:
-          - monitoring
-        group_admin: hamadmin
-        group_user: ham
-        group_managed_scope: /etc/group_managed_scope
-        authorized_key_scheme: ansible.builtin.file
-        authorized_key_location: test_keys/
-        test_flaky_network: true

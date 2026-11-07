@@ -15,13 +15,15 @@
 "ansible_connection": "ansible.netcommon.network_cli"
 "ansible_network_cli_ssh_type": "libssh"
 "ansible_network_os": "routeros"
-"ansible_ssh_host_key_auto_add": "true"
+# Host keys are checked as usual (libssh, ~/.ssh/known_hosts); see the README, "Host keys".
 
 routeros_facts:
   - name: routeros_version
     fact: routeros_version
     query_command: '/system resource print'
-    pattern: '.*version: (\S*).*'
+    # 'version:' must follow whitespace (or the start), so 'minimum-version: 6.47.4' on RouterOS 7
+    # is not picked up instead.  (A plain '.*version:' is greedy and matched the last one.)
+    pattern: '(?:^|.*\s)version: (\S*).*'
 
 # Settings for both RouterOS 6 and 7
 default_simple_settings:
@@ -92,9 +94,12 @@ default_v6_simple_settings:
 
 # Settings only for RouterOS 7.x
 default_v7_simple_settings:
+  # RouterOS 7 'print' lists the servers one per line (seen on 7.22, 7.24.2 and 7.25), so
+  # 'servers: a,b' never matched and the setting was re-applied on every run (molecule's
+  # idempotence check caught it).  ':put [... get servers]' prints them on one line as 'a;b'.
   - name: ntp_client
-    query_command: /system ntp client print
-    desired_value: 'servers: {{ v7_ntp_client_servers }}'
-    pattern: '.*servers: (\S*).*'
+    query_command: ':put [/system ntp client get servers]'
+    desired_value: '{{ v7_ntp_client_servers | replace(",", ";") }}'
+    pattern: '^\s*(\S*).*$'
     set_command: '/system ntp client set servers={{ v7_ntp_client_servers }} enabled=yes'
     missing_ok: false

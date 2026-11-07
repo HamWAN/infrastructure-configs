@@ -1,2 +1,14 @@
 ---
-# defaults file for users
+# Defaults for the users role (lowest precedence: group_vars, host_vars or -e override them).
+
+# The account Ansible logs in as (-u, ansible_user or remote_user):
+#   - is NEVER removed by the purge of users no longer listed.  There is no override: to remove
+#     it, run the playbook as a different admin.
+#   - SAFETY FLAG: its authorized_keys is left alone unless this is true.  Rewriting the keys you
+#     are connected with is an easy way to lock yourself out.  Allow it deliberately with:
+#       ansible-playbook ... -e users_allow_update_connecting_user=true
+users_allow_update_connecting_user: false
+
+# Name of the account Ansible connects as.  Normally found automatically; set this only if that
+# is wrong for your inventory.
+# users_connecting_user: myname

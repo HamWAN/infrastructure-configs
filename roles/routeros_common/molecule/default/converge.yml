@@ -9,12 +9,58 @@
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
+    # RouterOS 6 only offers hmac-sha1/hmac-md5, which libssh does not offer by default; it reads
+    # its MAC list from the SSH config files (~/.ssh/config or /etc/ssh/ssh_config).  Probe with
+    # libssh itself (not 'ssh -G': OpenSSH still allows hmac-sha1 by default) so a missing config
+    # block fails here with instructions.
+    - name: "Check libssh can negotiate a MAC with the RouterOS 6 test VMs"
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "-c"
+          - |
+            import sys
+            from pylibsshext.session import Session
+            try:
+                Session().connect(host=sys.argv[1], port=int(sys.argv[2]), user="molecule-mac-probe",
+                                  password="x", host_key_checking=False, look_for_keys=False, timeout=15)
+            except Exception as e:
+                if "mac algo" in str(e):
+                    sys.exit("libssh cannot use hmac-sha1 for %s (%s).  Add the SSH config block (e.g. to "
+                             "~/.ssh/config) described under 'RouterOS 6' in roles/routeros_common/README.md."
+                             % (sys.argv[1], e))
+          - "{{ ansible_host }}"
+          - "{{ ansible_port | default(22) }}"
+      changed_when: false
+      delegate_to: localhost
+      when: inventory_hostname is match('ros6')
+
+    # RouterOS 6 only accepts SHA-1 'ssh-rsa' public-key signatures; let libssh send them.
+    # (Its hmac-sha1-only MACs are allowed by the SSH config block checked above.)
+    - name: "Allow ssh-rsa signatures for RouterOS 6"
+      ansible.builtin.set_fact:
+        ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"
+      when: inventory_hostname is match('ros6')
+
+    # Log in as plain 'vagrant', with no '+' login options: the role must add them itself
+    # (routeros_login_options).  Set here as a fact, not in include_role 'vars:' below, because
+    # those outrank set_fact and would stop the role from changing it - unlike -u or inventory.
+    - name: "Log in without RouterOS login options"
+      ansible.builtin.set_fact:
+        ansible_user: vagrant
+
+    - name: "Start the test SSH key server"
+      ansible.builtin.include_tasks: key_server.yml
+
     - name: "Include hamwan.routeros_common"
       ansible.builtin.include_role:
-        name: routeros_common
+        name: hamwan.routeros_common
       vars:
         test_flaky_network: true
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
-        ansible_user: vagrant+ct132w
-        ansible_ssh_private_key_file: "/home/dpk/.vagrant.d/insecure_private_key"
+        ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"
+        # Master keys come from the local test key server (key_server.yml), not a real site.
+        # Ansible reads them on the host; the routers fetch them via VirtualBox NAT (10.0.2.2).
+        routeros_ssh_key_base_url: "http://127.0.0.1:{{ molecule_key_server_port }}/"
+        routeros_ssh_key_fetch_base_url: "http://10.0.2.2:{{ molecule_key_server_port }}/"
