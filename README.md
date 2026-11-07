@@ -74,6 +74,32 @@ Information specific to specific families of system (e.g. os_routeros and os_lin
 are in respective inventories/_site_/group_vars files, and group_vars/_group_.yml
 (e.g. groups_vars/os_routeros.yml that has all the desired RouterOS settings).
 
+## Changing your own SSH key
+
+Each user's master public key is read from `<authorized_key_location><user>.key`, where
+`authorized_key_location` is set in the site's group_vars (PSDR:
+`inventories/psdr/group_vars/owner_HamWAN.yml`, currently https://monitoring.hamwan.net/keys/).
+The playbook makes every router and Linux host match that file.  The account Ansible logs in as
+is protected, though: its key is left alone unless you say otherwise.  So to change your own key:
+
+1. Make a new key, preferably ed25519 (`ssh-keygen -t ed25519`).  RouterOS 7.25 and later refuse
+   RSA keys made by old PuTTY versions (small public exponent).  Keep the old key loaded in your
+   agent until step 4.
+2. Put the new public key at `<authorized_key_location><you>.key`.
+3. Push it out, either:
+   - **ask another admin to run the playbook** (your account is not protected in their run, so no
+     extra options are needed); or
+   - **run it yourself with both overrides**, starting with one router and one Linux host:
+
+         ansible-playbook psdr.yml -l R1.Example.hamwan.net,host1.example.hamwan.net -u myname \
+           -e routeros_allow_update_connecting_user=true -e users_allow_update_connecting_user=true
+
+     Your current session stays open while the key changes (RouterOS imports the new key before
+     removing the old one), so the run itself cannot lock you out.
+4. Check that the new key works on its own before relying on it:
+   `ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -p 222 myname@R1.Example.hamwan.net` (and the
+   same for the Linux host).  Then run the rest of the fleet the same way, and retire the old key.
+
 ## Operator Workstation Setup (Fedora)
 
 ```
