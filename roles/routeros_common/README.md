@@ -65,10 +65,17 @@ Setting `ansible_libssh_config_file` does not help: it is not passed through `ne
 
 Before anything else the role sends a long command that does nothing (`tasks/check_terminal.yml`)
 and stops the play for the host if the echo comes back wrapped, with a message pointing here.
-On RouterOS 7.24.2 this separates a correct login from one missing `+cet512w`.  One RouterOS
-7.25 device (a CRS328) wrapped long input even with the correct login; if you have such a device
-and accept that long set commands may misbehave, skip the check for it with
-`routeros_require_wide_terminal: false` (host_vars) or `-e routeros_require_wide_terminal=false`.
+On RouterOS 7.24.2 this separates a correct login from one missing `+cet512w`.
+
+**RouterOS 7.25 ignores the login options** (including its betas and release candidates), so
+input wraps even with a correct `+cet512w` login.  MikroTik fixed this in 7.25.1 ("console - fix
+custom SSH client login parameters being ignored (introduced in v7.25)").  Upgrade such routers
+to 7.25.1 or later; the role names the bug in its error message when it finds 7.25.
+
+If you cannot upgrade yet and accept that long set commands may be misread and re-applied on
+every run, skip the check for that router with `routeros_require_wide_terminal: false`
+(host_vars) or `-e routeros_require_wide_terminal=false`.  The role then prints a warning
+instead of stopping.
 
 ### Host keys
 

@@ -51,19 +51,49 @@
   check_mode: false
   when: routeros_wide_probe.stdout[0] | trim | length > 0
 
+# RouterOS 7.25 (including its betas and release candidates) ignores the login options: its
+# 7.25.1 changelog says "console - fix custom SSH client login parameters being ignored
+# (introduced in v7.25)".  This is a short command, so the wrapping does not matter.
+- name: Read the RouterOS version (the terminal is not in wide mode)
+  community.routeros.command:
+    commands: ":put [/system resource get version]"
+  register: routeros_version_for_probe
+  changed_when: false
+  check_mode: false
+  when: routeros_wide_probe.stdout[0] | trim | length > 0
+
+- name: Explain a RouterOS 7.25 login-options failure
+  ansible.builtin.set_fact:
+    routeros_wide_mode_hint: >-
+      {{ 'This router runs RouterOS ' ~ (routeros_version_for_probe.stdout[0] | trim) ~ ', which
+      ignores the login options (a RouterOS bug, fixed in 7.25.1): upgrade it to 7.25.1 or later.  '
+      if (routeros_version_for_probe.stdout[0] | default('') | trim)
+         is match('7\.25((beta|rc)\d+)?(\s|$)') else '' }}
+  when: routeros_wide_probe.stdout[0] | trim | length > 0
+
+- name: Warn that the terminal check is off and the terminal is not in wide mode
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: the RouterOS session is not in wide mode and routeros_require_wide_terminal is
+      false, so carrying on.  Long set commands may be misread and re-applied on every run.
+      {{ routeros_wide_mode_hint | default('') }}
+  when:
+    - routeros_wide_probe.stdout[0] | trim | length > 0
+    - not routeros_require_wide_terminal | bool
+
 - name: Stop if the terminal is not in wide mode
   ansible.builtin.assert:
     that:
       - routeros_wide_probe.stdout[0] | trim | length == 0
     fail_msg: >-
-      The RouterOS session is not in wide mode: a long command was echoed back wrapped, so this
+      {{ routeros_wide_mode_hint | default('') }}The RouterOS session is not in wide mode: a long command was echoed back wrapped, so this
       role would misread the output.  Ansible asked to log in as
       '{{ routeros_login_for_probe.user | default('?') }}'.  Check the router log
       (/log print where message~"publickey accepted") for the name it actually received.  It
       must include the '+cet512w' options.  If it does not, a 'User' line in ~/.ssh/config is
       probably overriding -u / ansible_user (libssh gives it priority): remove it for the
       routers, or set it to 'User yourname+cet512w'.  If the name is right and this still fails,
-      the RouterOS version may ignore the width option; set
+      the RouterOS version may ignore the width option (7.25 does); set
       routeros_require_wide_terminal=false to skip this check at your own risk.
     quiet: true
   when: routeros_require_wide_terminal | bool
