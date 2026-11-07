@@ -15,9 +15,11 @@
 "ansible_connection": "ansible.netcommon.network_cli"
 "ansible_network_cli_ssh_type": "libssh"
 "ansible_network_os": "routeros"
-# Host key auto-add cannot be set here: the libssh connection only reads it from ansible.cfg
-# ([libssh_connection] host_key_auto_add) or ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD.  See .ansible.cfg
-# at the top of the repo and the README.
+# Do not check router host keys.  Upgrading to RouterOS 7.25 replaces a router's host key
+# (the default type became Ed25519), and a known router whose key changed would otherwise stop
+# the run until someone edits ~/.ssh/known_hosts.  Applies to this role's connections only, not
+# to the Linux hosts.  Override per host or with -e ansible_host_key_checking=true.
+"ansible_host_key_checking": false
 
 routeros_facts:
   - name: routeros_version

@@ -79,19 +79,22 @@ instead of stopping.
 
 ### Host keys
 
-libssh checks `~/.ssh/known_hosts` and ignores `ansible_ssh_args`, so the
-`StrictHostKeyChecking=no` in `group_vars/os_routeros.yml` has no effect on routers.  A router you
-have never connected to fails with "The authenticity of host ... can't be established".  Either:
+**The role does not check router host keys** (`ansible_host_key_checking: false` in
+`vars/main.yml`).  Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519
+the default type), and libssh refuses a known router whose key has changed, which stopped the run
+until someone edited `~/.ssh/known_hosts`.  The trade-off: no protection against a swapped key.
+It applies to router connections made by this role only; the Linux hosts keep normal checking.
+To check keys again for some routers, set `ansible_host_key_checking: true` in their host_vars
+or group_vars, or pass `-e ansible_host_key_checking=true`.
 
-- copy `.ansible.cfg` from the top of this repo to `~/.ansible.cfg` (or add its
-  `[libssh_connection]` section to yours).  `host_key_auto_add = True` accepts and records a
-  router's key without asking (stored as `[host]:222` in `~/.ssh/known_hosts`).  **It also
-  accepts a key that has changed**, so it offers no protection against a swapped key - the same
-  trade-off `StrictHostKeyChecking=no` was meant to make.  It can only be set in ansible.cfg or
-  `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`, not as an inventory variable.  (The old
-  `ansible_ssh_host_key_auto_add` in `vars/main.yml` had no effect and has been removed);
-- or add routers yourself: `ssh-keyscan -p 222 router.hamwan.net >> ~/.ssh/known_hosts`;
-- or, for a one-off run, `ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ...`.
+libssh reads `~/.ssh/known_hosts` and ignores `ansible_ssh_args`, so the
+`StrictHostKeyChecking=no` in `group_vars/os_routeros.yml` has no effect on routers.
+
+With checking turned back on, `host_key_auto_add = True` in `.ansible.cfg` (`[libssh_connection]`)
+records a router's key on first contact and also accepts (and records) a key that has changed,
+but only if your ansible.cfg actually has it: a `~/.ansible.cfg` copied before that section was
+added does not.  It can only be set in ansible.cfg or `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`.
+With checking off (the default above) `~/.ssh/known_hosts` is neither read nor updated.
 
 ## SSH public keys for users
 
