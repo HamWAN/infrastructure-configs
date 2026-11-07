@@ -80,7 +80,7 @@ instead of stopping.
 ### Host keys
 
 **The role does not check router host keys** (`ansible_host_key_checking: false` in
-`vars/main.yml`).  Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519
+`defaults/main.yml`).  Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519
 the default type), and libssh refuses a known router whose key has changed, which stopped the run
 until someone edited `~/.ssh/known_hosts`.  The trade-off: no protection against a swapped key.
 It applies to router connections made by this role only; the Linux hosts keep normal checking.
