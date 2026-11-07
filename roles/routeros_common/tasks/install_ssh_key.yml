@@ -31,6 +31,10 @@
 - name: "Import public key - {{ key_user }}"
   community.routeros.command:
     commands: '/user ssh-keys import public-key-file={{ key_user }}.key user={{ key_user }}'
+  # RouterOS reports a refused key as text ('failure: ...'), not as an error, so keep it for
+  # the check below.  RouterOS 7.25+ refuses RSA keys with a small public exponent (e.g. 35 or
+  # 37, made by old PuTTY versions): 'failure: key uses insecure RSA public exponent!'.
+  register: ssh_import
 
 - name: "Count SSH keys after import - {{ key_user }}"
   community.routeros.command:
@@ -45,6 +49,10 @@
     fail_msg: >-
       Import for {{ key_user }} did not add a key (had {{ old_key_ids | length }},
       now {{ ssh_new_count.stdout[0] | trim }}).  The old key(s) were left in place.
+      RouterOS said: '{{ ssh_import.stdout[0] | default('') | trim }}'.
+      {{ 'The master key is an RSA key RouterOS considers insecure: the user needs a new key,
+      preferably ed25519 (ssh-keygen -t ed25519).'
+         if 'insecure' in (ssh_import.stdout[0] | default('')) else '' }}
 
 - name: "Read back SSH keys - {{ key_user }}"
   community.routeros.command:
