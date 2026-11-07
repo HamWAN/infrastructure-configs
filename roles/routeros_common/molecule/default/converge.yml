@@ -42,6 +42,13 @@
         ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"
       when: inventory_hostname is match('ros6')
 
+    # Log in as plain 'vagrant', with no '+' login options: the role must add them itself
+    # (routeros_login_options).  Set here as a fact, not in include_role 'vars:' below, because
+    # those outrank set_fact and would stop the role from changing it - unlike -u or inventory.
+    - name: "Log in without RouterOS login options"
+      ansible.builtin.set_fact:
+        ansible_user: vagrant
+
     - name: "Start the test SSH key server"
       ansible.builtin.include_tasks: key_server.yml
 
@@ -52,7 +59,6 @@
         test_flaky_network: true
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
-        ansible_user: vagrant+ct132w
         ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"
         # Master keys come from the local test key server (key_server.yml), not a real site.
         # Ansible reads them on the host; the routers fetch them via VirtualBox NAT (10.0.2.2).

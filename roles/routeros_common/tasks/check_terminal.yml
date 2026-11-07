@@ -1,5 +1,6 @@
 ---
 # Make sure the RouterOS session is in "wide" mode before any other command is sent.
+# First, add the login options to the user name if they are missing (routeros_login_options).
 #
 # The login options after '+' in the user name (e.g. 'myname+cet512w') set the terminal width.
 # Without them RouterOS wraps any input line longer than ~80 characters (prompt included) and
@@ -14,6 +15,27 @@
 # this one command).  It is 85 characters: longer than RouterOS's default 80-column line, so it
 # wraps whenever the login options are missing, but short enough to fit the 132 columns of
 # '+ct132w' (used by the molecule tests) as well as '+cet512w'.  In wide mode its output is empty.
+
+# Add the login options to the user name if the user did not.  The name Ansible will use is
+# read on the controller (nothing is sent to the router), and if it has no '+' part,
+# '+{{ routeros_login_options }}' is appended and set as ansible_user for this host.  set_fact
+# outranks -u, inventory and ansible.cfg (it is built from whichever of those applied), but not
+# -e ansible_user=... or a 'User' line in ~/.ssh/config; the wide-mode check below catches those.
+# network_cli keys its persistent connection on the user name, so the next command logs in
+# afresh with the new name.
+- name: Find the login name Ansible will use
+  hamwan_connection_user:
+  register: routeros_login_initial
+  check_mode: false
+  when: routeros_login_options | default('', true) | length > 0
+
+- name: Add the RouterOS login options to the user name
+  ansible.builtin.set_fact:
+    ansible_user: "{{ routeros_login_initial.user }}+{{ routeros_login_options }}"
+  when:
+    - routeros_login_options | default('', true) | length > 0
+    - routeros_login_initial.user | default('') | length > 0
+    - "'+' not in routeros_login_initial.user"
 
 - name: Check that the RouterOS terminal is in wide mode
   community.routeros.command:

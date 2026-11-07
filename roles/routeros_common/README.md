@@ -13,7 +13,7 @@ The user is expected to have SSH access to the devices.
 ## Logging in: the `+cet512w` suffix (read this first)
 
 RouterOS takes terminal options from the login name: everything after a `+`.  This role needs
-them, so if your RouterOS user is `myname` you must log in as **`myname+cet512w`**
+them: if your RouterOS user is `myname`, it must log in as **`myname+cet512w`**
 (`c` no colours, `e` dumb terminal, `t` no terminal auto-detection, `512w` 512 columns wide).
 Without them RouterOS wraps every input line longer than about 80 characters (prompt
 included) and echoes it back in fragments.  The fragments end up in the output, so set
@@ -22,9 +22,21 @@ commands look as if they failed and settings never compare as correct; on every 
 https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_routeros.html and
 https://help.mikrotik.com/docs/spaces/ROS/pages/328134/Command+Line+Interface
 
-Pass it on the command line, e.g.
+**The role adds the options for you.**  Before it sends anything, it reads the login name
+Ansible will use (from `-u`, `ansible_user` in inventory, or `remote_user` in ansible.cfg).  If
+that name has no `+` part, it appends `+cet512w` and uses that for the rest of the play, so
+this is enough:
 
-    ansible-playbook psdr.yml -l R1.Example.hamwan.net -u myname+cet512w --tags routeros --check --diff
+    ansible-playbook psdr.yml -l R1.Example.hamwan.net -u myname --tags routeros --check --diff
+
+A name that already has options (`-u myname+cet512w`) is used as it is.  The options added are
+set by `routeros_login_options` (default `cet512w`; `''` turns this off).
+
+Two things still beat it, and the wide-mode check below catches both:
+
+- `-e ansible_user=myname` (extra vars outrank anything a role sets), or `ansible_user` given in
+  `vars:` on an `include_role` task.  Include the options yourself there: `myname+cet512w`.
+- a `User` line in `~/.ssh/config` (next section).
 
 ### Watch out: `~/.ssh/config` beats `-u`
 
