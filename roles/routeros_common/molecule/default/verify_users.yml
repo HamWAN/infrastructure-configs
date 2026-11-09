@@ -10,7 +10,7 @@
 
     - name: Run /user print command on Mikrotik
       community.routeros.command:
-        commands: "/user print"
+        commands: "/user print without-paging"
       register: user_output
       changed_when: false
 

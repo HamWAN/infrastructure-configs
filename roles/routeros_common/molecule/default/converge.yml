@@ -17,4 +17,4 @@
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
         ansible_user: vagrant+ct132w
-        ansible_ssh_private_key_file: "/home/dpk/.vagrant.d/insecure_private_key"
+        ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"
