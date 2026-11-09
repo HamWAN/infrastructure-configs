@@ -228,6 +228,21 @@ with libssh itself, that the MAC block is in place before converging.  On the te
 
 ## Testing
 
+Three layers, fastest first:
+
+- `python3 -I roles/routeros_common/tests/test_routeros_ssh_keys.py` (and
+  `roles/hamwan_ssh_common/tests/test_ssh_keys.py`): unit tests for parsing RouterOS key listings
+  and master key files.  Under a second.
+- `python3 roles/routeros_common/tests/sim/run_sim.py`: runs the real `manage_users.yml` against a
+  fake RouterOS device, about two minutes, no VMs.  It is the only automated test of SSH key
+  *replacement*, which molecule does not exercise (its master keys never change during a run).
+  See `tests/sim/README.md`.
+- `molecule test` (from `roles/routeros_common`): real RouterOS 6 and 7 VMs under VirtualBox
+  (box versions pinned in `molecule/default/Vagrantfile`: 6.49.19 and 7.22), described below.
+  RouterOS 7.22 prints key fingerprints, so there molecule also checks keys match the master;
+  RouterOS 6 does not, so its keys are reported as unverifiable.  See the top-level README for setting up Vagrant and VirtualBox.
+
+
 We use molecule to drive automated testing using Vagrant and VirtualBox based routeros images.
 Vagrant is going to build 6 RouterOS images.  Three each for RouterOS 6 and RouterOS 7.
 Each is in a specific initial state for each of the settings we are going to test:
