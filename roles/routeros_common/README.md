@@ -77,6 +77,28 @@ every run, skip the check for that router with `routeros_require_wide_terminal: 
 (host_vars) or `-e routeros_require_wide_terminal=false`.  The role then prints a warning
 instead of stopping.
 
+### Host keys
+
+The role checks router host keys as usual (`~/.ssh/known_hosts`).
+
+**PSDR inventory, temporarily:** `inventories/psdr/group_vars/os_routeros.yml` sets
+`ansible_host_key_checking: false` while the fleet moves to RouterOS 7.25.  Upgrading a router to
+7.25 replaces its host key (7.25 made Ed25519 the default type).  With checking on, libssh then
+refuses the router ("Host key for server has changed") until someone edits `~/.ssh/known_hosts`,
+unless your ansible.cfg has `host_key_auto_add = True` (below).  The trade-off is no
+protection against a swapped key while it is set.  Remove that line once every router is on 7.25 or later.  To check keys meanwhile, pass
+`-e ansible_host_key_checking=true`.
+
+libssh reads `~/.ssh/known_hosts` and ignores `ansible_ssh_args` (so SSH options such as
+`StrictHostKeyChecking` there have no effect on this role).
+
+With checking turned back on, `host_key_auto_add = True` in `.ansible.cfg` (`[libssh_connection]`)
+records a router's key on first contact and also accepts (and records) a key that has changed,
+but only if your ansible.cfg actually has it: a `~/.ansible.cfg` copied before that section was
+added does not.  It can only be set in ansible.cfg or `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`.
+With checking off (as the PSDR inventory has it for now) `~/.ssh/known_hosts` is neither read
+nor updated.
+
 ## RouterOS 6
 
 RouterOS 6 only offers old SSH algorithms that current libssh (this role's connection) does not
