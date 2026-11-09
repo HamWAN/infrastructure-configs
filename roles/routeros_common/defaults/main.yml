@@ -1,0 +1,14 @@
+---
+# Defaults for routeros_common.  These have the lowest precedence, so they can be overridden
+# from group_vars, host_vars or the command line (-e).  (Values in vars/main.yml cannot.)
+
+# RouterOS login options added to the user name when it has none ('myname' -> 'myname+cet512w').
+# They set a wide terminal, which this role needs (see the README, "Logging in").  A name that
+# already has a '+...' part is left as it is.  Set to '' to turn this off.
+routeros_login_options: cet512w
+
+# Before doing anything else the role checks that the session is in wide mode (see
+# tasks/check_terminal.yml and the README).  Only set this to false for a device that is known
+# to wrap long input even with the right login options; set commands longer than about
+# 50 characters may then be reported as failed and re-applied every run.
+routeros_require_wide_terminal: true
