@@ -1,0 +1,15 @@
+---
+# Variables for the users role under molecule, shared by converge.yml and verify.yml.
+# The test inventory (inventories/test/hosts.py) logs in as 'eo', so eo is the connecting account.
+users_admin:
+  - eo
+  - nigel
+  - tom          # test_keys/tom.key holds TWO keys (multi-key file)
+users_user:
+  - monitoring
+group_admin: hamadmin
+group_user: ham
+group_managed_scope: /etc/group_managed_scope
+authorized_key_scheme: ansible.builtin.file
+authorized_key_location: test_keys/
+test_flaky_network: true
