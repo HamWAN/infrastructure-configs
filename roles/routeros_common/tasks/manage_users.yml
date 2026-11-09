@@ -1,17 +1,146 @@
 ---
 # Manage Mikrotik Users
 # Missing users are added with random password and ssh public key loaded.
+# Users whose ssh public key is missing, or differs from the master copy (compared by
+#   fingerprint), have the key (re)loaded.
 # Users present and in the delete_users list are delete.
+# Every users_admin entry must have a usable master key (<base url><user>.key); if one does not,
+# the play stops for the host before anything is changed.
 # For now, we leave extra users as is.
+#
+# The account Ansible is logged in as is protected:
+#   - it is NEVER deleted (no override - delete it by running as a different admin);
+#   - its ssh keys are not changed unless routeros_allow_update_connecting_user is true.
+
+# Normally already done by main.yml; runs here too when manage_users.yml is used on its own.
+- name: Check the RouterOS session is usable (login options / wide terminal)
+  ansible.builtin.include_tasks:
+    file: check_terminal.yml
+  when: routeros_terminal_checked is not defined
 
 - name: setup expected users
   set_fact:
     expected_users: "{{ users_admin + users_user + ['admin'] }}"
     delete_users: "{{ users_delete }}"
 
+# Ask Ansible which login name it is really using (inventory ansible_user, -u on the command
+# line, ansible.cfg remote_user ... all resolve to the same place).  Runs on the controller only.
+- name: Find the login name Ansible is using for this host
+  hamwan_connection_user:
+  register: routeros_login
+  check_mode: false
+
+# The login name may carry RouterOS login options after a '+', e.g. 'myname+cet512w'; the
+# account name is what comes before the '+'.  routeros_connecting_user, if set, wins.
+- name: Work out which account Ansible is connected as
+  ansible.builtin.set_fact:
+    connecting_user: >-
+      {{ (routeros_connecting_user | default(routeros_login.user, true) | default('', true))
+         | string | regex_replace('[+].*$', '') }}
+
+- name: Refuse to continue if the protection cannot work
+  ansible.builtin.assert:
+    that:
+      - connecting_user | length > 0
+    fail_msg: >-
+      Cannot tell which account Ansible connects as, so it cannot be protected from deletion.
+      Set routeros_connecting_user.
+
+# The name above is the one Ansible ASKED to log in with.  libssh lets a 'User' line in
+# ~/.ssh/config override it, and if that line keeps the '+cet512w' options the wide-mode check
+# passes, so the role would protect the wrong account and could replace the key of, or delete,
+# the account really in use.  RouterOS has no "who am I", so check that the account is among
+# those logged in over SSH right now.  This catches the override; it cannot prove which session
+# is ours if the same name is also logged in from elsewhere.
+- name: List the accounts logged in to the device over SSH
+  community.routeros.command:
+    commands: ':foreach i in=[/user active find where via="ssh"] do={:put [/user active get $i name]}'
+  register: routeros_active_ssh
+  changed_when: false
+  check_mode: false
+
+- name: Stop unless the protected account is really logged in
+  ansible.builtin.assert:
+    that:
+      - connecting_user in routeros_active_ssh.stdout_lines[0] | map('trim') | list
+    fail_msg: >-
+      Ansible asked to log in as '{{ connecting_user }}', but that account has no SSH session on
+      the device (logged in over SSH: {{ routeros_active_ssh.stdout_lines[0] | map('trim')
+      | select | unique | list }}).  The role would protect the wrong account.  The usual cause is
+      a 'User' line in ~/.ssh/config, which libssh lets override -u / ansible_user: remove it for
+      the routers.  If routeros_connecting_user is set, check it.
+    quiet: true
+
+# protected_users: ssh keys left alone (unless the flag allows updating them).
+# undeletable_users: never deleted, whatever the flags say.
+- name: Decide which users are protected from change
+  ansible.builtin.set_fact:
+    protected_users: "{{ [] if routeros_allow_update_connecting_user | bool else [connecting_user] }}"
+    undeletable_users: "{{ [connecting_user] }}"
+
+- name: Show protected users
+  ansible.builtin.debug:
+    msg: >-
+      Account Ansible is connected as: {{ connecting_user }}.  It is never deleted.
+      {{ 'Its ssh keys MAY be updated (routeros_allow_update_connecting_user=true).'
+         if routeros_allow_update_connecting_user | bool else
+         'Its ssh keys are not changed; allow that with -e routeros_allow_update_connecting_user=true.' }}
+
+- name: Users whose ssh keys are managed (all hosts)
+  ansible.builtin.set_fact:
+    ssh_key_managed_users: "{{ (users_admin + users_user) | unique }}"
+
+# Runs once, on the controller (lookups always do), not once per router.  An unreadable or
+# missing master key is recorded as invalid here; what happens next depends on the user's role
+# (see the check below).  Done before anything on the device is changed.
+- name: Stop if no key source is configured
+  ansible.builtin.assert:
+    that:
+      - routeros_ssh_key_base_url | default('', true) | length > 0
+    fail_msg: >-
+      No SSH key source configured.  Set authorized_key_location (shared with the users role) or
+      routeros_ssh_key_base_url to the URL prefix of your <user>.key files.  Nothing was changed.
+    quiet: true
+
+- name: Start with no master keys (so an empty user list still works)
+  ansible.builtin.set_fact:
+    master_keys: {}
+
+- name: Look up master ssh public keys
+  ansible.builtin.set_fact:
+    master_keys: >-
+      {{ master_keys | combine({item:
+           (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
+                   split_lines=False, errors='ignore') | default('', true) | ssh_pubkeys_info(max_keys=1))}) }}
+  loop: "{{ ssh_key_managed_users }}"
+  run_once: true
+
+# An admin (users_admin, created with group=full) with no usable master key is a configuration
+# error: the account would exist with full rights and no way to log in with a key.  Stop before
+# touching the device.  Read-only users (users_user) without a key are only reported.
+- name: Admins whose master ssh public key is missing or unusable
+  ansible.builtin.set_fact:
+    admins_without_master_key: >-
+      {{ users_admin | unique
+         | reject('in', master_keys | dict2items | selectattr('value.valid') | map(attribute='key') | list)
+         | list }}
+
+- name: Stop if an admin has no usable master ssh public key
+  ansible.builtin.assert:
+    that:
+      - admins_without_master_key | length == 0
+    fail_msg: >-
+      No usable SSH public key for admin user(s):
+      {% for u in admins_without_master_key %}{{ u }} ({{ master_keys[u].error | default('no key')
+      }} at {{ routeros_ssh_key_base_url ~ u ~ '.key' }}){{ '; ' if not loop.last }}{% endfor %}.
+      Publish the key or remove the user from users_admin.  Nothing was changed on the device.
+    quiet: true
+
+# 'without-paging' on every print we parse: RouterOS otherwise stops at a
+# '-- [Q quit|D dump|down]' prompt once output passes the terminal height, and the task times out.
 - name: Run /user print command on Mikrotik
   community.routeros.command:
-    commands: "/user print"
+    commands: "/user print without-paging"
   register: user_output
   changed_when: false
   check_mode: false
@@ -55,24 +184,34 @@
 - name: Find extra users to be deleted
   set_fact:
     to_be_deleted: >-
-      {{ mikrotik_users | intersect(delete_users) }}
+      {{ mikrotik_users | intersect(delete_users) | difference(undeletable_users) }}
 
 - name: Display extra users to be deleted
   debug:
     var: to_be_deleted
 
+- name: Warn if a protected user is in the delete list
+  ansible.builtin.debug:
+    msg: >-
+      NOT deleting {{ mikrotik_users | intersect(delete_users) | intersect(undeletable_users) }}:
+      it is the account Ansible is connected as.  Run as a different admin to delete it.
+  when: mikrotik_users | intersect(delete_users) | intersect(undeletable_users) | length > 0
+
 - name: Generate random password for new users
+  no_log: true
   set_fact:
     random_password: "{{ lookup('password', '/dev/null', length=12, chars=['ascii_letters', 'digits']) }}"
   when: missing_users | length > 0
 
+# New users get a random password that is never shown; they log in with their SSH key.
 - name: Display generated password
   debug:
     var: random_password
   when: missing_users | length > 0
-  #no_log: true
+  no_log: true
 
 - name: Add missing users with appropriate role
+  no_log: true
   community.routeros.command:
     commands: '/user add name={{ item }} group={{ "read" if item in users_user else "full" }} password="{{ random_password }}"'
     #commands: '/user add name={{ item }} group={{ "read" if item == "monitoring" else "full" }} password="{{ random_password }}"'
@@ -84,17 +223,72 @@
     commands: /console clear-history
   when: missing_users | length > 0 and not ansible_check_mode
 
-- name: Fetch their public keys
-  community.routeros.command:
-    commands: '/tool fetch url="https://monitoring.hamwan.net/keys/{{ item }}.key"'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+# ---- SSH public keys -------------------------------------------------------------------
+# Keys are managed for users_admin + users_user (the users that have a master key); the
+# built-in 'admin' account is left alone.  This replaces the old "fetch/load keys for newly
+# added users" tasks: a newly added user simply has no key yet, so it falls out of the
+# same comparison as an existing user whose key changed.
 
-- name: Load public keys
+- name: Read ssh keys currently on the device
   community.routeros.command:
-    commands: '/user ssh-keys import public-key-file={{ item }}.key user={{ item }}'
-  loop: "{{ missing_users }}"
-  when: missing_users | length > 0 and not ansible_check_mode
+    commands: "/user ssh-keys print detail without-paging"
+  register: ssh_keys_output
+  changed_when: false
+  check_mode: false
+
+- name: Index ssh keys on the device
+  ansible.builtin.set_fact:
+    device_keys: "{{ ssh_keys_output.stdout[0] | routeros_ssh_keys_parse }}"
+    ssh_key_candidates: "{{ ssh_key_managed_users | difference(protected_users) }}"
+
+- name: Show ssh keys that will not be touched because they belong to a protected user
+  ansible.builtin.debug:
+    msg: >-
+      NOT checking ssh key for {{ ssh_key_managed_users | intersect(protected_users) }}: it is the
+      account Ansible is connected as.  Override with -e routeros_allow_update_connecting_user=true
+  when: ssh_key_managed_users | intersect(protected_users) | length > 0
+
+- name: Plan ssh key changes
+  ansible.builtin.include_tasks:
+    file: ssh_key_plan.yml
+
+- name: Start the lists of keys RouterOS refuses or cannot download
+  ansible.builtin.set_fact:
+    routeros_refused_keys: []
+    routeros_key_download_failed: []
+
+- name: Install or replace ssh public keys
+  ansible.builtin.include_tasks:
+    file: install_ssh_key.yml
+  loop: "{{ keys_to_install }}"
+  loop_control:
+    loop_var: key_user
+  when: keys_to_install | length > 0 and not ansible_check_mode
+
+# Refused keys do not stop the run (see install_ssh_key.yml); report them here.  RouterOS 7.25+
+# refuses RSA keys with a small public exponent (35 or 37, from old PuTTY versions).
+- name: Report ssh keys RouterOS refused
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: RouterOS refused the master key for
+      {{ routeros_refused_keys | map(attribute='user') | sort | join(', ') }}; those accounts were left
+      as they were.  {{ routeros_refused_keys | map(attribute='reason') | unique | join(' / ') }}
+      {{ 'These users need a new key, preferably ed25519 (ssh-keygen -t ed25519).'
+         if routeros_refused_keys | map(attribute='reason') | select('search', 'insecure') | list | length > 0
+         else '' }}
+  when: routeros_refused_keys | length > 0
+
+# The router could not download the master key (key server unreachable from the router, a 404,
+# a wrong routeros_ssh_key_fetch_base_url ...).  Not the user's key: nothing for them to fix.
+- name: Report ssh keys the router could not download
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: the router could not download the master key for
+      {{ routeros_key_download_failed | map(attribute='user') | sort | join(', ') }} from
+      {{ routeros_ssh_key_fetch_base_url }}; those accounts were left as they were.
+      {{ routeros_key_download_failed | map(attribute='reason') | unique | join(' / ') }}.
+      Check the router can reach the key server (routeros_ssh_key_fetch_base_url).
+  when: routeros_key_download_failed | length > 0
 
 - name: Remove to_be_deteted users
   community.routeros.command:

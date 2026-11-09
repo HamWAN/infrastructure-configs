@@ -2,6 +2,43 @@
 # Defaults for routeros_common.  These have the lowest precedence, so they can be overridden
 # from group_vars, host_vars or the command line (-e).  (Values in vars/main.yml cannot.)
 
+# Where the master copy of each user's SSH public key lives: <base url><username>.key.
+# There is no built-in default: set authorized_key_location for your organisation in group_vars
+# (it is shared with the Linux 'users' role; HamWAN sets it in inventories/psdr/group_vars/
+# owner_HamWAN.yml), or set routeros_ssh_key_base_url directly.  Ansible reads the keys from here.
+routeros_ssh_key_base_url: "{{ authorized_key_location }}"
+
+# The URL prefix the ROUTERS download the keys from (/tool fetch).  The same as above unless the
+# routers reach the key server by a different address than the Ansible host does (NAT, a
+# management network, or the molecule tests, where the routers use VirtualBox's 10.0.2.2).
+routeros_ssh_key_fetch_base_url: "{{ routeros_ssh_key_base_url }}"
+
+# The account Ansible logs in as (from -u, ansible_user or remote_user, minus any RouterOS login
+# options such as the '+cet512w' suffix):
+#   - is NEVER deleted via users_delete.  There is no override: run as a different admin.
+#   - SAFETY FLAG: has its SSH keys left alone (not replaced, not cleaned up by exclusive mode)
+#     unless this is true.  Replacing the key you are connected with is an easy way to lock
+#     yourself out.  Allow it deliberately with:  -e routeros_allow_update_connecting_user=true
+routeros_allow_update_connecting_user: false
+
+# Name of the account Ansible connects as.  Normally derived automatically (see manage_users.yml);
+# set this only if the derivation is wrong for your inventory.
+# routeros_connecting_user: myname
+
+# What to do for a user who already has SSH key(s) on the device when the device does not
+# report a fingerprint we can compare (older RouterOS, e.g. v6):
+#   skip    - leave the key alone and say so (default; idempotent)
+#   replace - re-import the master key every run (converges, but always reports 'changed')
+routeros_ssh_key_unverifiable_action: skip
+
+# EXCLUSIVE MODE: when true, a user whose master key is on the device but who also holds other
+# keys has those other keys removed, so the master key is the only one left.  This is done the
+# same safe way as a replacement: the master key is imported again, checked, and only then are
+# all the older key entries removed.  Users whose keys cannot be verified (no fingerprint shown)
+# and the account Ansible is connected as are never cleaned up.
+# Default false: extra keys are reported but left alone.
+routeros_ssh_keys_exclusive: false
+
 # RouterOS login options added to the user name when it has none ('myname' -> 'myname+cet512w').
 # They set a wide terminal, which this role needs (see the README, "Logging in").  A name that
 # already has a '+...' part is left as it is.  Set to '' to turn this off.
