@@ -1,6 +1,10 @@
 ---
 dependency:
   name: galaxy
+  options:
+    # roles/requirements.yml, found relative to this scenario (roles/<role>/molecule/<scenario>)
+    requirements-file: ${MOLECULE_SCENARIO_DIRECTORY}/../../../requirements.yml
+    role-file: ${MOLECULE_SCENARIO_DIRECTORY}/../../../requirements.yml
 driver:
   name: default
 platforms:
