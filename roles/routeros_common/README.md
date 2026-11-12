@@ -6,7 +6,9 @@ do not match desired settings.  The configruation is split into two locations.
  - group_vars/os_routeros.yml sets the site specific values used by the file above.
 By putting the values in group_vars, the can be overriden where needed by entries in host_vars.
 
-It is currently tested against routeros versions up to 6.1-6.49.x and 7.1-7.16.
+The molecule tests run it against RouterOS 6.49.19 and 7.22 (the box versions pinned in
+`molecule/default/Vagrantfile`).  Earlier versions of the role were tested on 6.1-6.49.x and
+7.1-7.16.
 
 The user is expected to have SSH access to the devices.
 
