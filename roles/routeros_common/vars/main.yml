@@ -99,7 +99,8 @@ default_v7_simple_settings:
   # idempotence check caught it).  ':put [... get servers]' prints them on one line as 'a;b'.
   - name: ntp_client
     query_command: ':put [/system ntp client get servers]'
-    desired_value: '{{ v7_ntp_client_servers | replace(",", ";") }}'
+    # The list is tidied first (split on commas, spaces trimmed), so 'a, b' works too.
+    desired_value: '{{ v7_ntp_client_servers | split(",") | map("trim") | join(";") }}'
     pattern: '^\s*(\S*).*$'
-    set_command: '/system ntp client set servers={{ v7_ntp_client_servers }} enabled=yes'
+    set_command: '/system ntp client set servers={{ v7_ntp_client_servers | split(",") | map("trim") | join(",") }} enabled=yes'
     missing_ok: false
