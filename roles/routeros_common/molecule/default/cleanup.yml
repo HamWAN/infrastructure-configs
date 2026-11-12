@@ -1,0 +1,13 @@
+---
+- name: Cleanup
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Stop the test SSH key server started by key_server.yml
+      ansible.builtin.shell: |
+        state="${MOLECULE_EPHEMERAL_DIRECTORY:-/tmp}"
+        if [ -f "$state/key_server.pid" ]; then
+          kill "$(cat "$state/key_server.pid")" 2>/dev/null || true
+          rm -f "$state/key_server.pid"
+        fi
+      changed_when: false
