@@ -11,7 +11,7 @@
 
     - name: "Include hamwan.routeros_common"
       ansible.builtin.include_role:
-        name: routeros_common
+        name: hamwan.routeros_common
       vars:
         test_flaky_network: true
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
