@@ -9,6 +9,34 @@
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
+    # RouterOS 6 only offers hmac-sha1/hmac-md5, which libssh does not offer by default; it reads
+    # its MAC list from the SSH config files (~/.ssh/config or /etc/ssh/ssh_config).  Probe with
+    # libssh itself (not 'ssh -G': OpenSSH still allows hmac-sha1 by default) so a missing config
+    # block fails here with instructions.
+    - name: "Check libssh can negotiate a MAC with the RouterOS 6 test VMs"
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "-c"
+          - |
+            import sys
+            from pylibsshext.session import Session
+            try:
+                Session().connect(host=sys.argv[1], port=int(sys.argv[2]), user="molecule-mac-probe",
+                                  password="x", host_key_checking=False, look_for_keys=False, timeout=15)
+            except Exception as e:
+                if "mac algo" in str(e):
+                    sys.exit("libssh cannot use hmac-sha1 for %s (%s).  Add the SSH config block (e.g. to "
+                             "~/.ssh/config) described under 'RouterOS 6' in roles/routeros_common/README.md."
+                             % (sys.argv[1], e))
+          - "{{ ansible_host }}"
+          - "{{ ansible_port | default(22) }}"
+      changed_when: false
+      delegate_to: localhost
+      when: inventory_hostname is match('ros6')
+
+    # (The ssh-rsa signature setting RouterOS 6 also needs is in molecule.yml, group 'ros6'.)
+
     # Log in as plain 'vagrant', with no '+' login options: the role must add them itself
     # (routeros_login_options).  Set here as a fact, not in include_role 'vars:' below, because
     # those outrank set_fact and would stop the role from changing it - unlike -u or inventory.

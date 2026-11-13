@@ -9,13 +9,22 @@ driver:
   name: default
 platforms:
   - name: ros6.correct
+    groups: [ros6]
   - name: ros6.incorrect
+    groups: [ros6]
   - name: ros6.missing
+    groups: [ros6]
   - name: ros7.correct
   - name: ros7.incorrect
   - name: ros7.missing
 provisioner:
   name: ansible
   log: True
+  inventory:
+    group_vars:
+      # RouterOS 6 only accepts SHA-1 'ssh-rsa' public-key signatures; let libssh send them.
+      # (Its hmac-sha1-only MACs need the SSH config block that converge.yml checks for.)
+      ros6:
+        ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"
 verifier:
   name: ansible

@@ -1,3 +1,13 @@
 ---
-ansible_ssh_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+# Only used by Ansible's ordinary 'ssh' connection (e.g. ad-hoc commands); the routeros_common role
+# connects with network_cli/libssh, which ignores ansible_ssh_args.
+ansible_ssh_args: "-o PubkeyAcceptedKeyTypes=+ssh-rsa"
 ansible_port: 222
+
+# TEMPORARY - remove when every router here is on RouterOS 7.25 or later.  Tracked in
+# https://github.com/HamWAN/infrastructure-configs/issues/39
+# Upgrading to 7.25 replaces a router's host key, and libssh then refuses the router unless the
+# ansible.cfg in use has host_key_auto_add.  Turning checking off for this group covers everyone
+# who runs the playbooks.  The trade-off, the alternative (refreshing known_hosts per router) and
+# the steps for removing this are in roles/routeros_common/README.md, "Host keys".
+ansible_host_key_checking: false

@@ -79,6 +79,96 @@ every run, skip the check for that router with `routeros_require_wide_terminal: 
 (host_vars) or `-e routeros_require_wide_terminal=false`.  The role then prints a warning
 instead of stopping.
 
+### Host keys
+
+The role checks router host keys as usual, against `~/.ssh/known_hosts`.  It connects with
+libssh, which reads that file and ignores `ansible_ssh_args`, so SSH options such as
+`StrictHostKeyChecking` set there have no effect on this role.
+
+`host_key_auto_add = True` under `[libssh_connection]` in ansible.cfg (this repo's `.ansible.cfg`
+has it) records a router's key on first contact, and also accepts and records a key that has
+changed.  It can only be set in ansible.cfg or with `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`, not
+as an inventory variable, so check that the ansible.cfg you actually use has it.  Without it, a
+router you have never connected to fails with "The authenticity of host ... can't be
+established", and one whose key changed fails with "Host key for server has changed".
+
+#### When a RouterOS upgrade changes the host key
+
+Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519 the default type).
+If you do not use `host_key_auto_add`, every upgraded router is then refused until its stored
+key is replaced.  There are two ways to deal with that; which one fits is a decision for each
+site, so neither is built into the role.
+
+1. **Refresh the stored key of each router as it is upgraded** (host key checking stays on).
+   Use the address and port Ansible connects to (`ansible_host` and `ansible_port`):
+
+       ssh-keygen -R "[router.example.net]:222"
+       ssh-keyscan -p 222 router.example.net >> ~/.ssh/known_hosts
+
+   `ssh-keyscan` trusts whatever answers at that moment, as a first connection does, so run it
+   from your management network straight after the upgrade.
+
+2. **Turn host key checking off for the routers while the fleet is being upgraded.**  Set it
+   in your inventory, for the group that holds your RouterOS devices, so it covers everyone who
+   runs the playbooks and nothing else:
+
+       ansible_host_key_checking: false
+
+   While it is set there is no protection against a swapped key, and nothing is recorded in
+   `known_hosts`.  Treat it as temporary: note somewhere you will see it (an issue, a dated
+   comment) when it is to be removed.  When every router is upgraded, remove the line and
+   refresh the stored keys as in option 1.  To check keys for one run meanwhile, pass
+   `-e ansible_host_key_checking=true`.
+
+The example inventory in this repo (`inventories/psdr/group_vars/os_routeros.yml`) currently
+uses option 2; removing it is tracked in
+[issue #39](https://github.com/HamWAN/infrastructure-configs/issues/39).
+
+## RouterOS 6
+
+RouterOS 6 only offers old SSH algorithms that current libssh (this role's connection) does not
+offer by default:
+
+- **MAC:** RouterOS 6 has only `hmac-sha1`/`hmac-md5`.  Without help the connection fails with
+  `kex error : no match for method mac algo ... server [hmac-sha1,hmac-md5]`.
+- **Public-key signatures:** RouterOS 6 only accepts SHA-1 `ssh-rsa` signatures, so login with an
+  RSA key fails (libssh then tries other keys, which can surface as an unrelated-looking error).
+
+Both can be allowed for the RouterOS 6 devices only:
+
+1. **MACs - an SSH client config block** for the user who runs Ansible.  libssh has no Ansible
+   option for MACs, but it reads the standard SSH config files.  Put this in your own
+   `~/.ssh/config` (no root needed; it only affects you):
+
+       # RouterOS 6 only offers hmac-sha1/hmac-md5; allow it for these hosts only.
+       Host r6-a.example.net r6-b.example.net 192.0.2.17
+           MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
+
+   - The `Host` names must match what Ansible connects to (`ansible_host`, or the inventory name).
+   - SSH config uses the *first* value it finds: put the block above any `Host *` section that
+     sets `MACs`.
+   - Don't put `User` lines in it: libssh lets them override `-u` (see "Logging in").
+   - libssh finds `~/.ssh` from the account's home directory in the system user database, not
+     from `$HOME`.
+
+   On a machine shared by several Ansible users, the same block can instead go in a system-wide
+   file such as `/etc/ssh/ssh_config.d/routeros6-macs.conf` (Debian's `/etc/ssh/ssh_config`
+   includes `ssh_config.d/*.conf`; libssh reads it too).
+2. **Signatures - a host variable** (host_vars, or a group for your v6 devices):
+
+       ansible_libssh_publickey_algorithms: ssh-rsa,rsa-sha2-256,rsa-sha2-512
+
+Until you have done that, paramiko also works for v6 (`ansible_network_cli_ssh_type: paramiko`
+plus `ansible_paramiko_use_rsa_sha2_algorithms: false`), but ansible-core deprecates its paramiko
+connection plugin and will remove it in 2.21.
+
+The molecule tests use the libssh settings for the `ros6.*` VMs (192.168.56.20-22) and check,
+with libssh itself, that the MAC block is in place before converging.  On the test host add to
+`~/.ssh/config` (or a system-wide file as above):
+
+    Host 192.168.56.20 192.168.56.21 192.168.56.22
+        MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1
+
 ## Testing
 
 We use molecule to drive automated testing using Vagrant and VirtualBox based routeros images.
