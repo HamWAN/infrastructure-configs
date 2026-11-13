@@ -77,28 +77,46 @@ are in respective inventories/_site_/group_vars files, and group_vars/_group_.ym
 ## Changing your own SSH key
 
 Each user's master public key is read from `<authorized_key_location><user>.key`, where
-`authorized_key_location` is set in the site's group_vars (PSDR:
-`inventories/psdr/group_vars/owner_HamWAN.yml`, currently https://monitoring.hamwan.net/keys/).
-The playbook makes every router and Linux host match that file.  The account Ansible logs in as
-is protected, though: its key is left alone unless you say otherwise.  So to change your own key:
+`authorized_key_location` is set in your inventory's group_vars (the example inventory:
+`inventories/psdr/group_vars/owner_HamWAN.yml`).  The playbook makes every router and Linux host
+match that file.  The account Ansible logs in as is protected, though: its key is left alone
+unless you say otherwise.  So to change your own key:
 
 1. Make a new key, preferably ed25519 (`ssh-keygen -t ed25519`).  RouterOS 7.25 and later refuse
    RSA keys made by old PuTTY versions (small public exponent).  Keep the old key loaded in your
-   agent until step 4.
-2. Put the new public key at `<authorized_key_location><you>.key`.
-3. Push it out, either:
-   - **ask another admin to run the playbook** (your account is not protected in their run, so no
-     extra options are needed); or
-   - **run it yourself with both overrides**, starting with one router and one Linux host:
+   agent until you have finished.
+2. Put the new public key at `<authorized_key_location><you>.key`, then check that what is
+   published is the key you hold.  The two fingerprints must be the same:
 
-         ansible-playbook psdr.yml -l R1.Example.hamwan.net,host1.example.hamwan.net -u myname \
+       ssh-keygen -lf ~/.ssh/id_ed25519.pub
+       curl -s <authorized_key_location><you>.key | ssh-keygen -lf -
+
+   This is the step that prevents a lock-out: the usual way for step 4 to fail is a published
+   key that is not the one you have.
+3. Push it out to **one router and one Linux host** first, either:
+   - **ask another admin to run the playbook** for those two (your account is not protected in
+     their run, so no extra options are needed); or
+   - **run it yourself with both overrides**:
+
+         ansible-playbook psdr.yml -l router1.example.net,host1.example.net -u myname \
            -e routeros_allow_update_connecting_user=true -e users_allow_update_connecting_user=true
 
      Your current session stays open while the key changes (RouterOS imports the new key before
      removing the old one), so the run itself cannot lock you out.
-4. Check that the new key works on its own before relying on it:
-   `ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -p 222 myname@R1.Example.hamwan.net` (and the
-   same for the Linux host).  Then run the rest of the fleet the same way, and retire the old key.
+4. Check that the new key works on its own on those two:
+   `ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -p 222 myname@router1.example.net` (and the
+   same for the Linux host).
+5. If it works, run the rest of the fleet the same way, and retire the old key.
+
+**If step 4 fails**, stop there.  Your old key has been replaced on the two hosts you updated,
+but it still works everywhere else, so you have not lost access to the fleet.  To recover:
+
+- to go on with the new key: fix what is published (step 2) and repeat step 3;
+- to go back: put your old public key back in the master file and repeat step 3.
+
+Either way the two hosts you updated now accept only the published key, so if you cannot log in
+to them yourself, ask another admin to run the playbook for them (or use the device's own
+recovery access).  That is why step 3 starts with two hosts and not the fleet.
 
 ## Operator Workstation Setup (Fedora)
 
@@ -224,7 +242,7 @@ Oracle; it is not in Debian's main archive).  The `users` scenario runs on libvi
 
 There are two working combinations; both pass both molecule scenarios (tested on Debian 13).
 
-**A. HashiCorp Vagrant 2.4 (what dpk-server runs; tested with 2.4.9).**  Distributions only ship
+**A. HashiCorp Vagrant 2.4 (what the project's test host runs; tested with 2.4.9).**  Distributions only ship
 Vagrant 2.3.x (Debian's is a snapshot taken just before HashiCorp moved Vagrant to a
 non-open-source licence in August 2023); 2.4 comes from HashiCorp's repository.  It cannot use
 Debian's `vagrant-libvirt` package, so vagrant-libvirt is installed as a Vagrant plugin (it
