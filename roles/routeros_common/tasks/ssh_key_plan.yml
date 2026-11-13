@@ -1,0 +1,64 @@
+---
+# Decide, per user, what (if anything) needs doing about SSH public keys.  This file talks to
+# no device: it only works on facts gathered by manage_users.yml.
+#
+# Inputs (facts):
+#   ssh_key_candidates  users to consider: users_admin + users_user, minus the protected user
+#   master_keys         {user: ssh_pubkeys_info(..., max_keys=1)} from the master site
+#   device_keys         {user: [ {fingerprints: [...]}, ... ]} from routeros_ssh_keys_parse
+#   routeros_ssh_key_unverifiable_action   skip | replace
+#   routeros_ssh_keys_exclusive           true: also clean up users holding extra keys
+#
+# Outputs (facts):
+#   ssh_key_plan    {missing, stale, unverifiable, in_sync, extra, no_master}
+#                   'extra' = in sync, but holding keys besides the master key (a subset of in_sync)
+#   keys_to_install the users whose key must be (re)installed
+
+- name: Classify SSH key state for each managed user
+  ansible.builtin.set_fact:
+    ssh_key_plan: >-
+      {%- set ns = namespace(missing=[], stale=[], unverifiable=[], in_sync=[], extra=[], no_master=[]) -%}
+      {%- for u in ssh_key_candidates -%}
+      {%- set keys = device_keys.get(u, []) -%}
+      {%- set have = keys | map(attribute='fingerprints') | flatten | list -%}
+      {%- set m = master_keys.get(u, {}) -%}
+      {%- set want = [m.sha256, m.md5] if m.valid | default(false) else [] -%}
+      {#- No usable master key: nothing to install or compare, whatever the device holds. -#}
+      {%- if want | length == 0 -%}
+      {%- set _ = ns.no_master.append(u) -%}
+      {%- elif keys | length == 0 -%}
+      {%- set _ = ns.missing.append(u) -%}
+      {%- elif have | length == 0 -%}
+      {%- set _ = ns.unverifiable.append(u) -%}
+      {%- elif have | intersect(want) | length > 0 -%}
+      {%- set _ = ns.in_sync.append(u) -%}
+      {%- set other = namespace(n=0) -%}
+      {%- for k in keys if k.fingerprints | intersect(want) | length == 0 -%}
+      {%- set other.n = other.n + 1 -%}
+      {%- endfor -%}
+      {%- if other.n > 0 -%}
+      {%- set _ = ns.extra.append(u) -%}
+      {%- endif -%}
+      {%- else -%}
+      {%- set _ = ns.stale.append(u) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ {'missing': ns.missing, 'stale': ns.stale, 'unverifiable': ns.unverifiable,
+          'in_sync': ns.in_sync, 'extra': ns.extra, 'no_master': ns.no_master} }}
+
+- name: Work out which users get their key (re)installed
+  ansible.builtin.set_fact:
+    keys_to_install: >-
+      {{ ssh_key_plan.missing + ssh_key_plan.stale +
+         (ssh_key_plan.unverifiable if routeros_ssh_key_unverifiable_action == 'replace' else []) +
+         (ssh_key_plan.extra if routeros_ssh_keys_exclusive | bool else []) }}
+
+- name: Summarise SSH key plan
+  ansible.builtin.debug:
+    msg:
+      - "SSH keys to install (user has no key): {{ ssh_key_plan.missing }}"
+      - "SSH keys to replace (master key changed): {{ ssh_key_plan.stale }}"
+      - "SSH keys up to date: {{ ssh_key_plan.in_sync }}"
+      - "Users holding extra keys besides the master key, exclusive={{ routeros_ssh_keys_exclusive | bool }}{{ ' (will be cleaned up)' if routeros_ssh_keys_exclusive | bool else ' (left alone)' }}: {{ ssh_key_plan.extra }}"
+      - "SSH keys NOT checked - device shows no fingerprint, action={{ routeros_ssh_key_unverifiable_action }}: {{ ssh_key_plan.unverifiable }}"
+      - "SSH keys NOT checked - no usable master key (missing, unreadable or more than one): {{ ssh_key_plan.no_master }}"

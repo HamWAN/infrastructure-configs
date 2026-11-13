@@ -44,6 +44,9 @@
       ansible.builtin.set_fact:
         ansible_user: vagrant
 
+    - name: "Start the test SSH key server"
+      ansible.builtin.include_tasks: key_server.yml
+
     - name: "Include hamwan.routeros_common"
       ansible.builtin.include_role:
         name: hamwan.routeros_common
@@ -52,3 +55,7 @@
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
         ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"
+        # Master keys come from the local test key server (key_server.yml), not a real site.
+        # Ansible reads them on the host; the routers fetch them via VirtualBox NAT (10.0.2.2).
+        routeros_ssh_key_base_url: "http://127.0.0.1:{{ molecule_key_server_port }}/"
+        routeros_ssh_key_fetch_base_url: "http://10.0.2.2:{{ molecule_key_server_port }}/"

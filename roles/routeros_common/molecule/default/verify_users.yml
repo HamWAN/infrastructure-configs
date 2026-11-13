@@ -43,3 +43,17 @@
         to_be_deleted: >-
           {{ mikrotik_users | intersect(delete_users) }}
       failed_when: to_be_deleted | length > 0
+
+    - name: Read SSH keys on the device
+      community.routeros.command:
+        commands: "/user ssh-keys print without-paging"
+      register: key_output
+      changed_when: false
+
+    - name: Verify every managed user has an SSH key
+      ansible.builtin.assert:
+        that:
+          # rows look like ' 2 R admin1   rsa ...': number, optional flag letters (R = RSA), user
+          - key_output.stdout[0] is search('(?m)^\\s*\\d+\\s+(?:[A-Z]+\\s+)?' ~ item ~ '\\s')
+        fail_msg: "{{ item }} has no SSH key on the device:\n{{ key_output.stdout[0] }}"
+      loop: "{{ users_admin + users_user }}"

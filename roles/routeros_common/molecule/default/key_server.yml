@@ -1,0 +1,54 @@
+---
+# Make sure the test SSH key server is running.  Included by converge.yml (so it also works for a
+# plain 'molecule converge') and stopped by cleanup.yml.
+#
+# It serves test_keys/ over HTTP on 127.0.0.1 only.  Ansible reads the keys at
+# http://127.0.0.1:<port>/ and the RouterOS VMs download them at http://10.0.2.2:<port>/,
+# VirtualBox NAT's address for the host's loopback - so the server is never exposed to the network.
+- name: Ensure the test SSH key server is running on 127.0.0.1:{{ molecule_key_server_port }}
+  ansible.builtin.shell: |
+    port={{ molecule_key_server_port }}
+    state="${MOLECULE_EPHEMERAL_DIRECTORY:-/tmp}"
+    if ! python3 -c "import socket,sys; s=socket.socket(); s.settimeout(1); sys.exit(s.connect_ex(('127.0.0.1', $port)))"; then
+      setsid nohup python3 -m http.server "$port" --bind 127.0.0.1 --directory "{{ playbook_dir }}/test_keys" \
+        > "$state/key_server.log" 2>&1 < /dev/null &
+      echo $! > "$state/key_server.pid"
+      sleep 1
+      echo started
+    fi
+  delegate_to: localhost
+  run_once: true
+  changed_when: false
+
+# The task above leaves an already listening port alone, so that a second converge reuses the
+# server.  Make sure whatever answers on the port really is our key server: each test user's key
+# must come back exactly as it is in test_keys/.
+- name: Fetch each test key from the key server
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ molecule_key_server_port }}/{{ item }}.key"
+    return_content: true
+    use_proxy: false
+    status_code: [200, 404]
+  loop: "{{ (users_admin + users_user) | unique }}"
+  register: molecule_key_server_check
+  delegate_to: localhost
+  run_once: true
+  failed_when: false
+  changed_when: false
+
+- name: Stop unless the key server serves the test keys
+  ansible.builtin.assert:
+    that:
+      - item.status | default(0) == 200
+      - item.content | default('') == lookup('ansible.builtin.file', playbook_dir ~ '/test_keys/' ~ item.item ~ '.key', rstrip=false)
+    fail_msg: >-
+      Whatever is listening on 127.0.0.1:{{ molecule_key_server_port }} is not the test key server
+      (asked for {{ item.item }}.key, got status {{ item.status | default('none') }}).  Another
+      service is probably using the port: stop it, or set molecule_key_server_port in
+      molecule_vars.yml to a free port.
+    quiet: true
+  loop: "{{ molecule_key_server_check.results }}"
+  loop_control:
+    label: "{{ item.item }}.key"
+  delegate_to: localhost
+  run_once: true

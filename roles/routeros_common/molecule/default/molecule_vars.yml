@@ -8,3 +8,6 @@ users_user:
 users_delete:
   - DeleteMe1
   - DeleteMe2
+
+# Test SSH key server (key_server.yml): serves test_keys/ on 127.0.0.1:<port>.
+molecule_key_server_port: 18080

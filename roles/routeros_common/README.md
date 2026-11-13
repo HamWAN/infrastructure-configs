@@ -124,6 +124,106 @@ The example inventory in this repo (`inventories/psdr/group_vars/os_routeros.yml
 uses option 2; removing it is tracked in
 [issue #39](https://github.com/HamWAN/infrastructure-configs/issues/39).
 
+## SSH public keys for users
+
+`manage_users.yml` keeps each user's SSH public key on the device in step with the master copy
+`<base url><user>.key`.  For every user in `users_admin` + `users_user` it compares the
+fingerprint of the master key with the fingerprint(s) the device reports in
+`/user ssh-keys print detail`:
+
+| Device state | Action |
+|---|---|
+| user has no key | key fetched and imported |
+| key present, fingerprint matches master (SHA256 or MD5) | nothing |
+| key(s) present, none matches the master (the master key changed) | master key imported, then **all** the user's older keys removed, in either mode (see below) |
+| key present, device shows no fingerprint (older RouterOS) | per `routeros_ssh_key_unverifiable_action` |
+| **admin** (`users_admin`): master key missing, unreadable, or more than one key in the file | **play stops for the host before anything is changed**; the error names each user and the reason |
+| read-only user (`users_user`): master key missing, unreadable, or more than one key | nothing; reported (a new user is still created, without a key) |
+| master key present, plus other keys | nothing (reported); with `routeros_ssh_keys_exclusive=true` the others are removed |
+| RouterOS refuses the master key on import (any user, admins included) | account left as it is (old keys kept); reported at the end; the run carries on |
+| the router cannot download the master key (`/tool fetch` fails: unreachable, 404 ...) | account left as it is; reported separately at the end (not as a refused key); the run carries on |
+| the file the router downloaded is not the master key Ansible checked | nothing imported; account left as it is; reported with the failed downloads |
+| after import, the device's fingerprint for the new entry is not the master key's | the new entry is removed again, old keys kept, **play stops for the host** |
+
+**How a key is installed.**  Ansible reads and validates the master key; the router then
+downloads its own copy with `/tool fetch`, which does not verify the key server's certificate.
+So nothing is imported on trust:
+
+1. the router's downloaded file is read back and must hold exactly the key Ansible validated.
+   This works on every RouterOS version, including RouterOS 6, which shows no fingerprints;
+2. the key is imported *before* any old key is removed;
+3. where the device shows fingerprints, the entry just added must have the master key's
+   fingerprint; if it does not, it is removed again and the play stops for that router;
+4. only then are the old keys removed.
+
+**When a master key changes, all of that user's older keys are removed**, whether or not
+exclusive mode is on.  Without exclusive mode, extra keys are only left alone while the master
+key is still among them; once it is not, the device cannot tell which key was the old master,
+so they are all replaced by the new one.
+
+**RouterOS 7.25 and later refuse RSA keys with a small public exponent** (35 or 37, typical of
+keys made by old PuTTY versions): `failure: key uses insecure RSA public exponent!`.  Older
+RouterOS versions accept them.  The role does not stop for this: it leaves that user's account
+and keys as they are, carries on with the other users, and ends with a warning naming each user
+whose key was refused.  The fix is for those users to make a new key, preferably ed25519
+(`ssh-keygen -t ed25519`), and publish it as their master key.  A refused import is retried on
+every run (the device still lacks the master key) but is not reported as a change.
+
+Use `--check --diff` to see the plan without changing anything.
+
+Tested live on RouterOS 7.25 (CRS328): install, replace after a master key change, exclusive
+clean-up, idempotent re-runs, and connecting-user protection with `-u name+cet512w`.  Every print
+the role parses uses `without-paging`; without it RouterOS stops at its pager prompt once output
+passes the terminal height and the task times out.
+
+Exclusive mode (`-e routeros_ssh_keys_exclusive=true`) makes the master key the only key each
+managed user holds.  It re-imports the master key, checks it, then removes every older entry - the
+same safe order as a replacement.  Users whose keys cannot be verified are never cleaned up.
+
+New users are created with a random password that is not displayed (`no_log`); they log in with
+their SSH key.
+
+### Where the master keys come from
+
+There is no built-in key site: each organisation sets its own.
+
+| Variable | Default | Used by |
+|---|---|---|
+| `authorized_key_location` | none - set it in your inventory's group_vars (the example inventory: `inventories/psdr/group_vars/owner_HamWAN.yml`) | both this role and the Linux `users` role |
+| `routeros_ssh_key_base_url` | `authorized_key_location` | Ansible, to read and check the keys |
+| `routeros_ssh_key_fetch_base_url` | `routeros_ssh_key_base_url` | the routers, to download the key (`/tool fetch`) |
+
+Set `routeros_ssh_key_fetch_base_url` only if the routers reach the key server by a different
+address than the Ansible host does (NAT, a management network).  The molecule tests do exactly
+that: Ansible reads the keys at `http://127.0.0.1:<port>/` and the RouterOS VMs fetch them at
+`http://10.0.2.2:<port>/`.  If no key source is configured the play stops before changing anything.
+
+The master keys are looked up once per play, for the users of every router in it, so user lists
+that differ between routers (host_vars) are handled.
+
+### Protecting the account Ansible connects as
+
+The account Ansible logs in as is **never deleted** via `users_delete`, and there is no override:
+to delete it, run the playbook logged in as a *different* admin.
+
+Its SSH key is also left alone (not replaced, not cleaned up by exclusive mode) unless you pass:
+
+    ansible-playbook psdr.yml -e routeros_allow_update_connecting_user=true
+
+Make sure the new master key is one you hold before doing that.
+
+The name is the one Ansible asks to log in with, wherever it came from (`-u myname+cet512w` on
+the command line, `ansible_user` in inventory, `remote_user` in ansible.cfg), minus the `+...`
+suffix.  If it cannot be determined the play stops rather than guess; set
+`routeros_connecting_user` in that case.
+
+libssh can log in as a different account than that: a `User` line in `~/.ssh/config` overrides
+it (see "Logging in").  RouterOS has no "who am I" command, so before changing anything the role
+checks that the account it is about to protect is among those logged in over SSH right now
+(`/user active`), and stops if not.  That catches the override, but it cannot tell which session
+is Ansible's: if the account Ansible asked for is also logged in from somewhere else at the same
+time, an override would go unnoticed.  Keep `User` lines out of `~/.ssh/config` for the routers.  All variables are documented in `defaults/main.yml`.
+
 ## RouterOS 6
 
 RouterOS 6 only offers old SSH algorithms that current libssh (this role's connection) does not
