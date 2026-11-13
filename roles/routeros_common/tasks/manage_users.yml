@@ -112,7 +112,11 @@
       {{ master_keys | combine({item:
            (lookup('ansible.builtin.url', routeros_ssh_key_base_url ~ item ~ '.key',
                    split_lines=False, errors='ignore') | default('', true) | ssh_pubkeys_info(max_keys=1))}) }}
-  loop: "{{ ssh_key_managed_users }}"
+  # Done once for the whole play, so it covers the users of every host in it, not only those of
+  # the host this happens to run on: user lists may differ between hosts (host_vars).
+  loop: >-
+    {{ ansible_play_hosts_all | map('extract', hostvars) | selectattr('ssh_key_managed_users', 'defined')
+       | map(attribute='ssh_key_managed_users') | flatten | unique }}
   run_once: true
 
 # An admin (users_admin, created with group=full) with no usable master key is a configuration
@@ -204,12 +208,6 @@
   when: missing_users | length > 0
 
 # New users get a random password that is never shown; they log in with their SSH key.
-- name: Display generated password
-  debug:
-    var: random_password
-  when: missing_users | length > 0
-  no_log: true
-
 - name: Add missing users with appropriate role
   no_log: true
   community.routeros.command:
@@ -279,7 +277,8 @@
   when: routeros_refused_keys | length > 0
 
 # The router could not download the master key (key server unreachable from the router, a 404,
-# a wrong routeros_ssh_key_fetch_base_url ...).  Not the user's key: nothing for them to fix.
+# a wrong routeros_ssh_key_fetch_base_url ...), or what it downloaded was not the key Ansible
+# checked.  Not the user's key: nothing for them to fix.
 - name: Report ssh keys the router could not download
   ansible.builtin.debug:
     msg: >-
@@ -287,7 +286,8 @@
       {{ routeros_key_download_failed | map(attribute='user') | sort | join(', ') }} from
       {{ routeros_ssh_key_fetch_base_url }}; those accounts were left as they were.
       {{ routeros_key_download_failed | map(attribute='reason') | unique | join(' / ') }}.
-      Check the router can reach the key server (routeros_ssh_key_fetch_base_url).
+      Check the router can reach the key server (routeros_ssh_key_fetch_base_url) and that it
+      serves the same keys Ansible reads (routeros_ssh_key_base_url).
   when: routeros_key_download_failed | length > 0
 
 - name: Remove to_be_deteted users
