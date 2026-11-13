@@ -9,6 +9,13 @@
     - name: "Include group vars for os_routeros"
       ansible.builtin.include_vars: ../../../../group_vars/os_routeros.yml
 
+    # Log in as plain 'vagrant', with no '+' login options: the role must add them itself
+    # (routeros_login_options).  Set here as a fact, not in include_role 'vars:' below, because
+    # those outrank set_fact and would stop the role from changing it - unlike -u or inventory.
+    - name: "Log in without RouterOS login options"
+      ansible.builtin.set_fact:
+        ansible_user: vagrant
+
     - name: "Include hamwan.routeros_common"
       ansible.builtin.include_role:
         name: hamwan.routeros_common
@@ -16,5 +23,4 @@
         test_flaky_network: true
         # TODO(dpk) - The following should be coming from the inventory, but aren't. Why?
         ansible_port: 22
-        ansible_user: vagrant+ct132w
         ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.vagrant.d/insecure_private_key"

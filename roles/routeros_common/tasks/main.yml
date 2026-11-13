@@ -1,6 +1,10 @@
 ---
 # tasks for common settings
 
+- name: Check the RouterOS session is usable (login options / wide terminal)
+  ansible.builtin.include_tasks:
+    file: check_terminal.yml
+
 - name: call common task template
   block:
     - name: collect facts
