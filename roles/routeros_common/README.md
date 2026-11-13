@@ -14,6 +14,15 @@ the login options; see below).
 
 The user is expected to have SSH access to the devices.
 
+## One login per router per run
+
+The role talks to each router over one persistent SSH connection.  Ansible closes such a
+connection after 30 seconds without a command, and with many routers each one waits longer than
+that between tasks, so by default every task logged in again.  The role sets the idle timeout to
+300 seconds (`ansible_connect_timeout` in `defaults/main.yml`; despite the name it is not the
+time allowed for connecting, and unreachable routers fail just as quickly).  If a run over a
+very large fleet shows repeated logins in a router's log, raise it.
+
 ## Logging in: the `+cet512w` suffix (read this first)
 
 RouterOS takes terminal options from the login name: everything after a `+`.  This role needs

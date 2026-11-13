@@ -52,3 +52,12 @@ routeros_login_options: cet512w
 # to wrap long input even with the right login options; set commands longer than about
 # 50 characters may then be reported as failed and re-applied every run.
 routeros_require_wide_terminal: true
+
+# How long (seconds) the connection to a router is kept open while it waits for the next
+# command.  Despite its name this Ansible setting is the IDLE timeout of the persistent
+# connection, not the time allowed for connecting (unreachable routers fail just as fast).
+# Ansible's default is 30.  With many routers each one waits longer than that between
+# commands, so the connection was closed and the router logged in to again for nearly every
+# task - slow, and noisy in the router's log.  300 keeps one login per router per run.  The
+# connection is closed when the play ends.  A default, so inventory or -e can change it.
+ansible_connect_timeout: 300
