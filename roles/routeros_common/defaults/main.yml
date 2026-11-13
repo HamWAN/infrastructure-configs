@@ -4,8 +4,9 @@
 
 # Where the master copy of each user's SSH public key lives: <base url><username>.key.
 # There is no built-in default: set authorized_key_location for your organisation in group_vars
-# (it is shared with the Linux 'users' role; HamWAN sets it in inventories/psdr/group_vars/
-# owner_HamWAN.yml), or set routeros_ssh_key_base_url directly.  Ansible reads the keys from here.
+# (it is shared with the Linux 'users' role; the example inventory sets it in
+# inventories/psdr/group_vars/owner_HamWAN.yml), or set routeros_ssh_key_base_url directly.
+# Ansible reads the keys from here.
 routeros_ssh_key_base_url: "{{ authorized_key_location }}"
 
 # The URL prefix the ROUTERS download the keys from (/tool fetch).  The same as above unless the
@@ -36,7 +37,9 @@ routeros_ssh_key_unverifiable_action: skip
 # same safe way as a replacement: the master key is imported again, checked, and only then are
 # all the older key entries removed.  Users whose keys cannot be verified (no fingerprint shown)
 # and the account Ansible is connected as are never cleaned up.
-# Default false: extra keys are reported but left alone.
+# Default false: extra keys are reported but left alone - as long as the master key is among
+# the user's keys.  When the master key CHANGES, all the user's older keys are removed in either
+# mode: the device cannot tell which of them was the old master key.
 routeros_ssh_keys_exclusive: false
 
 # RouterOS login options added to the user name when it has none ('myname' -> 'myname+cet512w').
