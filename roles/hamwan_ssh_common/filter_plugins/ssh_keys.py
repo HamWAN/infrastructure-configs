@@ -3,8 +3,9 @@
 ssh_pubkeys_info(text, max_keys=None)
     Takes the text of a master <user>.key file (OpenSSH public key format) and returns
       count         number of key lines (blank lines and '#' comments are ignored)
-      valid         True when there is at least one key, every key line decodes, and there are
-                    no more than max_keys keys (no limit when max_keys is None)
+      valid         True when there is at least one key, every key line decodes, the key type
+                    named inside each key's data matches the type written on its line, and
+                    there are no more than max_keys keys (no limit when max_keys is None)
       key_lines     the key lines, as they would be written to authorized_keys
       fingerprints  SHA256 fingerprint of each key, as ssh-keygen -l prints it
       md5s          MD5 fingerprint of each key (lower-case hex pairs)
@@ -61,6 +62,20 @@ def _split_key(line):
     return fields[idx], fields[idx + 1]
 
 
+def _blob_key_type(blob):
+    """The key type named inside the decoded key data (it starts with a length-prefixed type
+    string, RFC 4253 section 6.6); None if the data is too short or not text."""
+    if len(blob) < 4:
+        return None
+    size = int.from_bytes(blob[:4], "big")
+    if size == 0 or len(blob) < 4 + size:
+        return None
+    try:
+        return blob[4:4 + size].decode("ascii")
+    except UnicodeDecodeError:
+        return None
+
+
 def ssh_pubkeys_info(text, max_keys=None):
     lines = _key_lines(text)
     info = {"count": len(lines), "valid": False, "key_lines": [], "fingerprints": [], "md5s": []}
@@ -76,6 +91,11 @@ def ssh_pubkeys_info(text, max_keys=None):
             blob = base64.b64decode(parts[1], validate=True)
         except (binascii.Error, ValueError):
             info["error"] = "line %d: key data is not valid base64" % n
+            return info
+        inner = _blob_key_type(blob)
+        if inner != parts[0]:
+            info["error"] = ("line %d: key data is not a well-formed key" % n if inner is None else
+                             "line %d: the line says %s but the key data is a %s key" % (n, parts[0], inner))
             return info
         info["key_lines"].append(line)
         info["fingerprints"].append(
