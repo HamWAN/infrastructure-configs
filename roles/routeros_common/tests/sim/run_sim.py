@@ -351,7 +351,8 @@ p, st15e = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_PROBE_NOISE": "War
 check("play succeeds", p.returncode == 0, p.stdout[-1500:])
 check("the output is shown as a note", "not a wrapped echo" in p.stdout and "license expires soon" in p.stdout,
       p.stdout[-1500:])
-check("not reported as narrow", "not in wide mode" not in p.stdout)
+# (task names mention wide mode even when skipped, so look for the failure message's own words)
+check("not reported as narrow", "this role would misread the output" not in p.stdout)
 
 print("== 16. RouterOS refuses some keys (insecure RSA exponent): run carries on ==")
 p, st16 = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_REFUSE_KEYS": "alice,bob"})
