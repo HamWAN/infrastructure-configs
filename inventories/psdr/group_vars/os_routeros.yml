@@ -4,13 +4,10 @@
 ansible_ssh_args: "-o PubkeyAcceptedKeyTypes=+ssh-rsa"
 ansible_port: 222
 
-# TEMPORARY, while the fleet moves to RouterOS 7.25: upgrading replaces a router's host key
-# (Ed25519 became the default).  With host key checking on, libssh then refuses the router
-# ("Host key for server has changed") until ~/.ssh/known_hosts is edited - unless your
-# ansible.cfg has [libssh_connection] host_key_auto_add = True (the repo's .ansible.cfg does; an
-# older copy in ~/.ansible.cfg may not), which accepts and records the new key.  This line
-# covers everyone either way.  Remove it once every router is on 7.25 or later, to go back to
-# checking host keys; this is tracked in the GitHub issue "Re-enable RouterOS host key checking
-# after the 7.25 rollout".  The role README ("Host keys") has the steps, including how to
-# refresh a single router's stored key with ssh-keygen -R / ssh-keyscan instead.
+# TEMPORARY - remove when every router here is on RouterOS 7.25 or later.  Tracked in
+# https://github.com/HamWAN/infrastructure-configs/issues/39
+# Upgrading to 7.25 replaces a router's host key, and libssh then refuses the router unless the
+# ansible.cfg in use has host_key_auto_add.  Turning checking off for this group covers everyone
+# who runs the playbooks.  The trade-off, the alternative (refreshing known_hosts per router) and
+# the steps for removing this are in roles/routeros_common/README.md, "Host keys".
 ansible_host_key_checking: false
