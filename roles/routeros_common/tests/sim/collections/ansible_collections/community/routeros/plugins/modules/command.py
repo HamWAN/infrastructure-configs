@@ -49,7 +49,8 @@ def run(cmd, st):
     if c == "/user print without-paging":
         rows = ["Flags: X - disabled", " #   NAME      GROUP   ADDRESS   LAST-LOGGED-IN"]
         for i, u in enumerate(st["users"]):
-            rows.append(" %d   %-9s %-7s" % (i, u["name"], u["group"]))
+            # a disabled account has an X in the flag column, in front of its name
+            rows.append(" %d %s %-9s %-7s" % (i, "X" if u.get("disabled") else " ", u["name"], u["group"]))
         return "\n".join(rows)
 
     m = re.match(r'/user add name=(\S+) group=(\S+) password="(.*)"$', c)

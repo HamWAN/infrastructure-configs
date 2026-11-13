@@ -7,6 +7,8 @@
 # Every users_admin entry must have a usable master key (<base url><user>.key); if one does not,
 # the play stops for the host before anything is changed.
 # For now, we leave extra users as is.
+# The built-in 'admin' account (routeros_builtin_users) is never created and never reported as
+# extra; it is only removed if it is listed in users_delete.
 #
 # The account Ansible is logged in as is protected:
 #   - it is NEVER deleted (no override - delete it by running as a different admin);
@@ -20,7 +22,11 @@
 
 - name: setup expected users
   set_fact:
-    expected_users: "{{ users_admin + users_user + ['admin'] }}"
+    # The accounts this role creates when they are missing.
+    expected_users: "{{ users_admin + users_user }}"
+    # Accounts that are neither created nor reported as extra: RouterOS's built-in 'admin'.
+    # Many sites disable or delete it; the role must not bring it back.
+    builtin_users: "{{ routeros_builtin_users }}"
     delete_users: "{{ users_delete }}"
 
 # Ask Ansible which login name it is really using (inventory ansible_user, -u on the command
@@ -155,13 +161,9 @@
 
 - name: Extract usernames
   set_fact:
-    mikrotik_users: >-
-      {{ user_output.stdout_lines[0] |
-         reject('search', ';;;') |
-         reject('search', ' # ') |
-         select('search', '^\s*\d*\s+E*\s*\S+') |
-         map('regex_replace', '^\s*\d*\s+E*\s*(\S+).*', '\1') |
-         list }}
+    # routeros_user_names reads the NAME column, so a flag in front of a name (X disabled,
+    # E expired) is not mistaken for the name.
+    mikrotik_users: "{{ user_output.stdout_lines[0] | routeros_user_names }}"
 
 - name: Display extracted usernames
   debug:
@@ -179,7 +181,7 @@
 - name: Find extra users
   set_fact:
     extra_users: >-
-      {{ mikrotik_users | difference(expected_users) }}
+      {{ mikrotik_users | difference(expected_users) | difference(builtin_users) }}
 
 - name: Display extra users
   debug:

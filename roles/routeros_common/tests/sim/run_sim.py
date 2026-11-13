@@ -411,6 +411,24 @@ p, st20b = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_FETCH_TAMPER": "al
 check("also caught on a device that shows no fingerprints (RouterOS 6)", keyfor(st20b, "alice") == [OLD["alice"]],
       str(keyfor(st20b, "alice")))
 
+print("== 21. the built-in admin account is deleted on the device: not brought back ==")
+st = copy.deepcopy(initial_state())
+st["users"] = [u for u in st["users"] if u["name"] != "admin"]
+p, st21 = run(st)
+check("play succeeds", p.returncode == 0, p.stdout[-2500:])
+check("admin not created", "admin" not in names(st21), str(names(st21)))
+check("listed users still created (bob)", "bob" in names(st21))
+
+print("== 22. the built-in admin account is disabled (flag in front of its name) ==")
+st = copy.deepcopy(initial_state())
+st["users"] = [dict(u, disabled=True) if u["name"] == "admin" else u for u in st["users"]]
+p, st22 = run(st)
+check("play succeeds", p.returncode == 0, p.stdout[-2500:])
+check("admin still there, once, still disabled",
+      [u for u in st22["users"] if u["name"] == "admin"] == [{"name": "admin", "group": "full", "disabled": True}],
+      str(st22["users"]))
+check("the flag is not taken for a user name", '"X"' not in p.stdout)
+
 print()
 bad = [n for n, ok in results if not ok]
 print("%d checks, %d failed" % (len(results), len(bad)))
