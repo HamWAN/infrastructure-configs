@@ -6,7 +6,9 @@
 collections:
   - name: ansible.netcommon      # network_cli connection, libssh options (RouterOS)
     version: ">=8.2.0"
+  # 2.2.2, not 2.1.0: 2.1.0's authorized_key imports from ansible.module_utils._text, which
+  # ansible-core 2.20 warns about on every run and 2.24 removes.
   - name: ansible.posix          # authorized_key (users role)
-    version: ">=2.1.0"
+    version: ">=2.2.2"
   - name: community.routeros     # RouterOS command module and cliconf
     version: ">=3.15.0"
