@@ -35,12 +35,7 @@
       delegate_to: localhost
       when: inventory_hostname is match('ros6')
 
-    # RouterOS 6 only accepts SHA-1 'ssh-rsa' public-key signatures; let libssh send them.
-    # (Its hmac-sha1-only MACs are allowed by the SSH config block checked above.)
-    - name: "Allow ssh-rsa signatures for RouterOS 6"
-      ansible.builtin.set_fact:
-        ansible_libssh_publickey_algorithms: "ssh-rsa,rsa-sha2-256,rsa-sha2-512"
-      when: inventory_hostname is match('ros6')
+    # (The ssh-rsa signature setting RouterOS 6 also needs is in molecule.yml, group 'ros6'.)
 
     # Log in as plain 'vagrant', with no '+' login options: the role must add them itself
     # (routeros_login_options).  Set here as a fact, not in include_role 'vars:' below, because
