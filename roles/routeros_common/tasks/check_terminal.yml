@@ -41,19 +41,21 @@
 - name: Check that the RouterOS terminal is in wide mode
   community.routeros.command:
     commands:
-      - ':local routerosCommonWideModeCheck "{{ ("0123456789" * 5)[:48] }}"'
+      - ':local routerosCommonWideModeCheck "{{ ("0123456789" * 5)[:41] }}WrapEnd"'
   register: routeros_wide_probe
   changed_when: false
   check_mode: false
 
-# Wrapped means the probe's own text came back (the echo fragments contain its name and digits).
+# Wrapped means the probe's own text came back.  The probe ends with the marker 'WrapEnd': a
+# wrapped echo always shows the end of the line, so the marker is there however short the prompt
+# is (the probe's name and digits are also looked for).
 # Anything else the router prints here - a warning or notice - is not wrapping: it is shown, and
 # the role carries on.
 - name: Work out whether the probe was echoed back wrapped
   ansible.builtin.set_fact:
     routeros_probe_output: "{{ routeros_wide_probe.stdout[0] | default('') | trim }}"
     routeros_probe_wrapped: >-
-      {{ (routeros_wide_probe.stdout[0] | default('')) is search('WideModeCheck|0123456789') }}
+      {{ (routeros_wide_probe.stdout[0] | default('')) is search('WrapEnd|WideModeCheck|0123456789') }}
 
 - name: Show unexpected output from the terminal check
   ansible.builtin.debug:
