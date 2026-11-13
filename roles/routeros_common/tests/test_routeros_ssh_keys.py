@@ -3,7 +3,8 @@
 Run from anywhere:   python3 -I roles/routeros_common/tests/test_routeros_ssh_keys.py
 
 NOTE: V7_OUTPUT, V6_OUTPUT and MD5_OUTPUT below are synthetic.  REAL_OUTPUT and REAL_725_OUTPUT are
-real RouterOS 7 captures.  A real RouterOS 6 capture is still wanted.
+real RouterOS 7 captures; REAL_V6_OUTPUT (6.49.19) and REAL_722_OUTPUT (7.22) were captured from
+the molecule test routers with '/user ssh-keys print detail without-paging'.
 """
 import importlib.util
 import os
@@ -66,7 +67,46 @@ REAL_725_OUTPUT = (
 )
 CLAUDETEST_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEQzwgfW5i0UZEhYMSEhlbdA6+4BWw0OWt1BGAtOJMxz claudetest@cowork"
 
+# RouterOS 6.49.19: a flags line, a flag column (R = RSA), no fingerprints, CR LF line ends.
+REAL_V6_OUTPUT = (
+    'Flags: R - RSA, D - DSA \r\n'
+    ' 0 R user=vagrant bits=2048 key-owner="" \r\n'
+    '\r\n'
+    ' 1 R user=admin1 bits=2048 key-owner="admin1@molecule-test" \r\n'
+    '\r\n'
+    ' 2 R user=admin2 bits=2048 key-owner="admin2@molecule-test" \r\n'
+    '\r\n'
+    ' 3 R user=user1 bits=2048 key-owner="user1@molecule-test" \r\n'
+    '\r\n'
+)
+
+# RouterOS 7.22: one line per key, fingerprint with base64 padding ('=' at the end).
+REAL_722_OUTPUT = (
+    ' 0 user=vagrant key-type=rsa bits=2048 info="" fingerprint="SHA256:1M4RzhMyWuFS/86uPY/ce2prh/dVTHW7iD2RhpquOZA=" \r\n'
+    '\r\n'
+    ' 1 user=admin1 key-type=rsa bits=2048 info="admin1@molecule-test" fingerprint="SHA256:qZ0Ggl67RtKT8GNfN1fZMkraksPyqHkh6vKcLfc9qTo=" \r\n'
+    '\r\n'
+)
+ADMIN1_SHA256 = "SHA256:qZ0Ggl67RtKT8GNfN1fZMkraksPyqHkh6vKcLfc9qTo"
+
+
 class DeviceParse(unittest.TestCase):
+    def test_real_v6_capture(self):
+        keys = mod.routeros_ssh_keys_parse(REAL_V6_OUTPUT)
+        self.assertEqual(sorted(keys), ["admin1", "admin2", "user1", "vagrant"])
+        for user in keys:
+            self.assertEqual(len(keys[user]), 1)
+            self.assertEqual(keys[user][0]["fingerprints"], [])
+
+    def test_real_v7_22_capture_matches_the_test_master_key(self):
+        keys = mod.routeros_ssh_keys_parse(REAL_722_OUTPUT)
+        self.assertEqual(sorted(keys), ["admin1", "vagrant"])
+        self.assertEqual(keys["admin1"][0]["fingerprints"], [ADMIN1_SHA256])
+        here = os.path.join(HERE, "..", "molecule", "default", "test_keys", "admin1.key")
+        with open(here) as fh:
+            master = shared.ssh_pubkeys_info(fh.read(), max_keys=1)
+        self.assertEqual(master["sha256"], ADMIN1_SHA256)
+
     def test_v7_wrapped_items_and_multiple_keys(self):
         keys = mod.routeros_ssh_keys_parse(V7_OUTPUT)
         self.assertEqual(sorted(keys), ["alice", "tom"])
