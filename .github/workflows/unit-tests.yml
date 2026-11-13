@@ -1,0 +1,33 @@
+---
+# Runs the roles' Python unit tests (roles/*/tests/test_*.py).  They need only Python: no
+# Ansible, no routers.  The molecule tests need VMs and are run by hand (see the READMEs).
+name: Unit tests
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run roles/*/tests/test_*.py
+        run: |
+          shopt -s nullglob
+          tests=(roles/*/tests/test_*.py)
+          if [ ${#tests[@]} -eq 0 ]; then echo "no unit tests found"; exit 1; fi
+          rc=0
+          for t in "${tests[@]}"; do
+            echo "::group::$t"
+            python3 -I "$t" -v || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc

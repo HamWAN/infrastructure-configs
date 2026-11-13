@@ -59,6 +59,9 @@ def run(cmd, st):
     if c.startswith(":local routerosCommonWideModeCheck "):
         if os.environ.get("FAKE_ROS_NARROW") == "1":
             return c[:54] + "\n<" + c[20:60] + "\n<" + c[20:]
+        # a router that prints something unrelated in reply (a warning, a notice)
+        if os.environ.get("FAKE_ROS_PROBE_NOISE"):
+            return os.environ["FAKE_ROS_PROBE_NOISE"]
         return ""
 
     if c == "/console clear-history":

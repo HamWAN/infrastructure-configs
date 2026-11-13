@@ -15,6 +15,7 @@
 # this one command).  It is 85 characters: longer than RouterOS's default 80-column line, so it
 # wraps whenever the login options are missing, but short enough to fit the 132 columns of
 # '+ct132w' (used by the molecule tests) as well as '+cet512w'.  In wide mode its output is empty.
+# Only the probe's own echo counts as wrapping; other output is reported and ignored.
 
 # Add the login options to the user name if the user did not.  The name Ansible will use is
 # read on the controller (nothing is sent to the router), and if it has no '+' part,
@@ -45,11 +46,29 @@
   changed_when: false
   check_mode: false
 
+# Wrapped means the probe's own text came back (the echo fragments contain its name and digits).
+# Anything else the router prints here - a warning or notice - is not wrapping: it is shown, and
+# the role carries on.
+- name: Work out whether the probe was echoed back wrapped
+  ansible.builtin.set_fact:
+    routeros_probe_output: "{{ routeros_wide_probe.stdout[0] | default('') | trim }}"
+    routeros_probe_wrapped: >-
+      {{ (routeros_wide_probe.stdout[0] | default('')) is search('WideModeCheck|0123456789') }}
+
+- name: Show unexpected output from the terminal check
+  ansible.builtin.debug:
+    msg: >-
+      NOTE: the router printed something in reply to the terminal check that is not a wrapped
+      echo, so the session is taken to be in wide mode: {{ routeros_probe_output }}
+  when:
+    - routeros_probe_output | length > 0
+    - not routeros_probe_wrapped | bool
+
 - name: Find the login name Ansible asked for
   hamwan_connection_user:
   register: routeros_login_for_probe
   check_mode: false
-  when: routeros_wide_probe.stdout[0] | trim | length > 0
+  when: routeros_probe_wrapped | bool
 
 # RouterOS 7.25 (including its betas and release candidates) ignores the login options: its
 # 7.25.1 changelog says "console - fix custom SSH client login parameters being ignored
@@ -60,7 +79,7 @@
   register: routeros_version_for_probe
   changed_when: false
   check_mode: false
-  when: routeros_wide_probe.stdout[0] | trim | length > 0
+  when: routeros_probe_wrapped | bool
 
 - name: Explain a RouterOS 7.25 login-options failure
   ansible.builtin.set_fact:
@@ -69,7 +88,7 @@
       ignores the login options (a RouterOS bug, fixed in 7.25.1): upgrade it to 7.25.1 or later.  '
       if (routeros_version_for_probe.stdout[0] | default('') | trim)
          is match('7\.25((beta|rc)\d+)?(\s|$)') else '' }}
-  when: routeros_wide_probe.stdout[0] | trim | length > 0
+  when: routeros_probe_wrapped | bool
 
 - name: Warn that the terminal check is off and the terminal is not in wide mode
   ansible.builtin.debug:
@@ -78,13 +97,13 @@
       false, so carrying on.  Long set commands may be misread and re-applied on every run.
       {{ routeros_wide_mode_hint | default('') }}
   when:
-    - routeros_wide_probe.stdout[0] | trim | length > 0
+    - routeros_probe_wrapped | bool
     - not routeros_require_wide_terminal | bool
 
 - name: Stop if the terminal is not in wide mode
   ansible.builtin.assert:
     that:
-      - routeros_wide_probe.stdout[0] | trim | length == 0
+      - not routeros_probe_wrapped | bool
     fail_msg: >-
       {{ routeros_wide_mode_hint | default('') }}The RouterOS session is not in wide mode: a long command was echoed back wrapped, so this
       role would misread the output.  Ansible asked to log in as

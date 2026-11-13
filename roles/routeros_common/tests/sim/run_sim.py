@@ -346,6 +346,13 @@ check("on RouterOS 7.25 the error names the 7.25 bug", "fixed in 7.25.1" in p.st
 check("on 7.24.2 it does not", "fixed in 7.25.1" not in run(copy.deepcopy(initial_state()),
       env={"FAKE_ROS_NARROW": "1"})[0].stdout)
 
+print("== 15b. router prints something else in reply to the terminal check: not wrapping ==")
+p, st15e = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_PROBE_NOISE": "Warning: license expires soon"})
+check("play succeeds", p.returncode == 0, p.stdout[-1500:])
+check("the output is shown as a note", "not a wrapped echo" in p.stdout and "license expires soon" in p.stdout,
+      p.stdout[-1500:])
+check("not reported as narrow", "not in wide mode" not in p.stdout)
+
 print("== 16. RouterOS refuses some keys (insecure RSA exponent): run carries on ==")
 p, st16 = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_REFUSE_KEYS": "alice,bob"})
 check("play succeeds", p.returncode == 0, p.stdout[-2500:])
