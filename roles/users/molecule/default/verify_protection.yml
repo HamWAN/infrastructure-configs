@@ -1,0 +1,70 @@
+---
+# Negative tests for the users role.  Imported at the end of verify.yml because they re-run the
+# role with altered user lists (the hosts are destroyed afterwards anyway).
+- name: An admin without a master key stops the play before anything changes
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Run the role with an admin who has no key file
+      block:
+        - name: "Include hamwan.users with admin 'nokeyadmin'"
+          ansible.builtin.include_role:
+            name: "hamwan.users"
+          vars:
+            users_admin: [eo, nigel, tom, nokeyadmin]
+        - name: The role should not get here
+          ansible.builtin.fail:
+            msg: "The role did not stop for an admin without a key"
+      rescue:
+        - name: Verify it stopped for the right reason
+          ansible.builtin.assert:
+            that:
+              - "'No usable SSH public key for admin user(s): nokeyadmin' in ansible_failed_result.msg"
+            fail_msg: "Unexpected failure: {{ ansible_failed_result.msg | default(ansible_failed_result) }}"
+
+    - name: Look for nokeyadmin
+      ansible.builtin.getent:
+        database: passwd
+        key: nokeyadmin
+        fail_key: false
+
+    - name: Verify nokeyadmin was not created
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.getent_passwd.nokeyadmin is none
+
+- name: The connecting account is never removed, even when it is no longer listed
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: "Include hamwan.users without eo in users_admin"
+      ansible.builtin.include_role:
+        name: "hamwan.users"
+      vars:
+        users_admin: [nigel, tom]
+
+    - name: Verify eo still exists
+      ansible.builtin.getent:
+        database: passwd
+        key: eo
+
+    # The role has now run three times with different user lists.  The connecting account's
+    # authorized_keys must still be as the Vagrantfile left it (the extra key is only set up on
+    # test.extra.users).
+    - name: Read the connecting account's authorized_keys
+      become: true
+      ansible.builtin.slurp:
+        src: /home/eo/.ssh/authorized_keys
+      register: eo_keys
+      when: inventory_hostname == 'test.extra.users'
+
+    - name: Verify the connecting account (eo) still has its extra key
+      ansible.builtin.assert:
+        that:
+          - "'eo-extra@molecule-test' in (eo_keys.content | b64decode)"
+        fail_msg: "eo authorized_keys: {{ (eo_keys.content | b64decode).splitlines() }}"
+      when: inventory_hostname == 'test.extra.users'

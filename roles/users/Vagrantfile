@@ -44,6 +44,14 @@ Vagrant.configure("2") do |config|
         useradd haxxxor -G hamadmin
         useradd monitoring -G ham
         useradd soyboy -G ham
+        # The connecting account (eo) holds an extra key: the role must leave it alone.
+        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFx+2/FQbjE8jEIixlD55hjcQmHvqeKLYS4QgKON0TS4 eo-extra@molecule-test" >> ~eo/.ssh/authorized_keys
+        # An admin whose authorized_keys holds a stray key: it must be replaced by tom.key.
+        useradd tom -G hamadmin
+        mkdir -m 0700 ~tom/.ssh
+        echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIMuXaroPleoG1oxkEJ7XAgXVx0uiSPFRRxvd2BGpmex tom-stray@molecule-test" > ~tom/.ssh/authorized_keys
+        chmod 0600 ~tom/.ssh/authorized_keys
+        chown -R tom:tom ~tom/.ssh
       ',
     },
     {
