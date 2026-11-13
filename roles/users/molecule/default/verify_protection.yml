@@ -51,3 +51,20 @@
       ansible.builtin.getent:
         database: passwd
         key: eo
+
+    # The role has now run three times with different user lists.  The connecting account's
+    # authorized_keys must still be as the Vagrantfile left it (the extra key is only set up on
+    # test.extra.users).
+    - name: Read the connecting account's authorized_keys
+      become: true
+      ansible.builtin.slurp:
+        src: /home/eo/.ssh/authorized_keys
+      register: eo_keys
+      when: inventory_hostname == 'test.extra.users'
+
+    - name: Verify the connecting account (eo) still has its extra key
+      ansible.builtin.assert:
+        that:
+          - "'eo-extra@molecule-test' in (eo_keys.content | b64decode)"
+        fail_msg: "eo authorized_keys: {{ (eo_keys.content | b64decode).splitlines() }}"
+      when: inventory_hostname == 'test.extra.users'
