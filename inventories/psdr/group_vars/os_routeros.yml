@@ -10,5 +10,7 @@ ansible_port: 222
 # ansible.cfg has [libssh_connection] host_key_auto_add = True (the repo's .ansible.cfg does; an
 # older copy in ~/.ansible.cfg may not), which accepts and records the new key.  This line
 # covers everyone either way.  Remove it once every router is on 7.25 or later, to go back to
-# checking host keys.
+# checking host keys; this is tracked in the GitHub issue "Re-enable RouterOS host key checking
+# after the 7.25 rollout".  The role README ("Host keys") has the steps, including how to
+# refresh a single router's stored key with ssh-keygen -R / ssh-keyscan instead.
 ansible_host_key_checking: false
