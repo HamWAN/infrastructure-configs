@@ -389,6 +389,28 @@ check("not reported as refused / no new-key advice",
       "refused the master key" not in p.stdout and "ed25519" not in p.stdout)
 check("no stray key file left", st18["files"] == {}, str(st18["files"]))
 
+print("== 19. the device ends up with a different key than the master: rolled back ==")
+p, st19 = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_WRONG_IMPORT": "alice"})
+check("play fails", p.returncode != 0)
+check("says the imported key is not the master key and was removed",
+      "is not the master key" in p.stdout and "has been removed again" in p.stdout, p.stdout[-1500:])
+check("the wrong key is not left on the account, old key kept", keyfor(st19, "alice") == [OLD["alice"]],
+      str(keyfor(st19, "alice")))
+
+print("== 20. the router downloads something other than the key Ansible checked: not imported ==")
+p, st20 = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_FETCH_TAMPER": "alice,bob"})
+check("play succeeds", p.returncode == 0, p.stdout[-2500:])
+check("alice left alone (old key kept)", keyfor(st20, "alice") == [OLD["alice"]])
+check("bob created, no key", "bob" in names(st20) and keyfor(st20, "bob") == [])
+check("reported, with the reason", "not the master key Ansible checked" in p.stdout
+      and "could not download the master key for alice, bob" in p.stdout,
+      "\n".join(l for l in p.stdout.splitlines() if "WARNING" in l))
+check("no stray key file left", st20["files"] == {}, str(st20["files"]))
+p, st20b = run(copy.deepcopy(initial_state()), env={"FAKE_ROS_FETCH_TAMPER": "alice", "FAKE_ROS_NO_FINGERPRINT": "1"},
+               extra={"routeros_ssh_key_unverifiable_action": "replace"})
+check("also caught on a device that shows no fingerprints (RouterOS 6)", keyfor(st20b, "alice") == [OLD["alice"]],
+      str(keyfor(st20b, "alice")))
+
 print()
 bad = [n for n, ok in results if not ok]
 print("%d checks, %d failed" % (len(results), len(bad)))
