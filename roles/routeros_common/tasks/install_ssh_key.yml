@@ -4,11 +4,13 @@
 #
 # Ordering is chosen so a failure never leaves the user without a key:
 #   1. remember the ids of the keys the user has now
-#   2. fetch the master key (a failed download is reported, and nothing else is done), then
-#      import it (the user now has old + new)
-#   3. confirm the key count went up and, where the device shows fingerprints, that the
-#      master key's fingerprint is present
-#   4. only then remove the old keys, by id
+#   2. the router fetches the master key (a failed download is reported, nothing else is done)
+#   3. read the downloaded file back and check it is exactly the master key Ansible validated;
+#      if not, nothing is imported
+#   4. import it (the user now has old + new) and confirm an entry was added
+#   5. where the device shows fingerprints, check the new entry is the master key; if it is
+#      not, remove it again and stop
+#   6. only then remove the old keys, by id
 # The key file RouterOS downloads is removed afterwards.
 
 - name: "Note ids of existing SSH keys - {{ key_user }}"
@@ -48,8 +50,37 @@
                     | default('no "status: finished" from /tool fetch')) | trim}] }}
   when: not ssh_fetch_ok | bool
 
-- name: "Import and verify the master key - {{ key_user }}"
+# The router downloads the key itself, separately from the copy Ansible fetched and checked, and
+# /tool fetch does not verify the key server's certificate.  So before importing anything, read
+# the downloaded file back and compare it with the master key Ansible checked.  This works on
+# every RouterOS version, including those that show no fingerprints after an import.  A file that
+# cannot be read back, or holds anything other than exactly that key, is not imported: the
+# account is left as it is and the user is reported with the failed downloads.
+- name: "Read back the downloaded key file - {{ key_user }}"
+  community.routeros.command:
+    commands: ':put [/file get [find name="{{ key_user }}.key"] contents]'
+  register: ssh_downloaded
+  changed_when: false
   when: ssh_fetch_ok | bool
+
+- name: "Compare the downloaded key with the master key - {{ key_user }}"
+  ansible.builtin.set_fact:
+    ssh_download_verified: >-
+      {{ ssh_fetch_ok | bool
+         and (master_keys[key_user] | default({})).valid | default(false)
+         and (ssh_downloaded.stdout[0] | default('') | ssh_key_ids) == (master_keys[key_user].line | ssh_key_ids) }}
+
+- name: "Record the download that does not match - {{ key_user }}"
+  ansible.builtin.set_fact:
+    routeros_key_download_failed: >-
+      {{ routeros_key_download_failed | default([]) + [{'user': key_user,
+         'reason': 'the file the router downloaded is not the master key Ansible checked (not imported)'}] }}
+  when:
+    - ssh_fetch_ok | bool
+    - not ssh_download_verified | bool
+
+- name: "Import and verify the master key - {{ key_user }}"
+  when: ssh_download_verified | bool
   block:
     - name: "Import public key - {{ key_user }}"
       community.routeros.command:
@@ -60,20 +91,24 @@
       register: ssh_import
       changed_when: "'failure:' not in (ssh_import.stdout[0] | default(''))"
 
-    - name: "Count SSH keys after import - {{ key_user }}"
+    - name: "List SSH keys after import - {{ key_user }}"
       community.routeros.command:
-        commands: ':put [:len [/user ssh-keys find user="{{ key_user }}"]]'
-      register: ssh_new_count
+        commands: ':put [/user ssh-keys find user="{{ key_user }}"]'
+      register: ssh_keys_after_import
       changed_when: false
 
+    # new_key_ids: the entries this import added (normally one).
     # A key RouterOS refuses ('failure: ...' and no new key) does not stop the run: the account is
     # left as it is (old keys kept), the user is recorded in routeros_refused_keys and reported at
     # the end of manage_users.yml, and the remaining users carry on.
+    - name: "Note what the import added - {{ key_user }}"
+      ansible.builtin.set_fact:
+        new_key_ids: "{{ ssh_keys_after_import.stdout[0] | regex_findall('[*][0-9A-Fa-f]+') | difference(old_key_ids) }}"
+
     - name: "Note whether RouterOS refused the key - {{ key_user }}"
       ansible.builtin.set_fact:
         ssh_import_refused: >-
-          {{ (ssh_new_count.stdout[0] | trim | int <= old_key_ids | length)
-             and ('failure:' in (ssh_import.stdout[0] | default(''))) }}
+          {{ (new_key_ids | length == 0) and ('failure:' in (ssh_import.stdout[0] | default(''))) }}
 
     - name: "Record the refused key - {{ key_user }}"
       ansible.builtin.set_fact:
@@ -86,19 +121,21 @@
     - name: "Confirm a key was added - {{ key_user }}"
       ansible.builtin.assert:
         that:
-          - ssh_new_count.stdout[0] | trim | int > old_key_ids | length
+          - new_key_ids | length > 0
         fail_msg: >-
-          Import for {{ key_user }} did not add a key (had {{ old_key_ids | length }},
-          now {{ ssh_new_count.stdout[0] | trim }}).  The old key(s) were left in place.
+          Import for {{ key_user }} did not add a key (the user still has
+          {{ old_key_ids | length }}).  The old key(s) were left in place.
           RouterOS said: '{{ ssh_import.stdout[0] | default('') | trim }}'.
       when: not ssh_import_refused | bool
 
     - name: "Verify the new key and remove the old ones - {{ key_user }}"
       when: not ssh_import_refused | bool
       block:
-        - name: "Read back SSH keys - {{ key_user }}"
+        # Only the entries this import added are read back, so an old key that happens to match
+        # cannot stand in for the new one.
+        - name: "Read back the imported key - {{ key_user }}"
           community.routeros.command:
-            commands: '/user ssh-keys print detail without-paging where user="{{ key_user }}"'
+            commands: ':foreach i in={{ new_key_ids | join(",") }} do={/user ssh-keys print detail without-paging from=$i}'
           register: ssh_after
           changed_when: false
 
@@ -107,17 +144,30 @@
             ssh_after_fps: >-
               {{ (ssh_after.stdout[0] | routeros_ssh_keys_parse).get(key_user, [])
                  | map(attribute='fingerprints') | flatten | list }}
-            ssh_expected_fps: >-
-              {{ [master_keys[key_user].sha256, master_keys[key_user].md5]
-                 if (master_keys[key_user] | default({})).valid | default(false) else [] }}
+            ssh_expected_fps: "{{ [master_keys[key_user].sha256, master_keys[key_user].md5] }}"
+
+        # Where the device shows fingerprints (RouterOS 7), the imported key must be the master
+        # key.  Where it shows none (RouterOS 6) the comparison of the downloaded file above is
+        # the check.
+        - name: "Decide whether the imported key is the master key - {{ key_user }}"
+          ansible.builtin.set_fact:
+            ssh_import_is_master: >-
+              {{ ssh_after_fps | length == 0 or (ssh_after_fps | intersect(ssh_expected_fps) | length > 0) }}
+
+        # Roll back before failing: a key that is not the master key must not stay on the account.
+        - name: "Remove the imported key, it is not the master key - {{ key_user }}"
+          community.routeros.command:
+            commands: '/user ssh-keys remove {{ item }}'
+          loop: "{{ new_key_ids }}"
+          when: not ssh_import_is_master | bool
 
         - name: "Confirm the imported key is the master key - {{ key_user }}"
           ansible.builtin.assert:
             that:
-              - ssh_after_fps | length == 0 or ssh_expected_fps | length == 0 or (ssh_after_fps | intersect(ssh_expected_fps) | length > 0)
+              - ssh_import_is_master | bool
             fail_msg: >-
-              After import, {{ key_user }}'s keys on the device ({{ ssh_after_fps }}) do not include the
-              master key ({{ ssh_expected_fps }}).  The old key(s) were left in place.
+              The key imported for {{ key_user }} ({{ ssh_after_fps }}) is not the master key
+              ({{ ssh_expected_fps }}).  It has been removed again; the old key(s) were left in place.
 
         - name: "Remove old SSH keys - {{ key_user }}"
           community.routeros.command:

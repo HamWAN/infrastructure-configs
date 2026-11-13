@@ -37,6 +37,8 @@ def save(path, st):
 
 
 REFUSED = "failure: key uses insecure RSA public exponent!"
+# a valid key that is nobody's master key (GitHub's published ed25519 host key)
+OTHER_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
 
 
 def run(cmd, st):
@@ -93,6 +95,23 @@ def run(cmd, st):
             n += 1
         return "\n\n".join(rows)
 
+    # read back only the entries an import added (install_ssh_key.yml)
+    m = re.match(r":foreach i in=(\S+) do=\{/user ssh-keys print detail without-paging from=\$i\}$", c)
+    if m:
+        rows = []
+        for n, k in enumerate(keys):
+            if k["id"] in m.group(1).split(","):
+                row = " %d user=%s key-type=ed25519 bits=256" % (n, k["user"])
+                if not nofp:
+                    row += '\n   fingerprint="%s"' % fps(k["line"])
+                rows.append(row)
+        return "\n\n".join(rows)
+
+    # read a downloaded key file back, as the role does before importing it
+    m = re.match(r':put \[/file get \[find name="(\S+)"\] contents\]$', c)
+    if m:
+        return st["files"].get(m.group(1), "no such item")
+
     m = re.match(r':put \[/user ssh-keys find user="(\S+)"\]$', c)
     if m:
         return ";".join(k["id"] for k in keys if k["user"] == m.group(1))
@@ -117,6 +136,9 @@ def run(cmd, st):
             body = urllib.request.urlopen(url, timeout=5).read().decode()
         except Exception as e:  # noqa: BLE001
             return "status: failed\ndownloaded: 0KiB\nfailure: %s" % e
+        # the router's download is not the key Ansible read (a different server, or tampering)
+        if name[:-len(".key")] in os.environ.get("FAKE_ROS_FETCH_TAMPER", "").split(","):
+            body = OTHER_KEY + " tampered\n"
         st["files"][url.rsplit("/", 1)[1]] = body
         return "status: finished"
 
@@ -132,7 +154,11 @@ def run(cmd, st):
         if body is None:
             return "failure: no such file"
         st["next_id"] += 1
-        keys.append({"id": "*%X" % st["next_id"], "user": m.group(2), "line": body.strip().splitlines()[0]})
+        line = body.strip().splitlines()[0]
+        # a device that ends up with a different key than the file held
+        if m.group(2) in os.environ.get("FAKE_ROS_WRONG_IMPORT", "").split(","):
+            line = OTHER_KEY + " wrong"
+        keys.append({"id": "*%X" % st["next_id"], "user": m.group(2), "line": line})
         return ""
 
     m = re.match(r"/user ssh-keys remove (\*[0-9A-Fa-f]+)$", c)

@@ -137,16 +137,31 @@ fingerprint of the master key with the fingerprint(s) the device reports in
 |---|---|
 | user has no key | key fetched and imported |
 | key present, fingerprint matches master (SHA256 or MD5) | nothing |
-| key present, fingerprint differs | master key imported, then the old key(s) removed |
+| key(s) present, none matches the master (the master key changed) | master key imported, then **all** the user's older keys removed, in either mode (see below) |
 | key present, device shows no fingerprint (older RouterOS) | per `routeros_ssh_key_unverifiable_action` |
 | **admin** (`users_admin`): master key missing, unreadable, or more than one key in the file | **play stops for the host before anything is changed**; the error names each user and the reason |
 | read-only user (`users_user`): master key missing, unreadable, or more than one key | nothing; reported (a new user is still created, without a key) |
 | master key present, plus other keys | nothing (reported); with `routeros_ssh_keys_exclusive=true` the others are removed |
 | RouterOS refuses the master key on import (any user, admins included) | account left as it is (old keys kept); reported at the end; the run carries on |
 | the router cannot download the master key (`/tool fetch` fails: unreachable, 404 ...) | account left as it is; reported separately at the end (not as a refused key); the run carries on |
+| the file the router downloaded is not the master key Ansible checked | nothing imported; account left as it is; reported with the failed downloads |
+| after import, the device's fingerprint for the new entry is not the master key's | the new entry is removed again, old keys kept, **play stops for the host** |
 
-The new key is imported *before* the old one is removed, and the old one is only removed once the
-key count has gone up and (where the device shows fingerprints) the master fingerprint is present.
+**How a key is installed.**  Ansible reads and validates the master key; the router then
+downloads its own copy with `/tool fetch`, which does not verify the key server's certificate.
+So nothing is imported on trust:
+
+1. the router's downloaded file is read back and must hold exactly the key Ansible validated.
+   This works on every RouterOS version, including RouterOS 6, which shows no fingerprints;
+2. the key is imported *before* any old key is removed;
+3. where the device shows fingerprints, the entry just added must have the master key's
+   fingerprint; if it does not, it is removed again and the play stops for that router;
+4. only then are the old keys removed.
+
+**When a master key changes, all of that user's older keys are removed**, whether or not
+exclusive mode is on.  Without exclusive mode, extra keys are only left alone while the master
+key is still among them; once it is not, the device cannot tell which key was the old master,
+so they are all replaced by the new one.
 
 **RouterOS 7.25 and later refuse RSA keys with a small public exponent** (35 or 37, typical of
 keys made by old PuTTY versions): `failure: key uses insecure RSA public exponent!`.  Older
@@ -176,7 +191,7 @@ There is no built-in key site: each organisation sets its own.
 
 | Variable | Default | Used by |
 |---|---|---|
-| `authorized_key_location` | none - set it in group_vars (HamWAN: `inventories/psdr/group_vars/owner_HamWAN.yml`) | both this role and the Linux `users` role |
+| `authorized_key_location` | none - set it in your inventory's group_vars (the example inventory: `inventories/psdr/group_vars/owner_HamWAN.yml`) | both this role and the Linux `users` role |
 | `routeros_ssh_key_base_url` | `authorized_key_location` | Ansible, to read and check the keys |
 | `routeros_ssh_key_fetch_base_url` | `routeros_ssh_key_base_url` | the routers, to download the key (`/tool fetch`) |
 
@@ -184,6 +199,9 @@ Set `routeros_ssh_key_fetch_base_url` only if the routers reach the key server b
 address than the Ansible host does (NAT, a management network).  The molecule tests do exactly
 that: Ansible reads the keys at `http://127.0.0.1:<port>/` and the RouterOS VMs fetch them at
 `http://10.0.2.2:<port>/`.  If no key source is configured the play stops before changing anything.
+
+The master keys are looked up once per play, for the users of every router in it, so user lists
+that differ between routers (host_vars) are handled.
 
 ### Protecting the account Ansible connects as
 

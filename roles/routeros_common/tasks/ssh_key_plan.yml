@@ -1,6 +1,6 @@
 ---
 # Decide, per user, what (if anything) needs doing about SSH public keys.  This file talks to
-# no device, so it can be tested on its own (see tests/ssh_key_plan_test.yml).
+# no device: it only works on facts gathered by manage_users.yml.
 #
 # Inputs (facts):
 #   ssh_key_candidates  users to consider: users_admin + users_user, minus the protected user
