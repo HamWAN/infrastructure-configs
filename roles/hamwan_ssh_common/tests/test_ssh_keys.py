@@ -34,6 +34,17 @@ class PubkeysInfo(unittest.TestCase):
         self.assertEqual(i["count"], 1)
         self.assertEqual(i["sha256"], GH_SHA256)
 
+    def test_type_on_the_line_must_match_the_key_data(self):
+        i = mod.ssh_pubkeys_info("ssh-rsa " + GH_KEY.split()[1] + " mislabelled\n")
+        self.assertFalse(i["valid"])
+        self.assertIn("says ssh-rsa but the key data is a ssh-ed25519 key", i["error"])
+
+    def test_key_data_that_is_not_a_key(self):
+        # valid base64, but not an SSH key structure ("hello world, this is not a key")
+        i = mod.ssh_pubkeys_info("ssh-ed25519 aGVsbG8gd29ybGQsIHRoaXMgaXMgbm90IGEga2V5\n")
+        self.assertFalse(i["valid"])
+        self.assertIn("not a well-formed key", i["error"])
+
     def test_several_keys_allowed_by_default(self):
         i = mod.ssh_pubkeys_info(TWO_KEYS)
         self.assertTrue(i["valid"], i)
