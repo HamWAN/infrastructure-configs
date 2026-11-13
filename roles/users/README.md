@@ -1,16 +1,18 @@
 # users Role
 
-Manages HamWAN accounts on Linux hosts (`psdr.yml`, hosts in `os_linux` and `owner_HamWAN`):
+Manages an organisation's accounts on Linux hosts.  (In this repo: the "Linux User Management"
+play in `psdr.yml`.)
 
 - groups `group_admin` (sudo, via `/etc/sudoers.d/<group_admin>`) and `group_user`;
 - one account per name in `users_admin` (in `group_admin`) and `users_user` (in `group_user`);
 - each account's `~/.ssh/authorized_keys`, set from the master key file
-  `<authorized_key_location><user>.key` (https://monitoring.hamwan.net/keys/ in production);
+  `<authorized_key_location><user>.key` (a web server or a directory you choose);
 - removal of members of those groups who are no longer listed (home directory included), and of
   groups recorded in `group_managed_scope` that are no longer used.
 
-The user lists and key location live in `inventories/psdr/group_vars/owner_HamWAN.yml`, shared
-with the RouterOS role.
+The user lists and the key location are inventory variables, shared with the RouterOS role
+(`routeros_common`).  The example inventory sets them in
+`inventories/psdr/group_vars/owner_HamWAN.yml`.
 
 ## SSH keys
 
@@ -47,7 +49,7 @@ the host's answer, or the play stops.
 |---|---|---|
 | `users_admin`, `users_user` | group_vars | account names |
 | `group_admin`, `group_user`, `group_managed_scope` | group_vars | group names, scope file |
-| `authorized_key_scheme` | group_vars | lookup used for master keys: `ansible.builtin.url` (production) or `ansible.builtin.file` (molecule) |
+| `authorized_key_scheme` | group_vars | lookup used for master keys: `ansible.builtin.url` (a key server) or `ansible.builtin.file` (a directory; the molecule tests use this) |
 | `authorized_key_location` | group_vars | prefix of the master key files |
 | `users_allow_update_connecting_user` | defaults (`false`) | allow updating the connecting account's keys |
 | `users_connecting_user` | optional | expected connecting account; the play stops if the host disagrees |
@@ -60,6 +62,7 @@ the host's answer, or the play stops.
 - `molecule test` (from `roles/users`) - three Vagrant VMs (see `Vagrantfile`), logged in as `eo`.
   Besides creating/removing users and groups, it checks that:
   - `tom` (multi-key `test_keys/tom.key`) ends up with exactly those keys, and a stray key is removed;
-  - `eo`, the connecting account, keeps an extra key it already had;
+  - `eo`, the connecting account, keeps an extra key it already had, also after the role has
+    been run again with other user lists (`verify_protection.yml`);
   - an admin with no key file stops the play and is not created (`verify_protection.yml`);
   - `eo` is not removed when it is left out of `users_admin` (`verify_protection.yml`).
