@@ -90,8 +90,23 @@ The role checks router host keys as usual (`~/.ssh/known_hosts`).
 7.25 replaces its host key (7.25 made Ed25519 the default type).  With checking on, libssh then
 refuses the router ("Host key for server has changed") until someone edits `~/.ssh/known_hosts`,
 unless your ansible.cfg has `host_key_auto_add = True` (below).  The trade-off is no
-protection against a swapped key while it is set.  Remove that line once every router is on 7.25 or later.  To check keys meanwhile, pass
+protection against a swapped key while it is set.  To check keys meanwhile, pass
 `-e ansible_host_key_checking=true`.
+
+This is meant to be short-lived and is tracked in a GitHub issue ("Re-enable RouterOS host key
+checking after the 7.25 rollout").  To finish it: remove that line from the group_vars once every
+router is on 7.25 or later, then refresh the stored keys as below, because nothing was recorded
+while checking was off.
+
+**Refreshing a router's stored host key** (after an upgrade that changed it, instead of turning
+checking off).  Use the address and port Ansible connects to (`ansible_host`, port 222):
+
+    ssh-keygen -R "[R1.Example.hamwan.net]:222"
+    ssh-keyscan -p 222 R1.Example.hamwan.net >> ~/.ssh/known_hosts
+
+`ssh-keyscan` trusts whatever answers at that moment, like a first connection does, so do it
+from the management network right after the upgrade.  With `host_key_auto_add = True` (below)
+Ansible does the same thing by itself on its next run.
 
 libssh reads `~/.ssh/known_hosts` and ignores `ansible_ssh_args` (so SSH options such as
 `StrictHostKeyChecking` there have no effect on this role).
