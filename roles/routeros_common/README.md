@@ -83,40 +83,48 @@ instead of stopping.
 
 ### Host keys
 
-The role checks router host keys as usual (`~/.ssh/known_hosts`).
+The role checks router host keys as usual, against `~/.ssh/known_hosts`.  It connects with
+libssh, which reads that file and ignores `ansible_ssh_args`, so SSH options such as
+`StrictHostKeyChecking` set there have no effect on this role.
 
-**PSDR inventory, temporarily:** `inventories/psdr/group_vars/os_routeros.yml` sets
-`ansible_host_key_checking: false` while the fleet moves to RouterOS 7.25.  Upgrading a router to
-7.25 replaces its host key (7.25 made Ed25519 the default type).  With checking on, libssh then
-refuses the router ("Host key for server has changed") until someone edits `~/.ssh/known_hosts`,
-unless your ansible.cfg has `host_key_auto_add = True` (below).  The trade-off is no
-protection against a swapped key while it is set.  To check keys meanwhile, pass
-`-e ansible_host_key_checking=true`.
+`host_key_auto_add = True` under `[libssh_connection]` in ansible.cfg (this repo's `.ansible.cfg`
+has it) records a router's key on first contact, and also accepts and records a key that has
+changed.  It can only be set in ansible.cfg or with `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`, not
+as an inventory variable, so check that the ansible.cfg you actually use has it.  Without it, a
+router you have never connected to fails with "The authenticity of host ... can't be
+established", and one whose key changed fails with "Host key for server has changed".
 
-This is meant to be short-lived and is tracked in a GitHub issue ("Re-enable RouterOS host key
-checking after the 7.25 rollout").  To finish it: remove that line from the group_vars once every
-router is on 7.25 or later, then refresh the stored keys as below, because nothing was recorded
-while checking was off.
+#### When a RouterOS upgrade changes the host key
 
-**Refreshing a router's stored host key** (after an upgrade that changed it, instead of turning
-checking off).  Use the address and port Ansible connects to (`ansible_host`, port 222):
+Upgrading a router to RouterOS 7.25 replaces its host key (7.25 made Ed25519 the default type).
+If you do not use `host_key_auto_add`, every upgraded router is then refused until its stored
+key is replaced.  There are two ways to deal with that; which one fits is a decision for each
+site, so neither is built into the role.
 
-    ssh-keygen -R "[R1.Example.hamwan.net]:222"
-    ssh-keyscan -p 222 R1.Example.hamwan.net >> ~/.ssh/known_hosts
+1. **Refresh the stored key of each router as it is upgraded** (host key checking stays on).
+   Use the address and port Ansible connects to (`ansible_host` and `ansible_port`):
 
-`ssh-keyscan` trusts whatever answers at that moment, like a first connection does, so do it
-from the management network right after the upgrade.  With `host_key_auto_add = True` (below)
-Ansible does the same thing by itself on its next run.
+       ssh-keygen -R "[router.example.net]:222"
+       ssh-keyscan -p 222 router.example.net >> ~/.ssh/known_hosts
 
-libssh reads `~/.ssh/known_hosts` and ignores `ansible_ssh_args` (so SSH options such as
-`StrictHostKeyChecking` there have no effect on this role).
+   `ssh-keyscan` trusts whatever answers at that moment, as a first connection does, so run it
+   from your management network straight after the upgrade.
 
-With checking turned back on, `host_key_auto_add = True` in `.ansible.cfg` (`[libssh_connection]`)
-records a router's key on first contact and also accepts (and records) a key that has changed,
-but only if your ansible.cfg actually has it: a `~/.ansible.cfg` copied before that section was
-added does not.  It can only be set in ansible.cfg or `ANSIBLE_LIBSSH_HOST_KEY_AUTO_ADD=True`.
-With checking off (as the PSDR inventory has it for now) `~/.ssh/known_hosts` is neither read
-nor updated.
+2. **Turn host key checking off for the routers while the fleet is being upgraded.**  Set it
+   in your inventory, for the group that holds your RouterOS devices, so it covers everyone who
+   runs the playbooks and nothing else:
+
+       ansible_host_key_checking: false
+
+   While it is set there is no protection against a swapped key, and nothing is recorded in
+   `known_hosts`.  Treat it as temporary: note somewhere you will see it (an issue, a dated
+   comment) when it is to be removed.  When every router is upgraded, remove the line and
+   refresh the stored keys as in option 1.  To check keys for one run meanwhile, pass
+   `-e ansible_host_key_checking=true`.
+
+The example inventory in this repo (`inventories/psdr/group_vars/os_routeros.yml`) currently
+uses option 2; removing it is tracked in
+[issue #39](https://github.com/HamWAN/infrastructure-configs/issues/39).
 
 ## SSH public keys for users
 
