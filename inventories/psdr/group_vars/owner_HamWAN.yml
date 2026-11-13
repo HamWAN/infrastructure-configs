@@ -19,6 +19,8 @@ users_user:
   - monitoring
 users_delete:
   - W3RWN
+  - ryan_turner
+  - KG7OZZ
 group_admin: hamadmin
 group_user: ham
 group_managed_scope: /etc/group_managed_scope

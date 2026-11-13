@@ -9,6 +9,8 @@ By putting the values in group_vars, the can be overriden where needed by entrie
 The molecule tests run it against RouterOS 6.49.19 and 7.22 (the box versions pinned in
 `molecule/default/Vagrantfile`).  Earlier versions of the role were tested on 6.1-6.49.x and
 7.1-7.16.
+It has also been run against real routers on RouterOS 7.24.2 and 7.25.1 (7.25 itself ignores
+the login options; see below).
 
 The user is expected to have SSH access to the devices.
 
