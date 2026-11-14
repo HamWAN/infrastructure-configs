@@ -29,6 +29,10 @@ whole, so a bad download is never installed.
 Run with `--check --diff` to see what would change.  The play prints
 `authorized_keys to be changed for: [...]`.
 
+A check run also works on a host where the groups or accounts do not exist yet.  Nothing is
+created in check mode, so the steps that need them leave them out, and the summary lists the
+accounts and groups a real run would create (each account with its master key).
+
 ## The account Ansible logs in as
 
 The account Ansible is logged in as - read from the host with `id -un`, so it is the real login
@@ -60,6 +64,8 @@ the host's answer, or the play stops.
 - `python3 -I roles/hamwan_ssh_common/tests/test_ssh_keys.py` - unit tests for the key-file checks
   (shared with routeros_common; see `roles/hamwan_ssh_common`).
 - `molecule test` (from `roles/users`) - three Vagrant VMs (see `Vagrantfile`), logged in as `eo`.
+  Before the real run it does a `--check` run on the fresh VMs (`prepare.yml`), which must get
+  through and change nothing.
   Besides creating/removing users and groups, it checks that:
   - `tom` (multi-key `test_keys/tom.key`) ends up with exactly those keys, and a stray key is removed;
   - `eo`, the connecting account, keeps an extra key it already had, also after the role has
