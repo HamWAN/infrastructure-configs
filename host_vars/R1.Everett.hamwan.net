@@ -1,0 +1,6 @@
+---
+# routeros_common settings overrides for R1.Everett
+# This router uses two public DNS servers ahead of the site's own.
+dns_servers: '8.8.8.8,1.1.1.1,44.25.0.1,44.25.1.1'
+# The DNS servers handed to DHCP clients normally follow dns_servers; keep the site's own here.
+dhcp_dns_server: '44.25.0.1,44.25.1.1'

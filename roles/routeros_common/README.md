@@ -6,6 +6,24 @@ do not match desired settings.  The configruation is split into two locations.
  - group_vars/os_routeros.yml sets the site specific values used by the file above.
 By putting the values in group_vars, the can be overriden where needed by entries in host_vars.
 
+### Exceptions for one router
+
+Everything the role checks comes from the `settings` variable (set in `group_vars/os_routeros.yml`
+from the role's default lists), so a file in `host_vars/` named after the router can change it
+for that router only:
+
+- **a different value** for a setting: set the variable it uses, e.g. `dns_servers: '...'`;
+- **leave one setting alone** (the role neither checks nor changes it): take it out of the list.
+  Filtering the default list keeps the rest in step with the role:
+
+      settings:
+        simple_settings: "{{ default_simple_settings | rejectattr('name', 'equalto', 'dns_servers') | list }}"
+        v6_simple_settings: '{{ default_v6_simple_settings }}'
+        v7_simple_settings: '{{ default_v7_simple_settings }}'
+
+- **leave all settings alone**: copy `host_vars/Null_settings` to the router's name (users and
+  SSH keys are still managed).
+
 The molecule tests run it against RouterOS 6.49.19 and 7.22 (the box versions pinned in
 `molecule/default/Vagrantfile`).  Earlier versions of the role were tested on 6.1-6.49.x and
 7.1-7.16.

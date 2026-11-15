@@ -1,0 +1,10 @@
+---
+# routeros_common settings overrides for AH6ET-BawFaw
+# This router keeps its own DNS servers: routeros_common must not check or change them here.
+# Every other setting is managed as usual: the list below is the role's default list
+# (default_simple_settings in roles/routeros_common/vars/main.yml) without 'dns_servers', so it
+# stays in step with the role.
+settings:
+  simple_settings: "{{ default_simple_settings | rejectattr('name', 'equalto', 'dns_servers') | list }}"
+  v6_simple_settings: '{{ default_v6_simple_settings }}'
+  v7_simple_settings: '{{ default_v7_simple_settings }}'
