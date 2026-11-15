@@ -226,14 +226,13 @@
 - name: Summarise ssh key changes
   ansible.builtin.debug:
     msg: >-
-      authorized_keys {{ 'to be ' if ansible_check_mode else '' }}changed for:
-      {{ users_key_results.results | default([]) | selectattr('changed') | map(attribute='item') | list }}
-      {{ ('.  Accounts to be created, each with its master key: '
-          ~ (users_not_yet_created | select('in', users_with_master_key) | list | string))
-         if users_not_yet_created | length > 0 else '' }}
-      {{ ('.  Groups to be created (their members will be added): '
-          ~ (users_groups_not_yet_created | string))
-         if users_groups_not_yet_created | length > 0 else '' }}
+      {{ ["authorized_keys " ~ ("to be " if ansible_check_mode else "") ~ "changed for: "
+          ~ (users_key_results.results | default([]) | selectattr("changed") | map(attribute="item") | list | string)]
+         + (["Accounts to be created, each with its master key: "
+             ~ (users_not_yet_created | select("in", users_with_master_key) | list | string)]
+            if users_not_yet_created | length > 0 else [])
+         + (["Groups to be created (their members will be added): " ~ (users_groups_not_yet_created | string)]
+            if users_groups_not_yet_created | length > 0 else []) }}
 
 # Report only, and without touching the host: read the connecting account's authorized_keys and
 # compare it with the master on the controller (an authorized_key check would count as 'changed').
