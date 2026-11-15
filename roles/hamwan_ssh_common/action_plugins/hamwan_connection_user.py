@@ -20,8 +20,12 @@ from ansible.plugins.action import ActionBase
 
 
 class ActionModule(ActionBase):
-    # The connection object is needed to read its options, but nothing is sent over it.
+    # Nothing is sent to the host, so no connection is needed.  Saying so matters for persistent
+    # connections (network_cli): without it Ansible starts the connection process for this task,
+    # with a fresh idle timer that can run out just as the next command arrives ("Unable to
+    # connect to socket").  For those connections the name then comes from the play context.
     TRANSFERS_FILES = False
+    _requires_connection = False
 
     def run(self, tmp=None, task_vars=None):
         result = super().run(tmp, task_vars)

@@ -2,6 +2,21 @@
 # Defaults for routeros_common.  These have the lowest precedence, so they can be overridden
 # from group_vars, host_vars or the command line (-e).  (Values in vars/main.yml cannot.)
 
+# How long (seconds) the connection to a router is kept open while it waits for the next
+# command.  Ansible's default is 30.  With many routers each one waits longer than that between
+# commands, so the connection was closed and the router logged in to again for nearly every
+# task - slow, and noisy in the router's log.  300 keeps one login per router per run.  The
+# connection is closed when the play ends.  A default, so inventory or -e can change it.
+#
+# ansible.netcommon documents this option as the time allowed to establish the connection as
+# well, so raising it looks as though it should make a dead router take 300 s to fail.  It does
+# not: how long an unresponsive router takes to fail is bounded by persistent_command_timeout
+# (Ansible's default, 30, is left alone here).  Measured against an address that drops packets
+# silently: 64 s to fail with this at 30 and with it at 300; 137 s only when
+# persistent_command_timeout was also raised to 300.  So if you raise THAT, expect dead routers
+# to hold the play up for longer.
+ansible_connect_timeout: 300
+
 # Where the master copy of each user's SSH public key lives: <base url><username>.key.
 # There is no built-in default: set authorized_key_location for your organisation in group_vars
 # (it is shared with the Linux 'users' role; the example inventory sets it in
