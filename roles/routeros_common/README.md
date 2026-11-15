@@ -23,6 +23,11 @@ that between tasks, so by default every task logged in again.  The role sets the
 time allowed for connecting, and unreachable routers fail just as quickly).  If a run over a
 very large fleet shows repeated logins in a router's log, raise it.
 
+Raising it does not make unreachable routers hold up the play: how long one of those takes to
+fail is bounded by `persistent_command_timeout`, which the role leaves at Ansible's default of
+30.  (Against an address that silently drops packets: 64 s to fail either way; only raising
+`persistent_command_timeout` as well made it longer.)
+
 ## Logging in: the `+cet512w` suffix (read this first)
 
 RouterOS takes terminal options from the login name: everything after a `+`.  This role needs
