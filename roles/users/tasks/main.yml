@@ -123,6 +123,17 @@
   loop:
     - "{{ group_admin }}"
     - "{{ group_user }}"
+  register: users_group_results
+
+# In check mode nothing is really created, so a group or account that a real run would create
+# first is still missing when later tasks need it, and those tasks fail ("Group ... does not
+# exist", "Either user must exist ...").  A check run on a new host used to stop there.  Note
+# what is still to be created, so the tasks below can leave it out and report it instead.
+- name: Groups that a real run would create first (check mode)
+  ansible.builtin.set_fact:
+    users_groups_not_yet_created: >-
+      {{ (users_group_results.results | selectattr('changed') | map(attribute='item') | list)
+         if ansible_check_mode else [] }}
 
 - name: Kill Persistent SSH Connection
   local_action: >
@@ -156,7 +167,7 @@
   become: true
   ansible.builtin.user:
     name: "{{ item }}"
-    groups: "{{ group_admin }}"
+    groups: "{{ omit if group_admin in users_groups_not_yet_created else group_admin }}"
     shell: "/bin/bash"
   loop: "{{ users_admin | flatten(1) }}"
 
@@ -173,7 +184,7 @@
   become: true
   ansible.builtin.user:
     name: "{{ item }}"
-    groups: "{{ group_user }}"
+    groups: "{{ omit if group_user in users_groups_not_yet_created else group_user }}"
     shell: "/bin/bash"
   loop: "{{ users_user | flatten(1) }}"
 
@@ -186,6 +197,19 @@
   when: test_flaky_network
   changed_when: false
 
+# Likewise for accounts: authorized_key cannot work out a key file for an account that does not
+# exist yet.  Leave those accounts out of the key task in check mode, and report them.
+- name: List the accounts on the host (check mode)
+  ansible.builtin.getent:
+    database: passwd
+  when: ansible_check_mode
+
+- name: Accounts that a real run would create first
+  ansible.builtin.set_fact:
+    users_not_yet_created: >-
+      {{ (users_key_managed | reject('in', ansible_facts.getent_passwd | default({})) | list)
+         if ansible_check_mode else [] }}
+
 # authorized_keys is set to exactly the master key(s) (exclusive): changed keys are replaced and
 # any other key is removed.  The connecting account is skipped unless the flag allows it.
 - name: Ensure ssh keys are present
@@ -194,14 +218,21 @@
     user: "{{ item }}"
     key: "{{ users_master_keys[item].key_lines | join('\n') }}"
     exclusive: true
-  loop: "{{ users_key_managed | select('in', users_with_master_key) | difference(users_key_protected) | list }}"
+  loop: >-
+    {{ users_key_managed | select('in', users_with_master_key) | difference(users_key_protected)
+       | difference(users_not_yet_created) | list }}
   register: users_key_results
 
 - name: Summarise ssh key changes
   ansible.builtin.debug:
     msg: >-
-      authorized_keys {{ 'to be ' if ansible_check_mode else '' }}changed for:
-      {{ users_key_results.results | default([]) | selectattr('changed') | map(attribute='item') | list }}
+      {{ ["authorized_keys " ~ ("to be " if ansible_check_mode else "") ~ "changed for: "
+          ~ (users_key_results.results | default([]) | selectattr("changed") | map(attribute="item") | list | string)]
+         + (["Accounts to be created, each with its master key: "
+             ~ (users_not_yet_created | select("in", users_with_master_key) | list | string)]
+            if users_not_yet_created | length > 0 else [])
+         + (["Groups to be created (their members will be added): " ~ (users_groups_not_yet_created | string)]
+            if users_groups_not_yet_created | length > 0 else []) }}
 
 # Report only, and without touching the host: read the connecting account's authorized_keys and
 # compare it with the master on the controller (an authorized_key check would count as 'changed').
@@ -249,8 +280,14 @@
   ansible.builtin.getent:
     database: group
     key: "{{ group_admin }}"
+    # In check mode on a new host the group has not been created yet: no members to audit.
+    # In a real run the group was created above, so a lookup that fails is a real fault and
+    # should still stop the play.
+    fail_key: "{{ not ansible_check_mode }}"
 - ansible.builtin.set_fact:
-    users_to_purge: "{{ ansible_facts['getent_group'][group_admin][2].split(',') | difference(users_admin) }}"
+    users_to_purge: >-
+      {{ ((ansible_facts['getent_group'][group_admin] | default(none, true)) or ['', '', ''])[2].split(',')
+         | difference(users_admin) }}
 
 - name: Kill Persistent SSH Connection
   local_action: >
@@ -265,8 +302,14 @@
   ansible.builtin.getent:
     database: group
     key: "{{ group_user }}"
+    # In check mode on a new host the group has not been created yet: no members to audit.
+    # In a real run the group was created above, so a lookup that fails is a real fault and
+    # should still stop the play.
+    fail_key: "{{ not ansible_check_mode }}"
 - ansible.builtin.set_fact:
-    users_to_purge: "{{ ansible_facts['getent_group'][group_user][2].split(',') | difference(users_user) + users_to_purge }}"
+    users_to_purge: >-
+      {{ ((ansible_facts['getent_group'][group_user] | default(none, true)) or ['', '', ''])[2].split(',')
+         | difference(users_user) + users_to_purge }}
 
 - name: Kill Persistent SSH Connection
   local_action: >

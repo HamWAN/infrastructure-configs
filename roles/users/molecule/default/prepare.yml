@@ -1,0 +1,46 @@
+---
+# Runs before converge, on the freshly created hosts: the whole role with --check.  A check run
+# must get through on hosts where accounts and groups do not exist yet, and must change nothing.
+# (It is run as a separate ansible-playbook so that it is a real --check run, as an operator
+# would do; it uses the same inventory and settings as molecule's own runs.)
+- name: Prepare (a --check run on fresh hosts)
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Run converge.yml with --check
+      ansible.builtin.command:
+        argv:
+          - ansible-playbook
+          - --inventory
+          - "{{ lookup('ansible.builtin.env', 'MOLECULE_INVENTORY_FILE') }}"
+          - --check
+          - "{{ playbook_dir }}/converge.yml"
+      register: check_run
+      changed_when: false
+      failed_when: false
+
+    - name: Show the end of the check run
+      ansible.builtin.debug:
+        msg: "{{ check_run.stdout_lines[-40:] }}"
+      when: check_run.rc != 0
+
+    - name: The check run must succeed on every host
+      ansible.builtin.assert:
+        that:
+          - check_run.rc == 0
+          - "'Accounts to be created, each with its master key' in check_run.stdout"
+
+- name: The check run changed nothing
+  hosts: test.missing.users
+  gather_facts: false
+  tasks:
+    - name: Look for an account the role would create
+      ansible.builtin.getent:
+        database: passwd
+        key: nigel
+        fail_key: false
+
+    - name: Verify it was not created
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.getent_passwd.nigel is none
