@@ -428,6 +428,19 @@ check("admin still there, once, still disabled",
       [u for u in st22["users"] if u["name"] == "admin"] == [{"name": "admin", "group": "full", "disabled": True}],
       str(st22["users"]))
 check("the flag is not taken for a user name", '"X"' not in p.stdout)
+check("a disabled BUILT-IN account is not reported", "are disabled on this device" not in p.stdout,
+      p.stdout[-1200:])
+
+print("== 22b. a managed user is disabled on the device: reported, left disabled ==")
+st = copy.deepcopy(initial_state())
+st["users"] = [dict(u, disabled=True) if u["name"] == "alice" else u for u in st["users"]]
+p, st22b = run(st)
+check("play succeeds", p.returncode == 0, p.stdout[-2500:])
+check("alice is named as disabled", "are disabled on this device and are left that way: alice" in p.stdout,
+      "\n".join(l for l in p.stdout.splitlines() if "disabled" in l))
+check("alice is still disabled", {"name": "alice", "group": "full", "disabled": True} in st22b["users"],
+      str(st22b["users"]))
+check("her key is still brought in step", keyfor(st22b, "alice") == [MASTER["alice"]], str(keyfor(st22b, "alice")))
 
 print()
 bad = [n for n, ok in results if not ok]

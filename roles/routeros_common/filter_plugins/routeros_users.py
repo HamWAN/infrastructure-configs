@@ -4,6 +4,11 @@ routeros_user_names
     Takes the output of '/user print without-paging' (a string, or a list of lines) and returns
     the user names, in the order listed.
 
+routeros_disabled_users
+    The names of the accounts the same listing marks as disabled.  Which flag letter means
+    disabled is read from the 'Flags:' legend the device prints ('Flags: X - DISABLED'), so a
+    device that uses another letter is still read correctly; without a legend 'X' is assumed.
+
 RouterOS puts a flag column between the row number and the name (X disabled, E expired) and
 only prints it when a flag is in use, so the name cannot be found by counting words: in
 ' 0 X admin  full' the second word is a flag, in ' 0 admin  full' it is the name.  The header
@@ -25,7 +30,8 @@ DOCUMENTATION = r"""
 """
 
 _HEADER = re.compile(r"^\s*#\s+NAME\b")
-_NO_HEADER_ROW = re.compile(r"^\s*\d+\s+(?:[A-Z]\s+)*(\S+)")
+_NO_HEADER_ROW = re.compile(r"^\s*\d+\s+((?:[A-Z]\s+)*)(\S+)")
+_LEGEND = re.compile(r"([A-Z])\s*-\s*([A-Za-z-]+)")
 
 
 def _lines(value):
@@ -39,22 +45,27 @@ def _lines(value):
     return str(value).replace("\r", "").split("\n")
 
 
-def routeros_user_names(output):
+def _rows(output):
+    """(name, flag letters) for each row, plus the flag legend the device printed."""
     lines = _lines(output)
     col = None
-    names = []
+    rows = []
+    legend = {}
     for line in lines:
+        if line.startswith("Flags:"):
+            legend.update((f, m.lower()) for f, m in _LEGEND.findall(line[len("Flags:"):]))
+            continue
         if col is None and _HEADER.match(line):
             col = line.index("NAME")
             continue
         if not line.strip() or ";;;" in line[: (col or 0) + 3] or line.lstrip().startswith(";;;"):
             continue
-        if line.startswith(("Flags:", "Columns:")):
+        if line.startswith("Columns:"):
             continue
         if col is None:
             m = _NO_HEADER_ROW.match(line)
             if m:
-                names.append(m.group(1))
+                rows.append((m.group(2), m.group(1).split()))
             continue
         # Everything before the NAME column must be a row number and flags (or blank, for a
         # RouterOS 6 row whose number is on the comment line above).
@@ -62,10 +73,23 @@ def routeros_user_names(output):
             continue
         rest = line[col:]
         if rest and not rest[0].isspace():
-            names.append(rest.split()[0])
-    return names
+            rows.append((rest.split()[0], re.findall(r"[A-Z]", line[:col])))
+    return rows, legend
+
+
+def routeros_user_names(output):
+    return [name for name, _flags in _rows(output)[0]]
+
+
+def routeros_disabled_users(output):
+    rows, legend = _rows(output)
+    disabled = {f for f, meaning in legend.items() if meaning.startswith("disabl")} or {"X"}
+    return [name for name, flags in rows if disabled.intersection(flags)]
 
 
 class FilterModule(object):
     def filters(self):
-        return {"routeros_user_names": routeros_user_names}
+        return {
+            "routeros_user_names": routeros_user_names,
+            "routeros_disabled_users": routeros_disabled_users,
+        }

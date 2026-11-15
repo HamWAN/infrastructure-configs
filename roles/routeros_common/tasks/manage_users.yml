@@ -178,6 +178,24 @@
   debug:
     var: missing_users
 
+# A managed user who is disabled on the device counts as present, so nothing is done about it:
+# someone disabled the account deliberately, and this role does not re-enable accounts.  Say so,
+# or it is invisible.  Their SSH keys are still kept in step with the master key.  The built-in
+# accounts are left out: they are not managed here and are often disabled on purpose.
+- name: Find managed users that are disabled on the device
+  ansible.builtin.set_fact:
+    disabled_users: >-
+      {{ user_output.stdout_lines[0] | routeros_disabled_users
+         | intersect(expected_users) | difference(builtin_users) | sort }}
+
+- name: Report managed users that are disabled on the device
+  ansible.builtin.debug:
+    msg: >-
+      NOTE: these accounts are disabled on this device and are left that way:
+      {{ disabled_users | join(', ') }}.  Their ssh keys are still kept in step with the master
+      copy.  Enable an account on the device itself, or remove it from users_admin/users_user.
+  when: disabled_users | length > 0
+
 - name: Find extra users
   set_fact:
     extra_users: >-
