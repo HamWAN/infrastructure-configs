@@ -281,7 +281,9 @@
     database: group
     key: "{{ group_admin }}"
     # In check mode on a new host the group has not been created yet: no members to audit.
-    fail_key: false
+    # In a real run the group was created above, so a lookup that fails is a real fault and
+    # should still stop the play.
+    fail_key: "{{ not ansible_check_mode }}"
 - ansible.builtin.set_fact:
     users_to_purge: >-
       {{ ((ansible_facts['getent_group'][group_admin] | default(none, true)) or ['', '', ''])[2].split(',')
@@ -301,7 +303,9 @@
     database: group
     key: "{{ group_user }}"
     # In check mode on a new host the group has not been created yet: no members to audit.
-    fail_key: false
+    # In a real run the group was created above, so a lookup that fails is a real fault and
+    # should still stop the play.
+    fail_key: "{{ not ansible_check_mode }}"
 - ansible.builtin.set_fact:
     users_to_purge: >-
       {{ ((ansible_facts['getent_group'][group_user] | default(none, true)) or ['', '', ''])[2].split(',')
