@@ -185,6 +185,10 @@ same safe order as a replacement.  Users whose keys cannot be verified are never
 New users are created with a random password that is not displayed (`no_log`); they log in with
 their SSH key.
 
+The built-in `admin` account is left alone: the role does not create it where it has been
+deleted, does not re-enable it where it is disabled, and does not report it as an extra user
+(`routeros_builtin_users` in `defaults/main.yml`).  List it in `users_delete` to have it removed.
+
 ### Where the master keys come from
 
 There is no built-in key site: each organisation sets its own.

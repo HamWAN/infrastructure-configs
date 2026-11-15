@@ -52,3 +52,9 @@ routeros_login_options: cet512w
 # to wrap long input even with the right login options; set commands longer than about
 # 50 characters may then be reported as failed and re-applied every run.
 routeros_require_wide_terminal: true
+
+# Accounts the role neither creates nor reports as extra: RouterOS's built-in 'admin'.  Many
+# sites disable or delete it, and the role must not bring it back (it would get full rights, a
+# random password and no key).  It is still removed if you list it in users_delete.
+routeros_builtin_users:
+  - admin
