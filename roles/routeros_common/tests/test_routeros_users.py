@@ -102,5 +102,45 @@ class UserNames(unittest.TestCase):
         self.assertEqual(mod.routeros_user_names(plain), ["X", "AB"])
 
 
+class DisabledUsers(unittest.TestCase):
+    def test_none_disabled(self):
+        self.assertEqual(mod.routeros_disabled_users(V7_PLAIN), [])
+
+    def test_disabled_admin(self):
+        self.assertEqual(mod.routeros_disabled_users(V7_DISABLED_ADMIN), ["admin"])
+
+    def test_expired_is_not_disabled(self):
+        self.assertEqual(mod.routeros_disabled_users(V7_EXPIRED), [])
+
+    def test_routeros6_lower_case_legend(self):
+        self.assertEqual(mod.routeros_disabled_users(V6_STYLE), ["olduser"])
+
+    def test_both_flags_in_one_legend(self):
+        out = [
+            "Flags: X - DISABLED, E - EXPIRED",
+            " #   NAME     GROUP",
+            " 0 X olduser  full",
+            " 1 E oldtoo   read",
+            " 2   fine     full",
+        ]
+        self.assertEqual(mod.routeros_disabled_users(out), ["olduser"])
+        self.assertEqual(mod.routeros_user_names(out), ["olduser", "oldtoo", "fine"])
+
+    def test_a_device_that_uses_another_letter(self):
+        out = [
+            "Flags: D - DISABLED",
+            " #   NAME     GROUP",
+            " 0 D olduser  full",
+            " 1   fine     full",
+        ]
+        self.assertEqual(mod.routeros_disabled_users(out), ["olduser"])
+
+    def test_no_legend_falls_back_to_x(self):
+        self.assertEqual(mod.routeros_disabled_users([" 0 X admin full", " 1 eo full"]), ["admin"])
+
+    def test_empty(self):
+        self.assertEqual(mod.routeros_disabled_users(""), [])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

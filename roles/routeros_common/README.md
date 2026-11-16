@@ -217,6 +217,10 @@ same safe order as a replacement.  Users whose keys cannot be verified are never
 New users are created with a random password that is not displayed (`no_log`); they log in with
 their SSH key.
 
+A managed user who is **disabled** on a device counts as present: the role does not re-enable
+accounts (someone disabled it deliberately), but it does keep that user's SSH key in step with
+the master copy.  Every run names such accounts, so they do not go unnoticed.
+
 The built-in `admin` account is left alone: the role does not create it where it has been
 deleted, does not re-enable it where it is disabled, and does not report it as an extra user
 (`routeros_builtin_users` in `defaults/main.yml`).  List it in `users_delete` to have it removed.
