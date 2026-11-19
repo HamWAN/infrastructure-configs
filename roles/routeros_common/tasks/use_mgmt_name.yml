@@ -1,0 +1,53 @@
+---
+# TEMPORARY (routeros_mgmt_name_try, default false).  While devices are being moved to a
+# management VRF they answer on a second name, normally 'mgmt.<host>'.  With the flag on, the
+# role looks for that name before it connects and uses it when it answers, so a fleet can be
+# moved a device at a time without editing the inventory.  When every device has moved, point
+# the inventory at the new names and delete this file, its three defaults, the two include
+# lines in main.yml / manage_users.yml and the README section.
+#
+# Only the address this role connects to is changed (ansible_host, for this host, for this
+# play).  The probe is a TCP connection from the controller to the same port the role uses; the
+# device is not touched, so it also runs in check mode.  A name that does not resolve, or does
+# not answer, leaves the host exactly as the inventory has it.
+
+- name: "Work out the management name for this device"
+  ansible.builtin.set_fact:
+    routeros_mgmt_name: "{{ routeros_mgmt_name | default(routeros_mgmt_name_prefix ~ inventory_hostname, true) }}"
+
+- name: "Look for the device at {{ routeros_mgmt_name }}"
+  ansible.builtin.wait_for:
+    host: "{{ routeros_mgmt_name }}"
+    port: "{{ ansible_port | default(22) }}"
+    timeout: "{{ routeros_mgmt_name_probe_timeout }}"
+    state: started
+  delegate_to: localhost
+  register: routeros_mgmt_probe
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+# failed_when: false above also clears the task's own 'failed' flag, so that cannot be the
+# test: wait_for reports 'state' when the port answered and 'msg' when it did not.
+- name: "Did the management name answer?"
+  ansible.builtin.set_fact:
+    routeros_mgmt_name_found: >-
+      {{ routeros_mgmt_probe.state | default('') == 'started'
+         and routeros_mgmt_probe.msg is not defined }}
+
+- name: "Use the management name for this device"
+  ansible.builtin.set_fact:
+    ansible_host: "{{ routeros_mgmt_name }}"
+  when: routeros_mgmt_name_found | bool
+
+- name: "Say which address is used"
+  ansible.builtin.debug:
+    msg: >-
+      {{ 'Using the management name ' ~ routeros_mgmt_name ~ ' for this device.'
+         if routeros_mgmt_name_found | bool else
+         'No answer at ' ~ routeros_mgmt_name ~ ' (' ~ (routeros_mgmt_probe.msg | default('no reason given'))
+         ~ '); using ' ~ (ansible_host | default(inventory_hostname)) ~ ' as before.' }}
+
+- name: "Note that the management name has been looked for"
+  ansible.builtin.set_fact:
+    routeros_mgmt_name_checked: true

@@ -32,6 +32,38 @@ the login options; see below).
 
 The user is expected to have SSH access to the devices.
 
+## Moving devices to a management address (temporary)
+
+While a fleet is being moved to management addresses - a management VRF, a separate management
+network - the devices answer on a second name for a while, and which devices have moved changes
+by the day.  Rather than editing the inventory twice per device, turn this on:
+
+    routeros_mgmt_name_try: true
+
+The role then looks for each device at **`mgmt.<inventory_hostname>`** before it connects, on
+the port it would use anyway.  If that name answers, the role talks to it; if the name does not
+resolve, or nothing answers, the device is used exactly as the inventory has it.  Nothing on the
+device is touched by the look-up, so it runs in check mode too, and it changes the address only
+for this role, for that device, for that run.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `routeros_mgmt_name_try` | `false` | look for the management name at all |
+| `routeros_mgmt_name_prefix` | `mgmt.` | what to put in front of the device's inventory name |
+| `routeros_mgmt_name_probe_timeout` | `5` | seconds to wait for it to answer before falling back |
+| `routeros_mgmt_name` | `<prefix><inventory_hostname>` | the whole name, for a device that does not follow the pattern (host_vars) |
+
+A different scheme is just a different prefix or name, e.g. `routeros_mgmt_name_prefix: "m-"`, or
+in `host_vars/R1.Example.net`:
+
+    routeros_mgmt_name: r1-mgmt.example.net
+
+Each device that has **not** moved costs the probe timeout, so keep it short on a large fleet.
+
+**This is meant to be temporary.**  When every device has moved, point the inventory at the new
+names, set the flag back to false (or drop it), and the three variables and
+`tasks/use_mgmt_name.yml` can be deleted; the file says what else to remove with it.
+
 ## One login per router per run
 
 The role talks to each router over one persistent SSH connection.  Ansible closes such a

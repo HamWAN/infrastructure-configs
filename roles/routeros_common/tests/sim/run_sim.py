@@ -442,6 +442,19 @@ check("alice is still disabled", {"name": "alice", "group": "full", "disabled": 
       str(st22b["users"]))
 check("her key is still brought in step", keyfor(st22b, "alice") == [MASTER["alice"]], str(keyfor(st22b, "alice")))
 
+print("== 23. management-name fallback (routeros_mgmt_name_try) ==")
+p, st23 = run(copy.deepcopy(initial_state()),
+              extra={"routeros_mgmt_name_try": True, "routeros_mgmt_name_probe_timeout": 1})
+check("play succeeds when the management name does not answer", p.returncode == 0, p.stdout[-2000:])
+check("says it fell back", "No answer at mgmt." in p.stdout,
+      "\n".join(l for l in p.stdout.splitlines() if "management name" in l or "No answer" in l))
+check("run is otherwise the same as a normal one", st23 == st1, str(st23))
+p, st23b = run(copy.deepcopy(initial_state()))
+# (the include task's own name mentions management names even when it is skipped, so look for
+# what the look-up itself prints)
+check("off by default: the look-up does not run",
+      "No answer at" not in p.stdout and "Using the management name" not in p.stdout)
+
 print()
 bad = [n for n, ok in results if not ok]
 print("%d checks, %d failed" % (len(results), len(bad)))

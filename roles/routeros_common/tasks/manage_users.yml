@@ -14,6 +14,14 @@
 #   - it is NEVER deleted (no override - delete it by running as a different admin);
 #   - its ssh keys are not changed unless routeros_allow_update_connecting_user is true.
 
+# Normally already done by main.yml; these two run here too when manage_users.yml is used alone.
+- name: Look for the device at its management name (routeros_mgmt_name_try)
+  ansible.builtin.include_tasks:
+    file: use_mgmt_name.yml
+  when:
+    - routeros_mgmt_name_try | bool
+    - routeros_mgmt_name_checked is not defined
+
 # Normally already done by main.yml; runs here too when manage_users.yml is used on its own.
 - name: Check the RouterOS session is usable (login options / wide terminal)
   ansible.builtin.include_tasks:

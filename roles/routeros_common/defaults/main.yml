@@ -17,6 +17,22 @@
 # to hold the play up for longer.
 ansible_connect_timeout: 300
 
+# TEMPORARY, for a move to a management VRF (see tasks/use_mgmt_name.yml).  With this true the
+# role looks for each device at 'mgmt.<inventory_hostname>' before it connects, and uses that
+# name when it answers on the same port; a name that does not resolve or does not answer leaves
+# the host as the inventory has it.  Nothing else about the device is touched, and the probe
+# runs in check mode too.  Off by default: it costs one TCP connection per device per run.
+routeros_mgmt_name_try: false
+
+# The prefix put in front of the device's inventory name.  Set a whole name instead with
+# routeros_mgmt_name (host_vars) where one device does not follow the pattern.
+routeros_mgmt_name_prefix: "mgmt."
+
+# How long (seconds) to wait for the management name to answer before falling back.  A device
+# that has not moved yet costs this much (a name that does not resolve waits it out too), so on
+# a large fleet keep it short.
+routeros_mgmt_name_probe_timeout: 5
+
 # Where the master copy of each user's SSH public key lives: <base url><username>.key.
 # There is no built-in default: set authorized_key_location for your organisation in group_vars
 # (it is shared with the Linux 'users' role; the example inventory sets it in

@@ -1,6 +1,13 @@
 ---
 # tasks for common settings
 
+- name: Look for the device at its management name (routeros_mgmt_name_try)
+  ansible.builtin.include_tasks:
+    file: use_mgmt_name.yml
+  when:
+    - routeros_mgmt_name_try | bool
+    - routeros_mgmt_name_checked is not defined
+
 - name: Check the RouterOS session is usable (login options / wide terminal)
   ansible.builtin.include_tasks:
     file: check_terminal.yml
